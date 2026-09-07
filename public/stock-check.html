@@ -19,6 +19,8 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.08);
             padding: 24px 28px 32px;
         }
+
+        /* ===== HEADER ===== */
         .header {
             display: flex;
             flex-wrap: wrap;
@@ -31,6 +33,8 @@
         .header h1 { font-size: 24px; color: #0b2b44; }
         .header .meta { font-size: 15px; color: #5a6a7e; }
         .header .user-info { background: #eaf4ff; padding: 6px 18px; border-radius: 30px; font-weight: 600; color: #1a4b6d; }
+
+        /* ===== CONTROLS ===== */
         .controls {
             display: flex;
             flex-wrap: wrap;
@@ -61,6 +65,49 @@
         .btn-secondary:hover { background: #5a6268; }
         .btn-warning { background: #ffc107; color: #1a2a3a; }
         .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: #dc3545; color: #fff; }
+        .btn-danger:hover { background: #c82333; }
+
+        /* ===== FILTER ===== */
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .filter-group .group-btn {
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 2px solid #dce2ec;
+            background: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            color: #5a6a7e;
+            transition: 0.2s;
+        }
+        .filter-group .group-btn.active {
+            border-color: #1a4b6d;
+            background: #1a4b6d;
+            color: #fff;
+        }
+        .filter-group .group-btn:hover:not(.active) { background: #f0f4fa; }
+
+        /* ===== SUMMARY ===== */
+        .summary {
+            background: #f8faff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            font-size: 15px;
+        }
+        .summary span { font-weight: 600; color: #0b2b44; }
+        .summary .found-count { color: #28a745; }
+        .summary .notfound-count { color: #dc3545; }
+
+        /* ===== TABLE ===== */
         .table-wrap {
             overflow-x: auto;
             border: 1px solid #e9edf4;
@@ -82,6 +129,7 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            white-space: nowrap;
         }
         table td {
             padding: 10px 16px;
@@ -96,6 +144,31 @@
             accent-color: #28a745;
         }
         .roll-number { font-weight: 600; color: #0b2b44; }
+
+        /* ===== SIZE SUMMARY ===== */
+        .size-summary {
+            margin: 16px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .size-summary .size-tag {
+            background: #e9edf4;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2a3a;
+        }
+        .size-summary .size-tag .count {
+            background: #1a4b6d;
+            color: #fff;
+            padding: 0 8px;
+            border-radius: 12px;
+            margin-left: 4px;
+        }
+
+        /* ===== SIGNATURE (for print) ===== */
         .signature-area {
             margin-top: 30px;
             border-top: 2px dashed #dce2ec;
@@ -126,17 +199,23 @@
             height: 30px;
             width: 180px;
         }
+
+        /* ===== PRINT MODE ===== */
         .print-hide { display: inline-block; }
         @media print {
             .print-hide { display: none !important; }
             body { background: #fff; padding: 0; }
             .container { box-shadow: none; border-radius: 0; padding: 16px; }
             .table-wrap { border: 1px solid #000; }
-            table th { background: #e9edf4; }
+            table th { background: #e9edf4 !important; }
             .signature-area { border-top: 2px solid #000; }
             .signature-area .sign-block .line { border-bottom: 2px solid #000; }
             .signature-area .sign-block .date-line { border-bottom: 2px solid #000; }
+            .size-summary .size-tag .count { background: #1a4b6d; color: #fff; }
+            .summary { background: #f0f4fa; }
         }
+
+        /* ===== TOAST ===== */
         .toast {
             position: fixed;
             bottom: 24px;
@@ -157,52 +236,77 @@
             0% { opacity: 0; transform: translateY(16px); }
             100% { opacity: 1; transform: translateY(0); }
         }
-        .filter-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 12px;
+
+        /* ===== PASSWORD MODAL ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
-        .filter-group .group-btn {
-            padding: 6px 16px;
-            border-radius: 30px;
-            border: 2px solid #dce2ec;
+        .modal-overlay.visible { display: flex; }
+        .modal-box {
             background: #fff;
-            cursor: pointer;
+            padding: 32px 36px;
+            border-radius: 24px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            animation: fadeUp 0.3s ease;
+        }
+        .modal-box h3 { color: #0b2b44; margin-bottom: 8px; }
+        .modal-box p { color: #5a6a7e; margin-bottom: 16px; font-size: 14px; }
+        .modal-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #dce2ec;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+        }
+        .modal-box input:focus { border-color: #1a4b6d; }
+        .modal-box .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            justify-content: flex-end;
+        }
+        .modal-box .modal-actions button {
+            padding: 10px 24px;
+            border-radius: 12px;
+            border: none;
             font-weight: 600;
-            color: #5a6a7e;
+            cursor: pointer;
             transition: 0.2s;
         }
-        .filter-group .group-btn.active {
-            border-color: #1a4b6d;
-            background: #1a4b6d;
-            color: #fff;
-        }
-        .filter-group .group-btn:hover:not(.active) { background: #f0f4fa; }
-        .summary {
-            background: #f8faff;
-            padding: 12px 20px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 24px;
-            font-size: 15px;
-        }
-        .summary span { font-weight: 600; color: #0b2b44; }
-        .summary .found-count { color: #28a745; }
-        .summary .notfound-count { color: #dc3545; }
+        .modal-box .modal-actions .btn-confirm { background: #28a745; color: #fff; }
+        .modal-box .modal-actions .btn-confirm:hover { background: #218838; }
+        .modal-box .modal-actions .btn-cancel { background: #6c757d; color: #fff; }
+        .modal-box .modal-actions .btn-cancel:hover { background: #5a6268; }
+        .modal-box .error-msg { color: #dc3545; font-size: 13px; margin-top: 8px; }
     </style>
 </head>
 <body>
     <div class="container" id="app">
+        <!-- HEADER -->
         <div class="header">
             <h1>📋 ตรวจนับสต็อกม้วนกระดาษ</h1>
             <div class="meta" id="stockMeta">กำลังโหลด...</div>
             <div class="user-info" id="userInfo">👤 ผู้ตรวจ: —</div>
         </div>
 
+        <!-- CONTROLS -->
         <div class="controls print-hide">
+            <select id="statusFilter">
+                <option value="all">ทุกสถานะ</option>
+                <option value="เต็ม">เต็ม</option>
+                <option value="เศษ">เศษ</option>
+                <option value="รอกรอ">รอกรอ</option>
+            </select>
             <select id="groupFilter">
                 <option value="all">ทุกกลุ่ม</option>
             </select>
@@ -211,37 +315,40 @@
             <button class="btn btn-secondary" id="backBtn">⬅ กลับหน้าแรก</button>
         </div>
 
+        <!-- SUMMARY -->
         <div class="summary" id="summary">
-            <span>✅ พบแล้ว: <span id="foundCount">0</span> ม้วน</span>
-            <span>❌ ไม่พบ: <span id="notFoundCount">0</span> ม้วน</span>
+            <span>✅ พบแล้ว: <span class="found-count" id="foundCount">0</span> ม้วน</span>
+            <span>❌ ไม่พบ: <span class="notfound-count" id="notFoundCount">0</span> ม้วน</span>
             <span>📦 รวม: <span id="totalCount">0</span> ม้วน</span>
         </div>
 
+        <!-- SIZE SUMMARY -->
+        <div class="size-summary print-hide" id="sizeSummary"></div>
+
+        <!-- FILTER BUTTONS -->
         <div class="filter-group print-hide" id="groupFilterButtons"></div>
 
+        <!-- TABLE -->
         <div class="table-wrap" id="tableWrap">
             <table>
                 <thead>
                     <tr>
-                        <th style="width:60px;">พบ?</th>
-                        <th>เลขม้วน</th>
-                        <th>กลุ่ม</th>
-                        <th>ขนาด</th>
-                        <th>DIA.</th>
-                        <th>Kg.</th>
-                        <th>Meter</th>
-                        <th>qlt</th>
-                        <th>Supplier</th>
                         <th>Location</th>
+                        <th>สถานะ</th>
+                        <th>Size</th>
+                        <th>grade</th>
+                        <th>พบ/ไม่พบ</th>
+                        <th>dimeter</th>
+                        <th>kgs</th>
                     </tr>
                 </thead>
                 <tbody id="checkTableBody">
-                    <tr><td colspan="10" class="text-muted" style="text-align:center;">กรุณาคลิก "โหลดข้อมูล"</td></tr>
+                    <tr><td colspan="7" class="text-muted" style="text-align:center;">กรุณาคลิก "โหลดข้อมูล"</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Signature area -->
+        <!-- SIGNATURE -->
         <div class="signature-area" id="signatureArea">
             <div class="sign-block">
                 <label>ผู้ตรวจนับ</label>
@@ -258,6 +365,20 @@
         </div>
     </div>
 
+    <!-- PASSWORD MODAL -->
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal-box">
+            <h3>🔐 ยืนยันตัวตน</h3>
+            <p>กรุณากรอกรหัสผ่านของคุณเพื่อเปลี่ยนสถานะการตรวจ</p>
+            <input type="password" id="modalPassword" placeholder="รหัสผ่าน" />
+            <div class="error-msg" id="modalError"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="modalCancel">ยกเลิก</button>
+                <button class="btn-confirm" id="modalConfirm">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toastContainer"></div>
 
     <script>
@@ -266,11 +387,14 @@
         let currentUser = null;
         let allRolls = [];
         let stockCountId = null;
+        let currentStatusFilter = 'all';
         let currentGroup = 'all';
+        let pendingRoll = null; // เก็บ roll ที่กำลังจะเปลี่ยนสถานะ
 
         const $ = id => document.getElementById(id);
         const stockMeta = $('stockMeta');
         const userInfo = $('userInfo');
+        const statusFilter = $('statusFilter');
         const groupFilter = $('groupFilter');
         const groupFilterButtons = $('groupFilterButtons');
         const loadBtn = $('loadBtn');
@@ -280,6 +404,14 @@
         const foundCount = $('foundCount');
         const notFoundCount = $('notFoundCount');
         const totalCount = $('totalCount');
+        const sizeSummary = $('sizeSummary');
+
+        // Modal
+        const passwordModal = $('passwordModal');
+        const modalPassword = $('modalPassword');
+        const modalError = $('modalError');
+        const modalConfirm = $('modalConfirm');
+        const modalCancel = $('modalCancel');
 
         function showToast(msg, type = 'info') {
             const c = document.createElement('div');
@@ -293,7 +425,7 @@
             return { 'Authorization': 'Bearer ' + token };
         }
 
-        // ---------- Load user and settings ----------
+        // ---------- Load user ----------
         async function loadUser() {
             try {
                 const res = await fetch('/api/auth/me', { headers: getAuthHeaders() });
@@ -309,6 +441,7 @@
             }
         }
 
+        // ---------- Load stock settings ----------
         async function loadStockSettings() {
             try {
                 const res = await fetch('/api/stock/latest', { headers: getAuthHeaders() });
@@ -336,8 +469,9 @@
                 if (res.ok && data.rolls) {
                     allRolls = data.rolls;
                     populateGroupFilter();
-                    renderTable(currentGroup);
+                    renderTable();
                     updateSummary();
+                    renderSizeSummary();
                 } else {
                     showToast('ไม่พบข้อมูลม้วน', 'warning');
                 }
@@ -377,77 +511,141 @@
                 b.classList.toggle('active', b.dataset.group === group);
             });
             groupFilter.value = group;
-            renderTable(group);
+            renderTable();
             updateSummary();
+            renderSizeSummary();
         }
 
-        // ---------- Render table ----------
-        function renderTable(group) {
+        // ---------- Render table (ตามลำดับที่ต้องการ) ----------
+        function renderTable() {
             let filtered = allRolls;
-            if (group !== 'all') {
-                filtered = allRolls.filter(r => (r.group_name || 'ไม่มีกลุ่ม') === group);
+
+            // กรองตามกลุ่ม
+            if (currentGroup !== 'all') {
+                filtered = filtered.filter(r => (r.group_name || 'ไม่มีกลุ่ม') === currentGroup);
             }
+
+            // กรองตามสถานะ
+            if (currentStatusFilter !== 'all') {
+                filtered = filtered.filter(r => r.status === currentStatusFilter);
+            }
+
+            // เรียงลำดับตาม: Location → status → width → grade
+            filtered.sort((a, b) => {
+                // Location (LOC1 มาก่อน LOCF)
+                const locA = a.loc || '';
+                const locB = b.loc || '';
+                if (locA !== locB) {
+                    if (locA === 'LOC1') return -1;
+                    if (locB === 'LOC1') return 1;
+                    return locA.localeCompare(locB);
+                }
+                // status
+                const statusOrder = { 'เต็ม': 0, 'เศษ': 1, 'รอกรอ': 2 };
+                const sA = statusOrder[a.status] ?? 99;
+                const sB = statusOrder[b.status] ?? 99;
+                if (sA !== sB) return sA - sB;
+                // width (แปลงเป็นตัวเลข)
+                const wA = parseFloat(a.width) || 0;
+                const wB = parseFloat(b.width) || 0;
+                if (wA !== wB) return wA - wB;
+                // grade
+                return (a.grade || '').localeCompare(b.grade || '');
+            });
+
             if (!filtered.length) {
-                checkTableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#7a8a9e;">ไม่มีม้วนในกลุ่มนี้</td></tr>';
+                checkTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#7a8a9e;">ไม่มีม้วนที่ตรงกับเงื่อนไข</td></tr>';
                 return;
             }
+
             let html = '';
             filtered.forEach(roll => {
                 const found = roll.found === 1;
                 html += `
                     <tr>
-                        <td><input type="checkbox" class="found-checkbox" data-roll="${roll.roll_number}" ${found ? 'checked' : ''} /></td>
-                        <td class="roll-number">${roll.roll_number || '—'}</td>
-                        <td>${roll.group_name || '—'}</td>
+                        <td>${roll.loc || '—'}</td>
+                        <td>${roll.status || '—'}</td>
                         <td>${roll.width ? roll.width + '"' : '—'}</td>
+                        <td>${roll.grade || '—'}</td>
+                        <td>
+                            <input type="checkbox" class="found-checkbox" data-roll="${roll.roll_number}" ${found ? 'checked' : ''} />
+                        </td>
                         <td>${roll.dimeter || '—'}</td>
                         <td>${roll.kgs || '—'}</td>
-                        <td>${roll.meter || '—'}</td>
-                        <td>${roll.qlt || '—'}</td>
-                        <td>${roll.supplier || '—'}</td>
-                        <td>${roll.loc || '—'}</td>
                     </tr>
                 `;
             });
             checkTableBody.innerHTML = html;
 
-            // Attach change events
+            // Attach change events (พร้อมเรียก Password Modal)
             checkTableBody.querySelectorAll('.found-checkbox').forEach(cb => {
-                cb.addEventListener('change', async function() {
+                cb.addEventListener('change', function(e) {
+                    e.preventDefault();
                     const rollNumber = this.dataset.roll;
-                    const found = this.checked ? 1 : 0;
-                    try {
-                        const res = await fetch('/api/stock/check', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-                            body: JSON.stringify({
-                                stock_count_id: stockCountId,
-                                roll_number: rollNumber,
-                                found: found
-                            })
-                        });
-                        if (res.ok) {
-                            // update local found status
-                            const roll = allRolls.find(r => r.roll_number === rollNumber);
-                            if (roll) roll.found = found;
-                            updateSummary();
-                        } else {
-                            showToast('บันทึกไม่สำเร็จ', 'error');
-                            this.checked = !this.checked;
-                        }
-                    } catch (e) {
-                        showToast('เกิดข้อผิดพลาด', 'error');
-                        this.checked = !this.checked;
+                    const currentChecked = this.checked;
+                    // ถ้ากำลังจะติ๊กออก (เปลี่ยนจากพบ → ไม่พบ) ต้องใส่รหัสผ่าน
+                    if (!currentChecked) {
+                        // ต้องการเปลี่ยนจาก พบ → ไม่พบ
+                        pendingRoll = { rollNumber, newFound: 0 };
+                        passwordModal.classList.add('visible');
+                        modalPassword.value = '';
+                        modalError.textContent = '';
+                        modalPassword.focus();
+                        // ยังไม่เปลี่ยนสถานะ checkbox
+                        this.checked = true;
+                        return;
+                    } else {
+                        // กำลังจะติ๊กเข้า (ไม่พบ → พบ) ตรงนี้ไม่ต้องใช้รหัสผ่าน
+                        pendingRoll = { rollNumber, newFound: 1 };
+                        // บันทึกทันที
+                        saveCheck(pendingRoll.rollNumber, 1, this);
                     }
                 });
             });
+        }
+
+        // ---------- Save check ----------
+        async function saveCheck(rollNumber, found, checkboxEl) {
+            try {
+                const res = await fetch('/api/stock/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({
+                        stock_count_id: stockCountId,
+                        roll_number: rollNumber,
+                        found: found
+                    })
+                });
+                if (res.ok) {
+                    // update local found status
+                    const roll = allRolls.find(r => r.roll_number === rollNumber);
+                    if (roll) roll.found = found;
+                    if (checkboxEl) checkboxEl.checked = found === 1;
+                    updateSummary();
+                    renderSizeSummary();
+                    if (found === 1) {
+                        showToast('✅ บันทึก: พบม้วนนี้แล้ว', 'success');
+                    } else {
+                        showToast('❌ บันทึก: ไม่พบม้วนนี้', 'warning');
+                    }
+                } else {
+                    showToast('บันทึกไม่สำเร็จ', 'error');
+                    if (checkboxEl) checkboxEl.checked = found !== 1;
+                }
+            } catch (e) {
+                showToast('เกิดข้อผิดพลาด', 'error');
+                if (checkboxEl) checkboxEl.checked = found !== 1;
+            }
         }
 
         // ---------- Update summary ----------
         function updateSummary() {
             let filtered = allRolls;
             if (currentGroup !== 'all') {
-                filtered = allRolls.filter(r => (r.group_name || 'ไม่มีกลุ่ม') === currentGroup);
+                filtered = filtered.filter(r => (r.group_name || 'ไม่มีกลุ่ม') === currentGroup);
+            }
+            if (currentStatusFilter !== 'all') {
+                filtered = filtered.filter(r => r.status === currentStatusFilter);
             }
             const total = filtered.length;
             const found = filtered.filter(r => r.found === 1).length;
@@ -457,7 +655,79 @@
             totalCount.textContent = total;
         }
 
-        // ---------- Export PDF (print preview) ----------
+        // ---------- Render size summary ----------
+        function renderSizeSummary() {
+            let filtered = allRolls;
+            if (currentGroup !== 'all') {
+                filtered = filtered.filter(r => (r.group_name || 'ไม่มีกลุ่ม') === currentGroup);
+            }
+            if (currentStatusFilter !== 'all') {
+                filtered = filtered.filter(r => r.status === currentStatusFilter);
+            }
+            const sizeMap = {};
+            filtered.forEach(r => {
+                const size = r.width || '0';
+                if (!sizeMap[size]) sizeMap[size] = 0;
+                sizeMap[size]++;
+            });
+            const sortedSizes = Object.keys(sizeMap).sort((a, b) => parseFloat(a) - parseFloat(b));
+            if (!sortedSizes.length) {
+                sizeSummary.innerHTML = '';
+                return;
+            }
+            sizeSummary.innerHTML = sortedSizes.map(s => `
+                <span class="size-tag">Size ${s}" <span class="count">${sizeMap[s]}</span></span>
+            `).join('');
+        }
+
+        // ---------- Modal handlers ----------
+        modalCancel.addEventListener('click', () => {
+            passwordModal.classList.remove('visible');
+            pendingRoll = null;
+            // รีเซ็ต checkbox กลับไปสถานะเดิม
+            renderTable();
+        });
+
+        modalConfirm.addEventListener('click', async () => {
+            const password = modalPassword.value.trim();
+            if (!password) {
+                modalError.textContent = 'กรุณากรอกรหัสผ่าน';
+                return;
+            }
+            // ตรวจสอบรหัสผ่าน โดยเรียก API login
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser.username, password: password })
+                });
+                const data = await res.json();
+                if (res.ok && data.token) {
+                    // รหัสผ่านถูกต้อง
+                    modalError.textContent = '';
+                    passwordModal.classList.remove('visible');
+                    // บันทึกการเปลี่ยนแปลง
+                    if (pendingRoll) {
+                        const cb = document.querySelector(`.found-checkbox[data-roll="${pendingRoll.rollNumber}"]`);
+                        await saveCheck(pendingRoll.rollNumber, 0, cb);
+                        pendingRoll = null;
+                    }
+                } else {
+                    modalError.textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาลองอีกครั้ง';
+                    modalPassword.value = '';
+                    modalPassword.focus();
+                }
+            } catch (e) {
+                modalError.textContent = 'เกิดข้อผิดพลาดในการตรวจสอบ';
+            }
+        });
+
+        modalPassword.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') modalConfirm.click();
+            if (e.key === 'Escape') modalCancel.click();
+        });
+
+        // ---------- Export PDF ----------
         function exportPDF() {
             window.print();
         }
@@ -467,6 +737,13 @@
         exportPdfBtn.addEventListener('click', exportPDF);
         backBtn.addEventListener('click', () => { window.location.href = '/'; });
 
+        statusFilter.addEventListener('change', function() {
+            currentStatusFilter = this.value;
+            renderTable();
+            updateSummary();
+            renderSizeSummary();
+        });
+
         groupFilter.addEventListener('change', function() {
             setGroup(this.value);
         });
@@ -475,7 +752,6 @@
         (async function init() {
             await loadUser();
             await loadStockSettings();
-            // if stock settings exist, auto load check items
             if (stockCountId) {
                 await loadCheckItems();
             }
@@ -488,7 +764,7 @@
             $('dateLine').textContent = dateStr;
         })();
 
-        console.log('📋 Stock Check page loaded');
+        console.log('📋 Stock Check page v2.0 ready');
     </script>
 </body>
 </html>
