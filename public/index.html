@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>📦 ระบบตรวจสอบ Location ม้วนกระดาษ</title>
+    <style>
+        /* ----- RESET & BASE ----- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f4f7fc;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        /* ----- APP CONTAINER ----- */
+        #app {
+            width: 100%;
+            max-width: 1300px;
+            background: #fff;
+            border-radius: 32px;
+            box-shadow: 0 25px 60px rgba(0, 20, 40, 0.15);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        /* ----- HEADER ----- */
+        .app-header {
+            background: linear-gradient(135deg, #0b2b44, #1a4b6d);
+            color: #fff;
+            padding: 18px 28px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .app-header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .app-header h1 small {
+            font-weight: 400;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        .header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .header-actions .user-badge {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-actions .user-badge .role-tag {
+            background: #ffc107;
+            color: #1a2a3a;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 30px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .header-actions .user-badge .role-tag.admin {
+            background: #ff6b6b;
+            color: #fff;
+        }
+        /* ----- BUTTONS ----- */
+        .btn {
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-primary {
+            background: #ffc107;
+            color: #1a2a3a;
+        }
+        .btn-primary:hover {
+            background: #ffd966;
+            transform: scale(1.02);
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: #fff;
+        }
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+        }
+        .btn-sm {
+            padding: 4px 14px;
+            font-size: 13px;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        /* ----- MAIN LAYOUT ----- */
+        .app-body {
+            padding: 24px 28px 32px;
+        }
+        /* ----- SEARCH SECTION ----- */
+        .search-section {
+            background: #f8faff;
+            border-radius: 20px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+            border: 1px solid #e9edf4;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+        }
+        .search-section label {
+            font-weight: 600;
+            color: #1a2a3a;
+            font-size: 15px;
+        }
+        .search-section input[type="text"] {
+            flex: 1 1 260px;
+            padding: 12px 18px;
+            border: 2px solid #dce2ec;
+            border-radius: 40px;
+            font-size: 16px;
+            outline: none;
+            transition: 0.2s;
+            background: #fff;
+        }
+        .search-section input[type="text"]:focus {
+            border-color: #1a4b6d;
+            box-shadow: 0 0 0 4px rgba(26, 75, 109, 0.12);
+        }
+        .search-section .search-btn {
+            padding: 12px 30px;
+            border-radius: 40px;
+            background: #1a4b6d;
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .search-section .search-btn:hover {
+            background: #0b2b44;
+            transform: scale(1.02);
+        }
+        .search-section .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        /* ----- RESULT CARD ----- */
+        .result-card {
+            background: #fff;
+            border-radius: 18px;
+            border: 1px solid #e9edf4;
+            padding: 24px 28px;
+            margin-top: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            display: none;
+            animation: fadeUp 0.35s ease;
+        }
+        .result-card.visible {
+            display: block;
+        }
+        @keyframes fadeUp {
+            0% {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .result-card .roll-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f0f3f8;
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+        }
+        .result-card .roll-header .roll-number {
+            font-size: 26px;
+            font-weight: 700;
+            color: #0b2b44;
+            letter-spacing: 0.5px;
+            word-break: break-all;
+        }
+        .result-card .roll-header .roll-status {
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 14px;
+            background: #e9edf4;
+            color: #2c3e50;
+        }
+        .result-card .roll-header .roll-status.เต็ม {
+            background: #d4edda;
+            color: #155724;
+        }
+        .result-card .roll-header .roll-status.เศษ {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .result-card .roll-header .roll-status.รอกรอ {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px 24px;
+        }
+        .result-grid .item {
+            display: flex;
+            flex-direction: column;
+        }
+        .result-grid .item .label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #7a8a9e;
+        }
+        .result-grid .item .value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0b2b44;
+            margin-top: 2px;
+            word-break: break-word;
+        }
+        .result-grid .item .value.highlight {
+            color: #c0392b;
+        }
+        .result-grid .item .value.location {
+            background: #eaf4ff;
+            padding: 2px 14px;
+            border-radius: 30px;
+            display: inline-block;
+        }
+        /* ----- NOT FOUND ----- */
+        .not-found {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7a8a9e;
+        }
+        .not-found .icon {
+            font-size: 56px;
+            margin-bottom: 12px;
+        }
+        .not-found h3 {
+            color: #1a2a3a;
+            margin-bottom: 6px;
+        }
+        /* ----- ADMIN PANEL ----- */
+        .admin-panel {
+            margin-top: 32px;
+            border-top: 2px solid #e9edf4;
+            padding-top: 28px;
+            display: none;
+        }
+        .admin-panel.visible {
+            display: block;
+        }
+        .admin-panel h2 {
+            font-size: 20px;
+            color: #0b2b44;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .admin-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9edf4;
+            padding-bottom: 10px;
+        }
+        .admin-tabs .tab-btn {
+            padding: 8px 22px;
+            border-radius: 40px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            color: #5a6a7e;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+        }
+        .admin-tabs .tab-btn.active {
+            background: #1a4b6d;
+            color: #fff;
+        }
+        .admin-tabs .tab-btn:hover:not(.active) {
+            background: #e9edf4;
+        }
+        .tab-content {
+            display: none;
+            animation: fadeUp 0.3s ease;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* ----- TABLES ----- */
+        .table-wrap {
+            overflow-x: auto;
+            margin-top: 12px;
+            border-radius: 14px;
+            border: 1px solid #e9edf4;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        table th {
+            background: #f0f4fa;
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: #1a2a3a;
+            border-bottom: 2px solid #dce2ec;
+        }
+        table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #eef2f7;
+            vertical-align: middle;
+        }
+        table tr:hover td {
+            background: #f8faff;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .badge.admin {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .badge.user {
+            background: #e9edf4;
+            color: #2c3e50;
+        }
+        /* ----- IMPORT FORM ----- */
+        .import-form {
+            background: #f8faff;
+            padding: 20px 24px;
+            border-radius: 16px;
+            border: 1px dashed #bcc9db;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+        }
+        .import-form input[type="file"] {
+            flex: 1 1 240px;
+            padding: 10px;
+            border: 1px solid #dce2ec;
+            border-radius: 10px;
+            background: #fff;
+        }
+        .import-form .file-info {
+            font-size: 13px;
+            color: #5a6a7e;
+        }
+        .import-form .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9edf4;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+        .import-form .progress-bar .fill {
+            height: 100%;
+            width: 0%;
+            background: #28a745;
+            border-radius: 10px;
+            transition: width 0.3s;
+        }
+        /* ----- DASHBOARD STATS ----- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #f8faff;
+            border-radius: 16px;
+            padding: 16px 20px;
+            border: 1px solid #e9edf4;
+            text-align: center;
+        }
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0b2b44;
+        }
+        .stat-card .label {
+            font-size: 13px;
+            color: #7a8a9e;
+            margin-top: 2px;
+        }
+        /* ----- LOGIN SCREEN ----- */
+        .login-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-overlay.visible {
+            display: flex;
+        }
+        .login-box {
+            background: #fff;
+            padding: 40px 36px;
+            border-radius: 28px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeUp 0.35s ease;
+        }
+        .login-box h2 {
+            font-size: 24px;
+            color: #0b2b44;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .login-box .sub {
+            color: #7a8a9e;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        .login-box .form-group {
+            margin-bottom: 16px;
+        }
+        .login-box .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a2a3a;
+            margin-bottom: 4px;
+        }
+        .login-box .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #dce2ec;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: 0.2s;
+        }
+        .login-box .form-group input:focus {
+            border-color: #1a4b6d;
+            box-shadow: 0 0 0 4px rgba(26, 75, 109, 0.1);
+        }
+        .login-box .login-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background: #1a4b6d;
+            color: #fff;
+            font-weight: 700;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+        }
+        .login-box .login-btn:hover {
+            background: #0b2b44;
+        }
+        .login-box .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .login-box .error-msg {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 12px;
+            text-align: center;
+            min-height: 24px;
+        }
+        /* ----- RESPONSIVE ----- */
+        @media (max-width: 640px) {
+            .app-header {
+                padding: 14px 18px;
+            }
+            .app-header h1 {
+                font-size: 18px;
+            }
+            .app-body {
+                padding: 16px;
+            }
+            .search-section {
+                padding: 16px;
+            }
+            .search-section input[type="text"] {
+                font-size: 15px;
+                padding: 10px 14px;
+            }
+            .result-card {
+                padding: 18px;
+            }
+            .result-card .roll-header .roll-number {
+                font-size: 20px;
+            }
+            .result-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .result-grid .item .value {
+                font-size: 16px;
+            }
+            .login-box {
+                padding: 28px 20px;
+                margin: 16px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .admin-tabs .tab-btn {
+                font-size: 13px;
+                padding: 6px 14px;
+            }
+            .header-actions .user-badge {
+                font-size: 13px;
+                padding: 4px 12px;
+            }
+        }
+        @media (max-width: 400px) {
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* ----- MISC ----- */
+        .text-muted {
+            color: #7a8a9e;
+        }
+        .mt-8 {
+            margin-top: 8px;
+        }
+        .mt-16 {
+            margin-top: 16px;
+        }
+        .flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .gap-8 {
+            gap: 8px;
+        }
+        .w-full {
+            width: 100%;
+        }
+        .truncate {
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        /* scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e9edf4;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #bcc9db;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0b0c6;
+        }
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1a2a3a;
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            font-weight: 500;
+            z-index: 2000;
+            animation: fadeUp 0.3s ease;
+            max-width: 400px;
+        }
+        .toast.success {
+            background: #28a745;
+        }
+        .toast.error {
+            background: #dc3545;
+        }
+        .toast.warning {
+            background: #ffc107;
+            color: #1a2a3a;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ====== LOGIN OVERLAY ====== -->
+    <div class="login-overlay visible" id="loginOverlay">
+        <div class="login-box">
+            <h2>🔐 เข้าสู่ระบบ</h2>
+            <div class="sub">ระบบตรวจสอบ Location ม้วนกระดาษ</div>
+            <div class="form-group">
+                <label>ชื่อผู้ใช้</label>
+                <input type="text" id="loginUser" placeholder="username" value="admin" />
+            </div>
+            <div class="form-group">
+                <label>รหัสผ่าน</label>
+                <input type="password" id="loginPass" placeholder="••••••••" value="admin123" />
+            </div>
+            <button class="login-btn" id="loginBtn">เข้าสู่ระบบ</button>
+            <div class="error-msg" id="loginError"></div>
+            <div style="margin-top:16px;font-size:13px;color:#7a8a9e;text-align:center;">
+                <span>👤 admin / admin123 &nbsp;|&nbsp; 👤 user / user123</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== APP ====== -->
+    <div id="app" style="display:none;">
+        <!-- HEADER -->
+        <header class="app-header">
+            <h1>📦 RollTracker <small>· ตรวจสอบม้วนกระดาษ</small></h1>
+            <div class="header-actions">
+                <span class="user-badge" id="userBadge">
+                    <span id="userNameDisplay">—</span>
+                    <span class="role-tag" id="userRoleTag">user</span>
+                </span>
+                <button class="btn btn-outline btn-sm" id="logoutBtn">🚪 ออกจากระบบ</button>
+            </div>
+        </header>
+
+        <!-- BODY -->
+        <div class="app-body">
+            <!-- SEARCH -->
+            <div class="search-section">
+                <label for="rollSearch">🔎 เลขม้วน</label>
+                <input type="text" id="rollSearch" placeholder="พิมพ์เลขม้วน เช่น 261APR00232" />
+                <button class="search-btn" id="searchBtn">ค้นหา</button>
+                <button class="btn btn-secondary btn-sm" id="clearBtn">✕ เคลียร์</button>
+                <span style="font-size:13px;color:#7a8a9e;margin-left:auto;" id="totalRollsDisplay">โหลดข้อมูล...</span>
+            </div>
+
+            <!-- RESULT -->
+            <div class="result-card" id="resultCard">
+                <div class="roll-header">
+                    <span class="roll-number" id="resultRollNumber">—</span>
+                    <span class="roll-status" id="resultStatus">—</span>
+                </div>
+                <div class="result-grid" id="resultGrid">
+                    <div class="item"><span class="label">📍 Location</span><span class="value location" id="rLoc">—</span></div>
+                    <div class="item"><span class="label">📂 กลุ่ม</span><span class="value" id="rGroup">—</span></div>
+                    <div class="item"><span class="label">🏷️ เกรด</span><span class="value" id="rGrade">—</span></div>
+                    <div class="item"><span class="label">📐 ขนาด (นิ้ว)</span><span class="value" id="rWidth">—</span></div>
+                    <div class="item"><span class="label">📏 DIA. (mm)</span><span class="value" id="rDia">—</span></div>
+                    <div class="item"><span class="label">⚖️ kgs</span><span class="value" id="rKgs">—</span></div>
+                    <div class="item"><span class="label">📏 meter</span><span class="value" id="rMeter">—</span></div>
+                    <div class="item"><span class="label">🏭 Supplier</span><span class="value" id="rSupplier">—</span></div>
+                    <div class="item"><span class="label">📄 Supplier SN</span><span class="value" id="rSn">—</span></div>
+                    <div class="item"><span class="label">📅 Buy Date</span><span class="value" id="rBuyDate">—</span></div>
+                    <div class="item"><span class="label">📌 หมายเหตุ</span><span class="value" id="rNote">—</span></div>
+                </div>
+            </div>
+
+            <!-- NOT FOUND -->
+            <div class="not-found" id="notFound" style="display:none;">
+                <div class="icon">🔍</div>
+                <h3>ไม่พบม้วนนี้</h3>
+                <p>กรุณาตรวจสอบเลขม้วนอีกครั้ง หรือลองค้นหาด้วยคำอื่น</p>
+            </div>
+
+            <!-- DASHBOARD STATS (always visible) -->
+            <div style="margin-top:28px;">
+                <h3 style="font-size:16px;color:#0b2b44;margin-bottom:12px;">📊 สรุปข้อมูล</h3>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card"><div class="number" id="statTotal">0</div><div class="label">ม้วนทั้งหมด</div></div>
+                    <div class="stat-card"><div class="number" id="statLoc1">0</div><div class="label">📍 LOC1</div></div>
+                    <div class="stat-card"><div class="number" id="statLocF">0</div><div class="label">📍 LOCF</div></div>
+                    <div class="stat-card"><div class="number" id="statFull">0</div><div class="label">✅ เต็ม</div></div>
+                    <div class="stat-card"><div class="number" id="statScrap">0</div><div class="label">🔻 เศษ</div></div>
+                    <div class="stat-card"><div class="number" id="statWait">0</div><div class="label">⏳ รอกรอ</div></div>
+                </div>
+            </div>
+
+            <!-- ====== ADMIN PANEL ====== -->
+            <div class="admin-panel" id="adminPanel">
+                <h2>⚙️ แผงควบคุมผู้ดูแล</h2>
+
+                <div class="admin-tabs">
+                    <button class="tab-btn active" data-tab="tabUsers">👥 ผู้ใช้งาน</button>
+                    <button class="tab-btn" data-tab="tabImport">📥 Import Excel</button>
+                    <button class="tab-btn" data-tab="tabHistory">📜 ประวัติ Import</button>
+                    <button class="tab-btn" data-tab="tabDanger">⚠️ เครื่องมือ</button>
+                </div>
+
+                <!-- TAB: Users -->
+                <div class="tab-content active" id="tabUsers">
+                    <div class="flex" style="justify-content:space-between;margin-bottom:12px;">
+                        <span style="font-weight:600;">รายชื่อผู้ใช้งาน</span>
+                        <button class="btn btn-success btn-sm" id="addUserBtn">➕ เพิ่มผู้ใช้</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>ID</th><th>ชื่อผู้ใช้</th><th>บทบาท</th><th>สถานะ</th><th>สร้างเมื่อ</th><th>จัดการ</th></tr></thead>
+                            <tbody id="userTableBody"><tr><td colspan="6" class="text-muted">กำลังโหลด...</td></tr></tbody>
+                        </table>
+                    </div>
+                    <!-- Add user form (hidden) -->
+                    <div id="addUserForm" style="display:none;margin-top:16px;background:#f8faff;padding:18px 20px;border-radius:14px;border:1px solid #e9edf4;">
+                        <div class="flex" style="gap:12px;flex-wrap:wrap;">
+                            <input type="text" id="newUsername" placeholder="ชื่อผู้ใช้" style="flex:1;padding:10px 14px;border:2px solid #dce2ec;border-radius:10px;font-size:15px;" />
+                            <input type="password" id="newPassword" placeholder="รหัสผ่าน" style="flex:1;padding:10px 14px;border:2px solid #dce2ec;border-radius:10px;font-size:15px;" />
+                            <select id="newRole" style="padding:10px 14px;border:2px solid #dce2ec;border-radius:10px;font-size:15px;background:#fff;">
+                                <option value="user">👤 User</option>
+                                <option value="admin">👑 Admin</option>
+                            </select>
+                            <button class="btn btn-success" id="saveUserBtn">💾 บันทึก</button>
+                            <button class="btn btn-secondary" id="cancelAddUserBtn">ยกเลิก</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: Import -->
+                <div class="tab-content" id="tabImport">
+                    <div class="import-form">
+                        <div style="flex:1;min-width:200px;">
+                            <label style="font-weight:600;display:block;margin-bottom:4px;">📂 เลือกไฟล์ Excel (.xlsx)</label>
+                            <input type="file" id="excelFileInput" accept=".xlsx,.xls" />
+                            <div class="file-info" id="fileInfo">ยังไม่ได้เลือกไฟล์</div>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" id="importBtn">⬆️ นำเข้า</button>
+                            <button class="btn btn-secondary btn-sm" id="clearImportBtn">🗑️ ล้างข้อมูล</button>
+                        </div>
+                        <div class="w-full">
+                            <div class="progress-bar"><div class="fill" id="importProgress"></div></div>
+                            <div id="importStatus" style="font-size:13px;color:#5a6a7e;margin-top:4px;">พร้อมนำเข้า</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: History -->
+                <div class="tab-content" id="tabHistory">
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>#</th><th>ไฟล์</th><th>ผู้นำเข้า</th><th>จำนวนแถว</th><th>วันที่นำเข้า</th></tr></thead>
+                            <tbody id="historyTableBody"><tr><td colspan="5" class="text-muted">ยังไม่มีประวัติ</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: Danger -->
+                <div class="tab-content" id="tabDanger">
+                    <div style="background:#fff5f5;border:1px solid #fcc;padding:20px 24px;border-radius:16px;">
+                        <h4 style="color:#c0392b;margin-bottom:8px;">⚠️ เครื่องมืออันตราย</h4>
+                        <p style="color:#5a6a7e;font-size:14px;">การล้างข้อมูลจะลบม้วนทั้งหมดออกจากฐานข้อมูล <strong>ไม่สามารถกู้คืนได้</strong></p>
+                        <button class="btn btn-danger" id="clearAllDataBtn" style="margin-top:12px;">🗑️ ล้างข้อมูลทั้งหมด</button>
+                        <div id="clearStatus" style="margin-top:8px;font-size:13px;color:#7a8a9e;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:16px;font-size:13px;color:#a0b0c6;text-align:center;border-top:1px solid #e9edf4;padding-top:16px;">
+                RollTracker v1.0 · ข้อมูลทั้งหมด <span id="footerTotal">0</span> ม้วน
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== TOAST ====== -->
+    <div id="toastContainer"></div>
+
+    <script>
+        // ============================================================
+        //  FRONTEND APPLICATION
+        // ============================================================
+
+        // --- state ---
+        let token = localStorage.getItem('rolltracker_token') || '';
+        let currentUser = null;
+        let allRolls = []; // cache
+
+        // --- DOM refs ---
+        const $ = id => document.getElementById(id);
+        const loginOverlay = $('loginOverlay');
+        const loginUser = $('loginUser');
+        const loginPass = $('loginPass');
+        const loginBtn = $('loginBtn');
+        const loginError = $('loginError');
+        const app = $('app');
+        const logoutBtn = $('logoutBtn');
+        const userNameDisplay = $('userNameDisplay');
+        const userRoleTag = $('userRoleTag');
+        const rollSearch = $('rollSearch');
+        const searchBtn = $('searchBtn');
+        const clearBtn = $('clearBtn');
+        const resultCard = $('resultCard');
+        const notFound = $('notFound');
+        const totalRollsDisplay = $('totalRollsDisplay');
+        const footerTotal = $('footerTotal');
+
+        // result fields
+        const rFields = {
+            roll: $('resultRollNumber'),
+            status: $('resultStatus'),
+            loc: $('rLoc'),
+            group: $('rGroup'),
+            grade: $('rGrade'),
+            width: $('rWidth'),
+            dia: $('rDia'),
+            kgs: $('rKgs'),
+            meter: $('rMeter'),
+            supplier: $('rSupplier'),
+            sn: $('rSn'),
+            buyDate: $('rBuyDate'),
+            note: $('rNote'),
+        };
+
+        // stats
+        const statTotal = $('statTotal');
+        const statLoc1 = $('statLoc1');
+        const statLocF = $('statLocF');
+        const statFull = $('statFull');
+        const statScrap = $('statScrap');
+        const statWait = $('statWait');
+
+        // admin
+        const adminPanel = $('adminPanel');
+        const userTableBody = $('userTableBody');
+        const addUserBtn = $('addUserBtn');
+        const addUserForm = $('addUserForm');
+        const newUsername = $('newUsername');
+        const newPassword = $('newPassword');
+        const newRole = $('newRole');
+        const saveUserBtn = $('saveUserBtn');
+        const cancelAddUserBtn = $('cancelAddUserBtn');
+        const excelFileInput = $('excelFileInput');
+        const fileInfo = $('fileInfo');
+        const importBtn = $('importBtn');
+        const importProgress = $('importProgress');
+        const importStatus = $('importStatus');
+        const historyTableBody = $('historyTableBody');
+        const clearAllDataBtn = $('clearAllDataBtn');
+        const clearStatus = $('clearStatus');
+        const clearImportBtn = $('clearImportBtn');
+
+        // --- helpers ---
+        function showToast(msg, type = 'info') {
+            const c = document.createElement('div');
+            c.className = `toast ${type}`;
+            c.textContent = msg;
+            document.getElementById('toastContainer').appendChild(c);
+            setTimeout(() => { c.style.opacity = '0';
+                c.style.transition = 'opacity 0.4s';
+                setTimeout(() => c.remove(), 500); }, 3000);
+        }
+
+        function api(method, path, body = null) {
+            const opts = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                }
+            };
+            if (body) opts.body = JSON.stringify(body);
+            return fetch('/api' + path, opts).then(r => r.json());
+        }
+
+        function formatDate(d) {
+            if (!d) return '—';
+            const dt = new Date(d);
+            if (isNaN(dt)) return d;
+            return dt.toLocaleDateString('th-TH');
+        }
+
+        // --- auth ---
+        function setAuth(tokenVal, user) {
+            token = tokenVal;
+            currentUser = user;
+            localStorage.setItem('rolltracker_token', token);
+            localStorage.setItem('rolltracker_user', JSON.stringify(user));
+            updateUI();
+        }
+
+        function logout() {
+            token = '';
+            currentUser = null;
+            localStorage.removeItem('rolltracker_token');
+            localStorage.removeItem('rolltracker_user');
+            loginOverlay.classList.add('visible');
+            app.style.display = 'none';
+            loginError.textContent = '';
+        }
+
+        function updateUI() {
+            if (currentUser) {
+                userNameDisplay.textContent = currentUser.username || '—';
+                userRoleTag.textContent = currentUser.role || 'user';
+                userRoleTag.className = 'role-tag ' + (currentUser.role === 'admin' ? 'admin' : '');
+                loginOverlay.classList.remove('visible');
+                app.style.display = 'block';
+                adminPanel.classList.toggle('visible', currentUser.role === 'admin');
+                if (currentUser.role === 'admin') {
+                    loadUsers();
+                    loadHistory();
+                }
+                loadStats();
+                loadTotalCount();
+            } else {
+                app.style.display = 'none';
+                loginOverlay.classList.add('visible');
+            }
+        }
+
+        // --- login ---
+        loginBtn.addEventListener('click', async () => {
+            const user = loginUser.value.trim();
+            const pass = loginPass.value.trim();
+            if (!user || !pass) { loginError.textContent = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน';
+                return; }
+            loginBtn.disabled = true;
+            loginError.textContent = 'กำลังเข้าสู่ระบบ...';
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                const data = await res.json();
+                if (res.ok && data.token) {
+                    setAuth(data.token, data.user);
+                    showToast('เข้าสู่ระบบสำเร็จ!', 'success');
+                    loginError.textContent = '';
+                    rollSearch.focus();
+                } else {
+                    loginError.textContent = data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+                }
+            } catch (e) {
+                loginError.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
+            }
+            loginBtn.disabled = false;
+        });
+
+        loginUser.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
+        loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
+
+        logoutBtn.addEventListener('click', logout);
+
+        // --- check saved session ---
+        (function init() {
+            const saved = localStorage.getItem('rolltracker_user');
+            if (saved) {
+                try {
+                    currentUser = JSON.parse(saved);
+                    token = localStorage.getItem('rolltracker_token') || '';
+                    if (token) {
+                        // verify token
+                        fetch('/api/auth/me', {
+                            headers: { 'Authorization': 'Bearer ' + token }
+                        }).then(r => r.json()).then(data => {
+                            if (data.user) {
+                                currentUser = data.user;
+                                updateUI();
+                                loadStats();
+                                loadTotalCount();
+                            } else {
+                                logout();
+                            }
+                        }).catch(() => logout());
+                        return;
+                    }
+                } catch (e) {}
+            }
+            logout();
+        })();
+
+        // --- search ---
+        async function doSearch() {
+            const q = rollSearch.value.trim();
+            if (!q) {
+                resultCard.classList.remove('visible');
+                notFound.style.display = 'none';
+                return;
+            }
+            searchBtn.disabled = true;
+            try {
+                const res = await fetch('/api/rolls/search?q=' + encodeURIComponent(q), {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (res.ok && data.roll) {
+                    showResult(data.roll);
+                    notFound.style.display = 'none';
+                } else {
+                    resultCard.classList.remove('visible');
+                    notFound.style.display = 'block';
+                }
+            } catch (e) {
+                showToast('เกิดข้อผิดพลาดในการค้นหา', 'error');
+            }
+            searchBtn.disabled = false;
+        }
+
+        function showResult(roll) {
+            rFields.roll.textContent = roll.roll_number || '—';
+            const status = roll.status || '—';
+            rFields.status.textContent = status;
+            rFields.status.className = 'roll-status ' + (status === 'เต็ม' ? 'เต็ม' : status === 'เศษ' ? 'เศษ' : status ===
+            'รอกรอ' ? 'รอกรอ' : '');
+            rFields.loc.textContent = roll.loc || '—';
+            rFields.group.textContent = roll.group_name || '—';
+            rFields.grade.textContent = roll.grade || '—';
+            rFields.width.textContent = roll.width ? roll.width + '"' : '—';
+            rFields.dia.textContent = roll.dimeter || '—';
+            rFields.kgs.textContent = roll.kgs || '—';
+            rFields.meter.textContent = roll.meter || '—';
+            rFields.supplier.textContent = roll.supplier || '—';
+            rFields.sn.textContent = roll.supplier_sn || '—';
+            rFields.buyDate.textContent = formatDate(roll.buy_date);
+            rFields.note.textContent = roll.note || '—';
+            resultCard.classList.add('visible');
+        }
+
+        searchBtn.addEventListener('click', doSearch);
+        rollSearch.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+        clearBtn.addEventListener('click', () => {
+            rollSearch.value = '';
+            resultCard.classList.remove('visible');
+            notFound.style.display = 'none';
+            rollSearch.focus();
+        });
+
+        // --- load stats ---
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/dashboard/stats', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    statTotal.textContent = data.total || 0;
+                    statLoc1.textContent = data.by_loc?.LOC1 || 0;
+                    statLocF.textContent = data.by_loc?.LOCF || 0;
+                    statFull.textContent = data.by_status?.เต็ม || 0;
+                    statScrap.textContent = data.by_status?.เศษ || 0;
+                    statWait.textContent = data.by_status?.รอกรอ || 0;
+                }
+            } catch (e) { console.warn('stats error', e); }
+        }
+
+        async function loadTotalCount() {
+            try {
+                const res = await fetch('/api/rolls/count', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                const n = data.count || 0;
+                totalRollsDisplay.textContent = '📦 ' + n + ' ม้วน';
+                footerTotal.textContent = n;
+            } catch (e) { totalRollsDisplay.textContent = '📦 —'; }
+        }
+
+        // --- admin: users ---
+        async function loadUsers() {
+            try {
+                const res = await api('GET', '/users');
+                if (res.users) {
+                    renderUsers(res.users);
+                }
+            } catch (e) { console.warn(e); }
+        }
+
+        function renderUsers(users) {
+            if (!users || !users.length) {
+                userTableBody.innerHTML = '<tr><td colspan="6" class="text-muted">ไม่มีผู้ใช้งาน</td></tr>';
+                return;
+            }
+            userTableBody.innerHTML = users.map(u => `
+                    <tr>
+                        <td>${u.id}</td>
+                        <td><strong>${u.username}</strong></td>
+                        <td><span class="badge ${u.role === 'admin' ? 'admin' : 'user'}">${u.role === 'admin' ? '👑 Admin' : '👤 User'}</span></td>
+                        <td><span class="badge ${u.is_active ? 'active' : 'inactive'}">${u.is_active ? '✅ ใช้งาน' : '❌ ปิดใช้งาน'}</span></td>
+                        <td>${formatDate(u.created_at)}</td>
+                        <td>
+                            <button class="btn btn-sm ${u.is_active ? 'btn-secondary' : 'btn-success'}" onclick="toggleUser(${u.id}, ${!u.is_active})">
+                                ${u.is_active ? '🔒 ปิด' : '🔓 เปิด'}
+                            </button>
+                            ${u.role !== 'admin' ? `<button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">🗑️</button>` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+        }
+
+        window.toggleUser = async (id, active) => {
+            try {
+                const res = await api('PUT', `/users/${id}/toggle`, { is_active: active });
+                if (res.ok) { showToast('อัปเดตสถานะแล้ว', 'success');
+                    loadUsers(); } else showToast(res.message || 'ผิดพลาด', 'error');
+            } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
+        };
+
+        window.deleteUser = async (id) => {
+            if (!confirm('ลบผู้ใช้นี้?')) return;
+            try {
+                const res = await api('DELETE', `/users/${id}`);
+                if (res.ok) { showToast('ลบผู้ใช้แล้ว', 'success');
+                    loadUsers(); } else showToast(res.message || 'ผิดพลาด', 'error');
+            } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
+        };
+
+        addUserBtn.addEventListener('click', () => {
+            addUserForm.style.display = 'block';
+            newUsername.value = '';
+            newPassword.value = '';
+            newRole.value = 'user';
+            newUsername.focus();
+        });
+        cancelAddUserBtn.addEventListener('click', () => { addUserForm.style.display = 'none'; });
+
+        saveUserBtn.addEventListener('click', async () => {
+            const u = newUsername.value.trim();
+            const p = newPassword.value.trim();
+            const r = newRole.value;
+            if (!u || !p) { showToast('กรุณากรอกชื่อและรหัสผ่าน', 'warning'); return; }
+            try {
+                const res = await api('POST', '/auth/register', { username: u, password: p, role: r });
+                if (res.ok) {
+                    showToast('สร้างผู้ใช้สำเร็จ', 'success');
+                    addUserForm.style.display = 'none';
+                    loadUsers();
+                } else {
+                    showToast(res.message || 'ผิดพลาด', 'error');
+                }
+            } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
+        });
+
+        // --- admin: import ---
+        let importInProgress = false;
+
+        excelFileInput.addEventListener('change', (e) => {
+            const f = e.target.files[0];
+            if (f) {
+                fileInfo.textContent = '📄 ' + f.name + ' (' + (f.size / 1024 / 1024).toFixed(2) + ' MB)';
+            } else {
+                fileInfo.textContent = 'ยังไม่ได้เลือกไฟล์';
+            }
+        });
+
+        importBtn.addEventListener('click', async () => {
+            if (importInProgress) { showToast('กำลังนำเข้า กรุณารอ...', 'warning'); return; }
+            const file = excelFileInput.files[0];
+            if (!file) { showToast('กรุณาเลือกไฟล์ Excel', 'warning'); return; }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            importInProgress = true;
+            importBtn.disabled = true;
+            importProgress.style.width = '30%';
+            importStatus.textContent = 'กำลังอัปโหลด...';
+
+            try {
+                const res = await fetch('/api/import', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+                const data = await res.json();
+                importProgress.style.width = '100%';
+                if (res.ok) {
+                    importStatus.textContent = '✅ นำเข้าเรียบร้อย! ' + (data.imported || 0) + ' แถว';
+                    showToast('นำเข้า ' + (data.imported || 0) + ' ม้วน สำเร็จ!', 'success');
+                    loadStats();
+                    loadTotalCount();
+                    loadHistory();
+                    excelFileInput.value = '';
+                    fileInfo.textContent = 'ยังไม่ได้เลือกไฟล์';
+                } else {
+                    importStatus.textContent = '❌ ' + (data.message || 'นำเข้าล้มเหลว');
+                    showToast(data.message || 'นำเข้าล้มเหลว', 'error');
+                }
+            } catch (e) {
+                importStatus.textContent = '❌ เกิดข้อผิดพลาด';
+                showToast('เกิดข้อผิดพลาดในการนำเข้า', 'error');
+            }
+            importInProgress = false;
+            importBtn.disabled = false;
+            setTimeout(() => { importProgress.style.width = '0%'; }, 2000);
+        });
+
+        // --- admin: history ---
+        async function loadHistory() {
+            try {
+                const res = await api('GET', '/import/history');
+                if (res.history) {
+                    renderHistory(res.history);
+                }
+            } catch (e) { console.warn(e); }
+        }
+
+        function renderHistory(rows) {
+            if (!rows || !rows.length) {
+                historyTableBody.innerHTML = '<tr><td colspan="5" class="text-muted">ยังไม่มีประวัติ</td></tr>';
+                return;
+            }
+            historyTableBody.innerHTML = rows.map((h, i) => `
+                    <tr>
+                        <td>${i+1}</td>
+                        <td>${h.filename || '—'}</td>
+                        <td>${h.imported_by || '—'}</td>
+                        <td>${h.rows_imported || 0}</td>
+                        <td>${formatDate(h.import_date)}</td>
+                    </tr>
+                `).join('');
+        }
+
+        // --- admin: clear data ---
+        clearImportBtn.addEventListener('click', async () => {
+            if (!confirm('⚠️ ล้างข้อมูลทั้งหมด (ม้วน, ประวัติ, ผู้ใช้)? การกระทำนี้ไม่สามารถกู้คืนได้!')) return;
+            if (!confirm('ยืนยันอีกครั้ง: ล้างข้อมูลทั้งหมด?')) return;
+            try {
+                const res = await api('DELETE', '/data/clear');
+                if (res.ok) {
+                    showToast('ล้างข้อมูลทั้งหมดแล้ว', 'warning');
+                    loadStats();
+                    loadTotalCount();
+                    loadHistory();
+                    loadUsers();
+                    resultCard.classList.remove('visible');
+                    notFound.style.display = 'none';
+                } else {
+                    showToast(res.message || 'ผิดพลาด', 'error');
+                }
+            } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
+        });
+
+        // --- admin: clear all data (danger) ---
+        clearAllDataBtn.addEventListener('click', async () => {
+            if (!confirm('⚠️⚠️ ล้างข้อมูลทั้งหมด (รวมผู้ใช้)? การกระทำนี้ไม่สามารถกู้คืนได้!')) return;
+            if (!confirm('ยืนยันอีกครั้ง: ล้างข้อมูลทั้งหมด?')) return;
+            try {
+                const res = await api('DELETE', '/data/clear-all');
+                if (res.ok) {
+                    showToast('ล้างข้อมูลทั้งหมดแล้ว', 'warning');
+                    loadStats();
+                    loadTotalCount();
+                    loadHistory();
+                    loadUsers();
+                    resultCard.classList.remove('visible');
+                    notFound.style.display = 'none';
+                    clearStatus.textContent = '✅ ล้างข้อมูลแล้ว';
+                } else {
+                    showToast(res.message || 'ผิดพลาด', 'error');
+                }
+            } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
+        });
+
+        // --- admin tabs ---
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                const target = document.getElementById(btn.dataset.tab);
+                if (target) target.classList.add('active');
+            });
+        });
+
+        // --- init ---
+        // (already called from session check)
+
+        // --- global for inline onclick ---
+        window.toggleUser = window.toggleUser;
+        window.deleteUser = window.deleteUser;
+
+        console.log('📦 RollTracker ready');
+        console.log('👤 Admin: admin/admin123 | User: user/user123');
+    </script>
+</body>
+</html>
