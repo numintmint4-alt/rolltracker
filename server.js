@@ -8,6 +8,11 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
 
+// สร้างโฟลเดอร์ uploads (ป้องกัน error)
+if (!fs.existsSync('./uploads')) {
+    fs.mkdirSync('./uploads');
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = 'your-secret-key-change-me';
@@ -67,7 +72,7 @@ db.serialize(() => {
         import_date DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Stock count settings (Admin sets this)
+    // Stock count settings
     db.run(`CREATE TABLE IF NOT EXISTS stock_counts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         count_number TEXT,
@@ -77,7 +82,7 @@ db.serialize(() => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // Stock check items (user checks each roll)
+    // Stock check items
     db.run(`CREATE TABLE IF NOT EXISTS stock_check_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         stock_count_id INTEGER,
@@ -244,13 +249,11 @@ app.get('/api/stock/latest', authMiddleware, (req, res) => {
 
 // ---------- Stock Check ----------
 app.get('/api/stock/check-items', authMiddleware, (req, res) => {
-    // get current stock count id
     db.get(`SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1`, (err, row) => {
         if (err || !row) {
             return res.status(404).json({ message: 'No stock count settings' });
         }
         const stockCountId = row.id;
-        // fetch all rolls, and check if already checked
         db.all(`SELECT r.*, 
                        (SELECT found FROM stock_check_items WHERE stock_count_id = ? AND roll_number = r.roll_number AND checked_by = ?) as found
                 FROM rolls r ORDER BY r.group_name, r.width`, [stockCountId, req.user.username], (err, rolls) => {
@@ -267,7 +270,6 @@ app.post('/api/stock/check', authMiddleware, (req, res) => {
         [stock_count_id, roll_number, req.user.username], (err, row) => {
             if (err) return res.status(500).json({ message: 'DB error' });
             if (row) {
-                // update
                 db.run(`UPDATE stock_check_items SET found = ?, checked_at = CURRENT_TIMESTAMP WHERE id = ?`,
                     [found ? 1 : 0, row.id], (err) => {
                         if (err) return res.status(500).json({ message: 'Update failed' });
@@ -288,7 +290,6 @@ const upload = multer({ dest: 'uploads/' });
 
 app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
-    // Also receive stock settings from form
     const { count_number, stock_date, stock_time } = req.body;
     if (!count_number || !stock_date || !stock_time) {
         return res.status(400).json({ message: 'กรุณากรอกครั้งที่, วันที่ และเวลา' });
@@ -334,12 +335,10 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
             });
             stmt.finalize();
 
-            // Save stock settings
             db.run(`INSERT INTO stock_counts (count_number, stock_date, stock_time, created_by) VALUES (?, ?, ?, ?)`,
                 [count_number, stock_date, stock_time, req.user.username]
             );
 
-            // Save import history
             db.run(`INSERT INTO import_history (filename, imported_by, rows_imported) VALUES (?, ?, ?)`,
                 [req.file.originalname, req.user.username, inserted]
             );
