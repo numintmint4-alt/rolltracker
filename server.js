@@ -130,6 +130,23 @@ function adminMiddleware(req, res, next) {
     next();
 }
 
+// ---------- Helper: แปลงวันที่จาก Excel ----------
+function convertExcelDate(value) {
+    if (!value) return '';
+    // ถ้าเป็นตัวเลข (Excel Serial Date)
+    if (typeof value === 'number') {
+        const epoch = new Date(1899, 11, 30);
+        const d = new Date(epoch.getTime() + value * 86400000);
+        return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'numeric', day: 'numeric' });
+    }
+    // ถ้าเป็น string แล้ว ให้ตัดทิ้งเวลา (ถ้ามี)
+    if (typeof value === 'string') {
+        const parts = value.split('T');
+        return parts[0].split(' ')[0];
+    }
+    return String(value);
+}
+
 // ---------- Auth Routes ----------
 app.post('/api/auth/login', (req, res) => {
     const { username, password } = req.body;
@@ -190,6 +207,8 @@ app.get('/api/rolls/search', authMiddleware, (req, res) => {
     db.get(`SELECT * FROM rolls WHERE roll_number = ?`, [q], (err, roll) => {
         if (err) return res.status(500).json({ message: 'DB error' });
         if (!roll) return res.status(404).json({ message: 'Not found' });
+        // แปลง buy_date ก่อนส่งกลับ
+        if (roll.buy_date) roll.buy_date = convertExcelDate(roll.buy_date);
         res.json({ roll });
     });
 });
@@ -310,6 +329,17 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
             data.forEach(row => {
                 const rollNumber = row['เบอร์ม้วน'] || row['roll_number'] || '';
                 if (!rollNumber) return;
+                
+                // แปลงวันที่ buy_date ถ้าเป็นตัวเลข
+                let buyDate = row['buy_date'] || '';
+                if (buyDate && typeof buyDate === 'number') {
+                    const epoch = new Date(1899, 11, 30);
+                    const d = new Date(epoch.getTime() + buyDate * 86400000);
+                    buyDate = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'numeric', day: 'numeric' });
+                } else if (buyDate && typeof buyDate === 'string') {
+                    buyDate = buyDate.split('T')[0];
+                }
+
                 stmt.run(
                     rollNumber,
                     row['grade'] || '',
@@ -321,7 +351,7 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
                     row['kgs'] ? String(row['kgs']) : '',
                     row['meter'] ? String(row['meter']) : '',
                     row['supplier_doc_no'] || '',
-                    row['buy_date'] ? String(row['buy_date']) : '',
+                    buyDate,
                     row['ageing'] ? String(row['ageing']) : '',
                     row['qlt'] || '',
                     row['customer'] || '',
