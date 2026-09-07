@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 ตรวจนับสต็อกม้วนกระดาษ</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f4f7fc;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 28px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+            padding: 24px 28px 32px;
+        }
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e9edf4;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+        .header h1 { font-size: 24px; color: #0b2b44; }
+        .header .meta { font-size: 15px; color: #5a6a7e; }
+        .header .user-info { background: #eaf4ff; padding: 6px 18px; border-radius: 30px; font-weight: 600; color: #1a4b6d; }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .controls select, .controls input {
+            padding: 10px 16px;
+            border: 2px solid #dce2ec;
+            border-radius: 12px;
+            font-size: 15px;
+            background: #fff;
+        }
+        .controls .btn {
+            padding: 10px 24px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-primary { background: #1a4b6d; color: #fff; }
+        .btn-primary:hover { background: #0b2b44; }
+        .btn-success { background: #28a745; color: #fff; }
+        .btn-success:hover { background: #218838; }
+        .btn-secondary { background: #6c757d; color: #fff; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-warning { background: #ffc107; color: #1a2a3a; }
+        .btn-warning:hover { background: #e0a800; }
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid #e9edf4;
+            border-radius: 16px;
+            margin-top: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        table th {
+            background: #f0f4fa;
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: #1a2a3a;
+            border-bottom: 2px solid #dce2ec;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #eef2f7;
+            vertical-align: middle;
+        }
+        table tr:hover td { background: #f8faff; }
+        .found-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #28a745;
+        }
+        .roll-number { font-weight: 600; color: #0b2b44; }
+        .signature-area {
+            margin-top: 30px;
+            border-top: 2px dashed #dce2ec;
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .signature-area .sign-block {
+            flex: 1;
+            min-width: 200px;
+        }
+        .signature-area .sign-block label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+            color: #1a2a3a;
+        }
+        .signature-area .sign-block .line {
+            border-bottom: 2px solid #1a2a3a;
+            height: 30px;
+            width: 100%;
+            max-width: 300px;
+        }
+        .signature-area .sign-block .date-line {
+            border-bottom: 2px solid #1a2a3a;
+            height: 30px;
+            width: 180px;
+        }
+        .print-hide { display: inline-block; }
+        @media print {
+            .print-hide { display: none !important; }
+            body { background: #fff; padding: 0; }
+            .container { box-shadow: none; border-radius: 0; padding: 16px; }
+            .table-wrap { border: 1px solid #000; }
+            table th { background: #e9edf4; }
+            .signature-area { border-top: 2px solid #000; }
+            .signature-area .sign-block .line { border-bottom: 2px solid #000; }
+            .signature-area .sign-block .date-line { border-bottom: 2px solid #000; }
+        }
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1a2a3a;
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            font-weight: 500;
+            z-index: 2000;
+            animation: fadeUp 0.3s ease;
+        }
+        .toast.success { background: #28a745; }
+        .toast.error { background: #dc3545; }
+        .toast.warning { background: #ffc107; color: #1a2a3a; }
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(16px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .filter-group .group-btn {
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 2px solid #dce2ec;
+            background: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            color: #5a6a7e;
+            transition: 0.2s;
+        }
+        .filter-group .group-btn.active {
+            border-color: #1a4b6d;
+            background: #1a4b6d;
+            color: #fff;
+        }
+        .filter-group .group-btn:hover:not(.active) { background: #f0f4fa; }
+        .summary {
+            background: #f8faff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            font-size: 15px;
+        }
+        .summary span { font-weight: 600; color: #0b2b44; }
+        .summary .found-count { color: #28a745; }
+        .summary .notfound-count { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div class="header">
+            <h1>📋 ตรวจนับสต็อกม้วนกระดาษ</h1>
+            <div class="meta" id="stockMeta">กำลังโหลด...</div>
+            <div class="user-info" id="userInfo">👤 ผู้ตรวจ: —</div>
+        </div>
+
+        <div class="controls print-hide">
+            <select id="groupFilter">
+                <option value="all">ทุกกลุ่ม</option>
+            </select>
+            <button class="btn btn-primary" id="loadBtn">🔄 โหลดข้อมูล</button>
+            <button class="btn btn-success" id="exportPdfBtn">📄 พรีวิว/PDF</button>
+            <button class="btn btn-secondary" id="backBtn">⬅ กลับหน้าแรก</button>
+        </div>
+
+        <div class="summary" id="summary">
+            <span>✅ พบแล้ว: <span id="foundCount">0</span> ม้วน</span>
+            <span>❌ ไม่พบ: <span id="notFoundCount">0</span> ม้วน</span>
+            <span>📦 รวม: <span id="totalCount">0</span> ม้วน</span>
+        </div>
+
+        <div class="filter-group print-hide" id="groupFilterButtons"></div>
+
+        <div class="table-wrap" id="tableWrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:60px;">พบ?</th>
+                        <th>เลขม้วน</th>
+                        <th>กลุ่ม</th>
+                        <th>ขนาด</th>
+                        <th>DIA.</th>
+                        <th>Kg.</th>
+                        <th>Meter</th>
+                        <th>qlt</th>
+                        <th>Supplier</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody id="checkTableBody">
+                    <tr><td colspan="10" class="text-muted" style="text-align:center;">กรุณาคลิก "โหลดข้อมูล"</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Signature area -->
+        <div class="signature-area" id="signatureArea">
+            <div class="sign-block">
+                <label>ผู้ตรวจนับ</label>
+                <div class="line" id="signLine"></div>
+            </div>
+            <div class="sign-block">
+                <label>วันที่ตรวจ</label>
+                <div class="date-line" id="dateLine"></div>
+            </div>
+            <div class="sign-block">
+                <label>หมายเหตุ</label>
+                <div class="line" style="max-width:200px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script>
+        // ---------- State ----------
+        let token = localStorage.getItem('rolltracker_token') || '';
+        let currentUser = null;
+        let allRolls = [];
+        let stockCountId = null;
+        let currentGroup = 'all';
+
+        const $ = id => document.getElementById(id);
+        const stockMeta = $('stockMeta');
+        const userInfo = $('userInfo');
+        const groupFilter = $('groupFilter');
+        const groupFilterButtons = $('groupFilterButtons');
+        const loadBtn = $('loadBtn');
+        const exportPdfBtn = $('exportPdfBtn');
+        const backBtn = $('backBtn');
+        const checkTableBody = $('checkTableBody');
+        const foundCount = $('foundCount');
+        const notFoundCount = $('notFoundCount');
+        const totalCount = $('totalCount');
+
+        function showToast(msg, type = 'info') {
+            const c = document.createElement('div');
+            c.className = `toast ${type}`;
+            c.textContent = msg;
+            document.getElementById('toastContainer').appendChild(c);
+            setTimeout(() => { c.style.opacity = '0'; c.style.transition = 'opacity 0.4s'; setTimeout(() => c.remove(), 500); }, 3000);
+        }
+
+        function getAuthHeaders() {
+            return { 'Authorization': 'Bearer ' + token };
+        }
+
+        // ---------- Load user and settings ----------
+        async function loadUser() {
+            try {
+                const res = await fetch('/api/auth/me', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (data.user) {
+                    currentUser = data.user;
+                    userInfo.textContent = '👤 ผู้ตรวจ: ' + currentUser.username;
+                } else {
+                    window.location.href = '/';
+                }
+            } catch (e) {
+                window.location.href = '/';
+            }
+        }
+
+        async function loadStockSettings() {
+            try {
+                const res = await fetch('/api/stock/latest', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (res.ok) {
+                    stockMeta.textContent = `📅 ครั้งที่ ${data.count_number} | วันที่ ${data.stock_date} เวลา ${data.stock_time}`;
+                    stockCountId = data.id;
+                } else {
+                    stockMeta.textContent = '⚠️ ยังไม่มีการตั้งค่า Stock กรุณาให้ Admin ตั้งค่าก่อน';
+                }
+            } catch (e) {
+                stockMeta.textContent = '⚠️ ไม่สามารถโหลดข้อมูล Stock';
+            }
+        }
+
+        // ---------- Load check items ----------
+        async function loadCheckItems() {
+            if (!stockCountId) {
+                showToast('ยังไม่มีการตั้งค่า Stock กรุณาให้ Admin ตั้งค่า', 'warning');
+                return;
+            }
+            try {
+                const res = await fetch('/api/stock/check-items', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (res.ok && data.rolls) {
+                    allRolls = data.rolls;
+                    populateGroupFilter();
+                    renderTable(currentGroup);
+                    updateSummary();
+                } else {
+                    showToast('ไม่พบข้อมูลม้วน', 'warning');
+                }
+            } catch (e) {
+                showToast('เกิดข้อผิดพลาดในการโหลด', 'error');
+            }
+        }
+
+        // ---------- Populate group filter ----------
+        function populateGroupFilter() {
+            const groups = [...new Set(allRolls.map(r => r.group_name || 'ไม่มีกลุ่ม'))].sort();
+            groupFilter.innerHTML = '<option value="all">ทุกกลุ่ม</option>';
+            groups.forEach(g => {
+                groupFilter.innerHTML += `<option value="${g}">${g}</option>`;
+            });
+            // Buttons
+            groupFilterButtons.innerHTML = '';
+            const allBtn = document.createElement('button');
+            allBtn.className = 'group-btn active';
+            allBtn.textContent = 'ทั้งหมด';
+            allBtn.dataset.group = 'all';
+            allBtn.addEventListener('click', () => { setGroup('all'); });
+            groupFilterButtons.appendChild(allBtn);
+            groups.forEach(g => {
+                const btn = document.createElement('button');
+                btn.className = 'group-btn';
+                btn.textContent = g;
+                btn.dataset.group = g;
+                btn.addEventListener('click', () => { setGroup(g); });
+                groupFilterButtons.appendChild(btn);
+            });
+        }
+
+        function setGroup(group) {
+            currentGroup = group;
+            document.querySelectorAll('.group-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.group === group);
+            });
+            groupFilter.value = group;
+            renderTable(group);
+            updateSummary();
+        }
+
+        // ---------- Render table ----------
+        function renderTable(group) {
+            let filtered = allRolls;
+            if (group !== 'all') {
+                filtered = allRolls.filter(r => (r.group_name || 'ไม่มีกลุ่ม') === group);
+            }
+            if (!filtered.length) {
+                checkTableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#7a8a9e;">ไม่มีม้วนในกลุ่มนี้</td></tr>';
+                return;
+            }
+            let html = '';
+            filtered.forEach(roll => {
+                const found = roll.found === 1;
+                html += `
+                    <tr>
+                        <td><input type="checkbox" class="found-checkbox" data-roll="${roll.roll_number}" ${found ? 'checked' : ''} /></td>
+                        <td class="roll-number">${roll.roll_number || '—'}</td>
+                        <td>${roll.group_name || '—'}</td>
+                        <td>${roll.width ? roll.width + '"' : '—'}</td>
+                        <td>${roll.dimeter || '—'}</td>
+                        <td>${roll.kgs || '—'}</td>
+                        <td>${roll.meter || '—'}</td>
+                        <td>${roll.qlt || '—'}</td>
+                        <td>${roll.supplier || '—'}</td>
+                        <td>${roll.loc || '—'}</td>
+                    </tr>
+                `;
+            });
+            checkTableBody.innerHTML = html;
+
+            // Attach change events
+            checkTableBody.querySelectorAll('.found-checkbox').forEach(cb => {
+                cb.addEventListener('change', async function() {
+                    const rollNumber = this.dataset.roll;
+                    const found = this.checked ? 1 : 0;
+                    try {
+                        const res = await fetch('/api/stock/check', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                            body: JSON.stringify({
+                                stock_count_id: stockCountId,
+                                roll_number: rollNumber,
+                                found: found
+                            })
+                        });
+                        if (res.ok) {
+                            // update local found status
+                            const roll = allRolls.find(r => r.roll_number === rollNumber);
+                            if (roll) roll.found = found;
+                            updateSummary();
+                        } else {
+                            showToast('บันทึกไม่สำเร็จ', 'error');
+                            this.checked = !this.checked;
+                        }
+                    } catch (e) {
+                        showToast('เกิดข้อผิดพลาด', 'error');
+                        this.checked = !this.checked;
+                    }
+                });
+            });
+        }
+
+        // ---------- Update summary ----------
+        function updateSummary() {
+            let filtered = allRolls;
+            if (currentGroup !== 'all') {
+                filtered = allRolls.filter(r => (r.group_name || 'ไม่มีกลุ่ม') === currentGroup);
+            }
+            const total = filtered.length;
+            const found = filtered.filter(r => r.found === 1).length;
+            const notFound = total - found;
+            foundCount.textContent = found;
+            notFoundCount.textContent = notFound;
+            totalCount.textContent = total;
+        }
+
+        // ---------- Export PDF (print preview) ----------
+        function exportPDF() {
+            window.print();
+        }
+
+        // ---------- Event listeners ----------
+        loadBtn.addEventListener('click', loadCheckItems);
+        exportPdfBtn.addEventListener('click', exportPDF);
+        backBtn.addEventListener('click', () => { window.location.href = '/'; });
+
+        groupFilter.addEventListener('change', function() {
+            setGroup(this.value);
+        });
+
+        // ---------- Init ----------
+        (async function init() {
+            await loadUser();
+            await loadStockSettings();
+            // if stock settings exist, auto load check items
+            if (stockCountId) {
+                await loadCheckItems();
+            }
+        })();
+
+        // Set signature date
+        (function setSignatureDate() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            $('dateLine').textContent = dateStr;
+        })();
+
+        console.log('📋 Stock Check page loaded');
+    </script>
+</body>
+</html>

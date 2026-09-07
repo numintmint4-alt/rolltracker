@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>📦 ระบบตรวจสอบ Location ม้วนกระดาษ</title>
     <style>
-        /* ----- RESET & BASE ----- */
+        /* ใช้ CSS เดิมทั้งหมด แล้วเพิ่มส่วนของ autocomplete และ stock timestamp */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -20,7 +20,6 @@
             align-items: center;
             padding: 20px;
         }
-        /* ----- APP CONTAINER ----- */
         #app {
             width: 100%;
             max-width: 1300px;
@@ -28,9 +27,7 @@
             border-radius: 32px;
             box-shadow: 0 25px 60px rgba(0, 20, 40, 0.15);
             overflow: hidden;
-            transition: all 0.2s;
         }
-        /* ----- HEADER ----- */
         .app-header {
             background: linear-gradient(135deg, #0b2b44, #1a4b6d);
             color: #fff;
@@ -44,7 +41,6 @@
         .app-header h1 {
             font-size: 22px;
             font-weight: 600;
-            letter-spacing: 0.3px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -61,7 +57,7 @@
             gap: 10px;
         }
         .header-actions .user-badge {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255,255,255,0.15);
             padding: 6px 16px;
             border-radius: 40px;
             font-size: 14px;
@@ -77,13 +73,11 @@
             padding: 2px 10px;
             border-radius: 30px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         .header-actions .user-badge .role-tag.admin {
             background: #ff6b6b;
             color: #fff;
         }
-        /* ----- BUTTONS ----- */
         .btn {
             border: none;
             padding: 8px 18px;
@@ -97,53 +91,18 @@
             gap: 6px;
             text-decoration: none;
         }
-        .btn-primary {
-            background: #ffc107;
-            color: #1a2a3a;
-        }
-        .btn-primary:hover {
-            background: #ffd966;
-            transform: scale(1.02);
-        }
-        .btn-danger {
-            background: #dc3545;
-            color: #fff;
-        }
-        .btn-danger:hover {
-            background: #c82333;
-        }
-        .btn-success {
-            background: #28a745;
-            color: #fff;
-        }
-        .btn-success:hover {
-            background: #218838;
-        }
-        .btn-outline {
-            background: transparent;
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            color: #fff;
-        }
-        .btn-outline:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: #fff;
-        }
-        .btn-sm {
-            padding: 4px 14px;
-            font-size: 13px;
-        }
-        .btn-secondary {
-            background: #6c757d;
-            color: #fff;
-        }
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        /* ----- MAIN LAYOUT ----- */
-        .app-body {
-            padding: 24px 28px 32px;
-        }
-        /* ----- SEARCH SECTION ----- */
+        .btn-primary { background: #ffc107; color: #1a2a3a; }
+        .btn-primary:hover { background: #ffd966; transform: scale(1.02); }
+        .btn-danger { background: #dc3545; color: #fff; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-success { background: #28a745; color: #fff; }
+        .btn-success:hover { background: #218838; }
+        .btn-outline { background: transparent; border: 2px solid rgba(255,255,255,0.4); color: #fff; }
+        .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+        .btn-sm { padding: 4px 14px; font-size: 13px; }
+        .btn-secondary { background: #6c757d; color: #fff; }
+        .btn-secondary:hover { background: #5a6268; }
+        .app-body { padding: 24px 28px 32px; }
         .search-section {
             background: #f8faff;
             border-radius: 20px;
@@ -154,25 +113,50 @@
             flex-wrap: wrap;
             align-items: center;
             gap: 14px;
+            position: relative;
         }
-        .search-section label {
-            font-weight: 600;
-            color: #1a2a3a;
-            font-size: 15px;
-        }
-        .search-section input[type="text"] {
+        .search-section label { font-weight: 600; color: #1a2a3a; font-size: 15px; }
+        .search-section .search-input-wrapper {
             flex: 1 1 260px;
+            position: relative;
+        }
+        .search-section .search-input-wrapper input {
+            width: 100%;
             padding: 12px 18px;
             border: 2px solid #dce2ec;
             border-radius: 40px;
             font-size: 16px;
             outline: none;
-            transition: 0.2s;
             background: #fff;
         }
-        .search-section input[type="text"]:focus {
+        .search-section .search-input-wrapper input:focus {
             border-color: #1a4b6d;
-            box-shadow: 0 0 0 4px rgba(26, 75, 109, 0.12);
+            box-shadow: 0 0 0 4px rgba(26,75,109,0.12);
+        }
+        .search-section .search-input-wrapper .suggestions {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #dce2ec;
+            border-radius: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        .search-section .search-input-wrapper .suggestions.show {
+            display: block;
+        }
+        .search-section .search-input-wrapper .suggestions .suggestion-item {
+            padding: 10px 18px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f3f8;
+        }
+        .search-section .search-input-wrapper .suggestions .suggestion-item:hover {
+            background: #f0f4fa;
         }
         .search-section .search-btn {
             padding: 12px 30px;
@@ -185,38 +169,22 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .search-section .search-btn:hover {
-            background: #0b2b44;
-            transform: scale(1.02);
-        }
-        .search-section .search-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        /* ----- RESULT CARD ----- */
+        .search-section .search-btn:hover { background: #0b2b44; }
+        .search-section .search-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .result-card {
             background: #fff;
             border-radius: 18px;
             border: 1px solid #e9edf4;
             padding: 24px 28px;
             margin-top: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             display: none;
             animation: fadeUp 0.35s ease;
         }
-        .result-card.visible {
-            display: block;
-        }
+        .result-card.visible { display: block; }
         @keyframes fadeUp {
-            0% {
-                opacity: 0;
-                transform: translateY(16px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            0% { opacity: 0; transform: translateY(16px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
         .result-card .roll-header {
             display: flex;
@@ -231,7 +199,6 @@
             font-size: 26px;
             font-weight: 700;
             color: #0b2b44;
-            letter-spacing: 0.5px;
             word-break: break-all;
         }
         .result-card .roll-header .roll-status {
@@ -242,18 +209,9 @@
             background: #e9edf4;
             color: #2c3e50;
         }
-        .result-card .roll-header .roll-status.เต็ม {
-            background: #d4edda;
-            color: #155724;
-        }
-        .result-card .roll-header .roll-status.เศษ {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .result-card .roll-header .roll-status.รอกรอ {
-            background: #fff3cd;
-            color: #856404;
-        }
+        .result-card .roll-header .roll-status.เต็ม { background: #d4edda; color: #155724; }
+        .result-card .roll-header .roll-status.เศษ { background: #f8d7da; color: #721c24; }
+        .result-card .roll-header .roll-status.รอกรอ { background: #fff3cd; color: #856404; }
         .result-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -277,47 +235,23 @@
             margin-top: 2px;
             word-break: break-word;
         }
-        .result-grid .item .value.highlight {
-            color: #c0392b;
-        }
         .result-grid .item .value.location {
             background: #eaf4ff;
             padding: 2px 14px;
             border-radius: 30px;
             display: inline-block;
         }
-        /* ----- NOT FOUND ----- */
-        .not-found {
-            text-align: center;
-            padding: 40px 20px;
-            color: #7a8a9e;
-        }
-        .not-found .icon {
-            font-size: 56px;
-            margin-bottom: 12px;
-        }
-        .not-found h3 {
-            color: #1a2a3a;
-            margin-bottom: 6px;
-        }
-        /* ----- ADMIN PANEL ----- */
+        .not-found { text-align: center; padding: 40px 20px; color: #7a8a9e; display: none; }
+        .not-found .icon { font-size: 56px; margin-bottom: 12px; }
+        .not-found h3 { color: #1a2a3a; margin-bottom: 6px; }
         .admin-panel {
             margin-top: 32px;
             border-top: 2px solid #e9edf4;
             padding-top: 28px;
             display: none;
         }
-        .admin-panel.visible {
-            display: block;
-        }
-        .admin-panel h2 {
-            font-size: 20px;
-            color: #0b2b44;
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .admin-panel.visible { display: block; }
+        .admin-panel h2 { font-size: 20px; color: #0b2b44; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
         .admin-tabs {
             display: flex;
             flex-wrap: wrap;
@@ -337,48 +271,15 @@
             transition: 0.2s;
             font-size: 14px;
         }
-        .admin-tabs .tab-btn.active {
-            background: #1a4b6d;
-            color: #fff;
-        }
-        .admin-tabs .tab-btn:hover:not(.active) {
-            background: #e9edf4;
-        }
-        .tab-content {
-            display: none;
-            animation: fadeUp 0.3s ease;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        /* ----- TABLES ----- */
-        .table-wrap {
-            overflow-x: auto;
-            margin-top: 12px;
-            border-radius: 14px;
-            border: 1px solid #e9edf4;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        table th {
-            background: #f0f4fa;
-            text-align: left;
-            padding: 12px 16px;
-            font-weight: 600;
-            color: #1a2a3a;
-            border-bottom: 2px solid #dce2ec;
-        }
-        table td {
-            padding: 10px 16px;
-            border-bottom: 1px solid #eef2f7;
-            vertical-align: middle;
-        }
-        table tr:hover td {
-            background: #f8faff;
-        }
+        .admin-tabs .tab-btn.active { background: #1a4b6d; color: #fff; }
+        .admin-tabs .tab-btn:hover:not(.active) { background: #e9edf4; }
+        .tab-content { display: none; animation: fadeUp 0.3s ease; }
+        .tab-content.active { display: block; }
+        .table-wrap { overflow-x: auto; margin-top: 12px; border-radius: 14px; border: 1px solid #e9edf4; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        table th { background: #f0f4fa; text-align: left; padding: 12px 16px; font-weight: 600; color: #1a2a3a; border-bottom: 2px solid #dce2ec; }
+        table td { padding: 10px 16px; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
+        table tr:hover td { background: #f8faff; }
         .badge {
             display: inline-block;
             padding: 2px 12px;
@@ -386,60 +287,41 @@
             font-size: 12px;
             font-weight: 600;
         }
-        .badge.active {
-            background: #d4edda;
-            color: #155724;
-        }
-        .badge.inactive {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .badge.admin {
-            background: #cce5ff;
-            color: #004085;
-        }
-        .badge.user {
-            background: #e9edf4;
-            color: #2c3e50;
-        }
-        /* ----- IMPORT FORM ----- */
+        .badge.active { background: #d4edda; color: #155724; }
+        .badge.inactive { background: #f8d7da; color: #721c24; }
+        .badge.admin { background: #cce5ff; color: #004085; }
+        .badge.user { background: #e9edf4; color: #2c3e50; }
         .import-form {
             background: #f8faff;
             padding: 20px 24px;
             border-radius: 16px;
             border: 1px dashed #bcc9db;
             display: flex;
-            flex-wrap: wrap;
-            align-items: center;
+            flex-direction: column;
             gap: 16px;
         }
-        .import-form input[type="file"] {
-            flex: 1 1 240px;
-            padding: 10px;
-            border: 1px solid #dce2ec;
+        .import-form .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+        }
+        .import-form .row label {
+            font-weight: 600;
+            min-width: 100px;
+        }
+        .import-form .row input, .import-form .row select {
+            padding: 10px 14px;
+            border: 2px solid #dce2ec;
             border-radius: 10px;
-            background: #fff;
+            font-size: 15px;
+            flex: 1;
+            min-width: 160px;
         }
-        .import-form .file-info {
-            font-size: 13px;
-            color: #5a6a7e;
-        }
-        .import-form .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e9edf4;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 6px;
-        }
-        .import-form .progress-bar .fill {
-            height: 100%;
-            width: 0%;
-            background: #28a745;
-            border-radius: 10px;
-            transition: width 0.3s;
-        }
-        /* ----- DASHBOARD STATS ----- */
+        .import-form .row input[type="file"] { padding: 10px; background: #fff; }
+        .import-form .file-info { font-size: 13px; color: #5a6a7e; }
+        .import-form .progress-bar { width: 100%; height: 8px; background: #e9edf4; border-radius: 10px; overflow: hidden; }
+        .import-form .progress-bar .fill { height: 100%; width: 0%; background: #28a745; border-radius: 10px; transition: width 0.3s; }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -453,200 +335,56 @@
             border: 1px solid #e9edf4;
             text-align: center;
         }
-        .stat-card .number {
-            font-size: 32px;
-            font-weight: 700;
-            color: #0b2b44;
-        }
-        .stat-card .label {
-            font-size: 13px;
-            color: #7a8a9e;
-            margin-top: 2px;
-        }
-        /* ----- LOGIN SCREEN ----- */
+        .stat-card .number { font-size: 32px; font-weight: 700; color: #0b2b44; }
+        .stat-card .label { font-size: 13px; color: #7a8a9e; margin-top: 2px; }
         .login-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0,0,0,0.5);
             backdrop-filter: blur(4px);
             z-index: 999;
             justify-content: center;
             align-items: center;
         }
-        .login-overlay.visible {
-            display: flex;
-        }
+        .login-overlay.visible { display: flex; }
         .login-box {
             background: #fff;
             padding: 40px 36px;
             border-radius: 28px;
             max-width: 400px;
             width: 100%;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
             animation: fadeUp 0.35s ease;
         }
-        .login-box h2 {
-            font-size: 24px;
-            color: #0b2b44;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .login-box .sub {
-            color: #7a8a9e;
-            margin-bottom: 24px;
-            font-size: 14px;
-        }
-        .login-box .form-group {
-            margin-bottom: 16px;
-        }
-        .login-box .form-group label {
-            display: block;
-            font-weight: 600;
-            font-size: 14px;
-            color: #1a2a3a;
-            margin-bottom: 4px;
-        }
-        .login-box .form-group input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #dce2ec;
-            border-radius: 12px;
-            font-size: 16px;
-            outline: none;
-            transition: 0.2s;
-        }
-        .login-box .form-group input:focus {
-            border-color: #1a4b6d;
-            box-shadow: 0 0 0 4px rgba(26, 75, 109, 0.1);
-        }
-        .login-box .login-btn {
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            border: none;
-            background: #1a4b6d;
-            color: #fff;
-            font-weight: 700;
-            font-size: 18px;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-top: 8px;
-        }
-        .login-box .login-btn:hover {
-            background: #0b2b44;
-        }
-        .login-box .login-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .login-box .error-msg {
-            color: #dc3545;
-            font-size: 14px;
-            margin-top: 12px;
-            text-align: center;
-            min-height: 24px;
-        }
-        /* ----- RESPONSIVE ----- */
+        .login-box h2 { font-size: 24px; color: #0b2b44; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+        .login-box .sub { color: #7a8a9e; margin-bottom: 24px; font-size: 14px; }
+        .login-box .form-group { margin-bottom: 16px; }
+        .login-box .form-group label { display: block; font-weight: 600; font-size: 14px; color: #1a2a3a; margin-bottom: 4px; }
+        .login-box .form-group input { width: 100%; padding: 12px 16px; border: 2px solid #dce2ec; border-radius: 12px; font-size: 16px; outline: none; transition: 0.2s; }
+        .login-box .form-group input:focus { border-color: #1a4b6d; box-shadow: 0 0 0 4px rgba(26,75,109,0.1); }
+        .login-box .login-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #1a4b6d; color: #fff; font-weight: 700; font-size: 18px; cursor: pointer; transition: 0.2s; margin-top: 8px; }
+        .login-box .login-btn:hover { background: #0b2b44; }
+        .login-box .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .login-box .error-msg { color: #dc3545; font-size: 14px; margin-top: 12px; text-align: center; min-height: 24px; }
         @media (max-width: 640px) {
-            .app-header {
-                padding: 14px 18px;
-            }
-            .app-header h1 {
-                font-size: 18px;
-            }
-            .app-body {
-                padding: 16px;
-            }
-            .search-section {
-                padding: 16px;
-            }
-            .search-section input[type="text"] {
-                font-size: 15px;
-                padding: 10px 14px;
-            }
-            .result-card {
-                padding: 18px;
-            }
-            .result-card .roll-header .roll-number {
-                font-size: 20px;
-            }
-            .result-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-            .result-grid .item .value {
-                font-size: 16px;
-            }
-            .login-box {
-                padding: 28px 20px;
-                margin: 16px;
-            }
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            .admin-tabs .tab-btn {
-                font-size: 13px;
-                padding: 6px 14px;
-            }
-            .header-actions .user-badge {
-                font-size: 13px;
-                padding: 4px 12px;
-            }
+            .app-header { padding: 14px 18px; }
+            .app-header h1 { font-size: 18px; }
+            .app-body { padding: 16px; }
+            .search-section { padding: 16px; }
+            .search-section input[type="text"] { font-size: 15px; padding: 10px 14px; }
+            .result-card { padding: 18px; }
+            .result-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .result-grid .item .value { font-size: 16px; }
+            .login-box { padding: 28px 20px; margin: 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 400px) {
-            .result-grid {
-                grid-template-columns: 1fr;
-            }
+            .result-grid { grid-template-columns: 1fr; }
         }
-        /* ----- MISC ----- */
-        .text-muted {
-            color: #7a8a9e;
-        }
-        .mt-8 {
-            margin-top: 8px;
-        }
-        .mt-16 {
-            margin-top: 16px;
-        }
-        .flex {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-        }
-        .gap-8 {
-            gap: 8px;
-        }
-        .w-full {
-            width: 100%;
-        }
-        .truncate {
-            max-width: 180px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: inline-block;
-            vertical-align: middle;
-        }
-        /* scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #e9edf4;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #bcc9db;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a0b0c6;
-        }
+        .text-muted { color: #7a8a9e; }
+        .flex { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .w-full { width: 100%; }
         .toast {
             position: fixed;
             bottom: 24px;
@@ -655,50 +393,47 @@
             color: #fff;
             padding: 14px 24px;
             border-radius: 14px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
             font-weight: 500;
             z-index: 2000;
             animation: fadeUp 0.3s ease;
             max-width: 400px;
         }
-        .toast.success {
-            background: #28a745;
-        }
-        .toast.error {
-            background: #dc3545;
-        }
-        .toast.warning {
-            background: #ffc107;
-            color: #1a2a3a;
+        .toast.success { background: #28a745; }
+        .toast.error { background: #dc3545; }
+        .toast.warning { background: #ffc107; color: #1a2a3a; }
+        .stock-timestamp {
+            background: #eaf4ff;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            color: #0b2b44;
+            display: inline-block;
+            margin-bottom: 16px;
         }
     </style>
 </head>
 <body>
-
-    <!-- ====== LOGIN OVERLAY ====== -->
+    <!-- Login -->
     <div class="login-overlay visible" id="loginOverlay">
         <div class="login-box">
             <h2>🔐 เข้าสู่ระบบ</h2>
             <div class="sub">ระบบตรวจสอบ Location ม้วนกระดาษ</div>
             <div class="form-group">
                 <label>ชื่อผู้ใช้</label>
-                <input type="text" id="loginUser" placeholder="username" value="admin" />
+                <input type="text" id="loginUser" placeholder="username" />
             </div>
             <div class="form-group">
                 <label>รหัสผ่าน</label>
-                <input type="password" id="loginPass" placeholder="••••••••" value="admin123" />
+                <input type="password" id="loginPass" placeholder="••••••••" />
             </div>
             <button class="login-btn" id="loginBtn">เข้าสู่ระบบ</button>
             <div class="error-msg" id="loginError"></div>
-            <div style="margin-top:16px;font-size:13px;color:#7a8a9e;text-align:center;">
-                <span>👤 admin / admin123 &nbsp;|&nbsp; 👤 user / user123</span>
-            </div>
         </div>
     </div>
 
-    <!-- ====== APP ====== -->
+    <!-- App -->
     <div id="app" style="display:none;">
-        <!-- HEADER -->
         <header class="app-header">
             <h1>📦 RollTracker <small>· ตรวจสอบม้วนกระดาษ</small></h1>
             <div class="header-actions">
@@ -710,46 +445,48 @@
             </div>
         </header>
 
-        <!-- BODY -->
         <div class="app-body">
-            <!-- SEARCH -->
+            <!-- Stock timestamp -->
+            <div id="stockTimestamp" class="stock-timestamp">📅 โหลดข้อมูล...</div>
+
+            <!-- Search -->
             <div class="search-section">
                 <label for="rollSearch">🔎 เลขม้วน</label>
-                <input type="text" id="rollSearch" placeholder="พิมพ์เลขม้วน เช่น 261APR00232" />
+                <div class="search-input-wrapper">
+                    <input type="text" id="rollSearch" placeholder="พิมพ์เลขม้วน..." autocomplete="off" />
+                    <div class="suggestions" id="suggestions"></div>
+                </div>
                 <button class="search-btn" id="searchBtn">ค้นหา</button>
                 <button class="btn btn-secondary btn-sm" id="clearBtn">✕ เคลียร์</button>
                 <span style="font-size:13px;color:#7a8a9e;margin-left:auto;" id="totalRollsDisplay">โหลดข้อมูล...</span>
             </div>
 
-            <!-- RESULT -->
+            <!-- Result -->
             <div class="result-card" id="resultCard">
                 <div class="roll-header">
                     <span class="roll-number" id="resultRollNumber">—</span>
                     <span class="roll-status" id="resultStatus">—</span>
                 </div>
                 <div class="result-grid" id="resultGrid">
-                    <div class="item"><span class="label">📍 Location</span><span class="value location" id="rLoc">—</span></div>
                     <div class="item"><span class="label">📂 กลุ่ม</span><span class="value" id="rGroup">—</span></div>
-                    <div class="item"><span class="label">🏷️ เกรด</span><span class="value" id="rGrade">—</span></div>
                     <div class="item"><span class="label">📐 ขนาด (นิ้ว)</span><span class="value" id="rWidth">—</span></div>
                     <div class="item"><span class="label">📏 DIA. (mm)</span><span class="value" id="rDia">—</span></div>
                     <div class="item"><span class="label">⚖️ kgs</span><span class="value" id="rKgs">—</span></div>
                     <div class="item"><span class="label">📏 meter</span><span class="value" id="rMeter">—</span></div>
+                    <div class="item"><span class="label">🔖 qlt</span><span class="value" id="rQlt">—</span></div>
                     <div class="item"><span class="label">🏭 Supplier</span><span class="value" id="rSupplier">—</span></div>
-                    <div class="item"><span class="label">📄 Supplier SN</span><span class="value" id="rSn">—</span></div>
                     <div class="item"><span class="label">📅 Buy Date</span><span class="value" id="rBuyDate">—</span></div>
-                    <div class="item"><span class="label">📌 หมายเหตุ</span><span class="value" id="rNote">—</span></div>
+                    <div class="item"><span class="label">📍 Location</span><span class="value location" id="rLoc">—</span></div>
                 </div>
             </div>
 
-            <!-- NOT FOUND -->
-            <div class="not-found" id="notFound" style="display:none;">
+            <div class="not-found" id="notFound">
                 <div class="icon">🔍</div>
                 <h3>ไม่พบม้วนนี้</h3>
-                <p>กรุณาตรวจสอบเลขม้วนอีกครั้ง หรือลองค้นหาด้วยคำอื่น</p>
+                <p>กรุณาตรวจสอบเลขม้วนอีกครั้ง</p>
             </div>
 
-            <!-- DASHBOARD STATS (always visible) -->
+            <!-- Stats -->
             <div style="margin-top:28px;">
                 <h3 style="font-size:16px;color:#0b2b44;margin-bottom:12px;">📊 สรุปข้อมูล</h3>
                 <div class="stats-grid" id="statsGrid">
@@ -762,10 +499,9 @@
                 </div>
             </div>
 
-            <!-- ====== ADMIN PANEL ====== -->
+            <!-- Admin Panel -->
             <div class="admin-panel" id="adminPanel">
                 <h2>⚙️ แผงควบคุมผู้ดูแล</h2>
-
                 <div class="admin-tabs">
                     <button class="tab-btn active" data-tab="tabUsers">👥 ผู้ใช้งาน</button>
                     <button class="tab-btn" data-tab="tabImport">📥 Import Excel</button>
@@ -773,7 +509,7 @@
                     <button class="tab-btn" data-tab="tabDanger">⚠️ เครื่องมือ</button>
                 </div>
 
-                <!-- TAB: Users -->
+                <!-- Users -->
                 <div class="tab-content active" id="tabUsers">
                     <div class="flex" style="justify-content:space-between;margin-bottom:12px;">
                         <span style="font-weight:600;">รายชื่อผู้ใช้งาน</span>
@@ -785,7 +521,6 @@
                             <tbody id="userTableBody"><tr><td colspan="6" class="text-muted">กำลังโหลด...</td></tr></tbody>
                         </table>
                     </div>
-                    <!-- Add user form (hidden) -->
                     <div id="addUserForm" style="display:none;margin-top:16px;background:#f8faff;padding:18px 20px;border-radius:14px;border:1px solid #e9edf4;">
                         <div class="flex" style="gap:12px;flex-wrap:wrap;">
                             <input type="text" id="newUsername" placeholder="ชื่อผู้ใช้" style="flex:1;padding:10px 14px;border:2px solid #dce2ec;border-radius:10px;font-size:15px;" />
@@ -800,15 +535,27 @@
                     </div>
                 </div>
 
-                <!-- TAB: Import -->
+                <!-- Import -->
                 <div class="tab-content" id="tabImport">
                     <div class="import-form">
-                        <div style="flex:1;min-width:200px;">
-                            <label style="font-weight:600;display:block;margin-bottom:4px;">📂 เลือกไฟล์ Excel (.xlsx)</label>
+                        <div class="row">
+                            <label>📅 ครั้งที่ (Stock Count)</label>
+                            <input type="text" id="stockCountNumber" placeholder="เช่น 1/2569" />
+                        </div>
+                        <div class="row">
+                            <label>📅 วันที่ (Stock Date)</label>
+                            <input type="date" id="stockDate" />
+                        </div>
+                        <div class="row">
+                            <label>⏰ เวลา (Stock Time)</label>
+                            <input type="time" id="stockTime" />
+                        </div>
+                        <div class="row">
+                            <label>📂 ไฟล์ Excel</label>
                             <input type="file" id="excelFileInput" accept=".xlsx,.xls" />
                             <div class="file-info" id="fileInfo">ยังไม่ได้เลือกไฟล์</div>
                         </div>
-                        <div>
+                        <div class="row">
                             <button class="btn btn-primary" id="importBtn">⬆️ นำเข้า</button>
                             <button class="btn btn-secondary btn-sm" id="clearImportBtn">🗑️ ล้างข้อมูล</button>
                         </div>
@@ -819,7 +566,7 @@
                     </div>
                 </div>
 
-                <!-- TAB: History -->
+                <!-- History -->
                 <div class="tab-content" id="tabHistory">
                     <div class="table-wrap">
                         <table>
@@ -829,7 +576,7 @@
                     </div>
                 </div>
 
-                <!-- TAB: Danger -->
+                <!-- Danger -->
                 <div class="tab-content" id="tabDanger">
                     <div style="background:#fff5f5;border:1px solid #fcc;padding:20px 24px;border-radius:16px;">
                         <h4 style="color:#c0392b;margin-bottom:8px;">⚠️ เครื่องมืออันตราย</h4>
@@ -841,25 +588,18 @@
             </div>
 
             <div style="margin-top:16px;font-size:13px;color:#a0b0c6;text-align:center;border-top:1px solid #e9edf4;padding-top:16px;">
-                RollTracker v1.0 · ข้อมูลทั้งหมด <span id="footerTotal">0</span> ม้วน
+                RollTracker v2.0 · ข้อมูลทั้งหมด <span id="footerTotal">0</span> ม้วน
             </div>
         </div>
     </div>
 
-    <!-- ====== TOAST ====== -->
     <div id="toastContainer"></div>
 
     <script>
-        // ============================================================
-        //  FRONTEND APPLICATION
-        // ============================================================
-
-        // --- state ---
+        // ---------- State ----------
         let token = localStorage.getItem('rolltracker_token') || '';
         let currentUser = null;
-        let allRolls = []; // cache
 
-        // --- DOM refs ---
         const $ = id => document.getElementById(id);
         const loginOverlay = $('loginOverlay');
         const loginUser = $('loginUser');
@@ -871,31 +611,29 @@
         const userNameDisplay = $('userNameDisplay');
         const userRoleTag = $('userRoleTag');
         const rollSearch = $('rollSearch');
+        const suggestions = $('suggestions');
         const searchBtn = $('searchBtn');
         const clearBtn = $('clearBtn');
         const resultCard = $('resultCard');
         const notFound = $('notFound');
         const totalRollsDisplay = $('totalRollsDisplay');
         const footerTotal = $('footerTotal');
+        const stockTimestamp = $('stockTimestamp');
 
-        // result fields
         const rFields = {
             roll: $('resultRollNumber'),
             status: $('resultStatus'),
-            loc: $('rLoc'),
             group: $('rGroup'),
-            grade: $('rGrade'),
             width: $('rWidth'),
             dia: $('rDia'),
             kgs: $('rKgs'),
             meter: $('rMeter'),
+            qlt: $('rQlt'),
             supplier: $('rSupplier'),
-            sn: $('rSn'),
             buyDate: $('rBuyDate'),
-            note: $('rNote'),
+            loc: $('rLoc'),
         };
 
-        // stats
         const statTotal = $('statTotal');
         const statLoc1 = $('statLoc1');
         const statLocF = $('statLocF');
@@ -903,7 +641,6 @@
         const statScrap = $('statScrap');
         const statWait = $('statWait');
 
-        // admin
         const adminPanel = $('adminPanel');
         const userTableBody = $('userTableBody');
         const addUserBtn = $('addUserBtn');
@@ -922,25 +659,23 @@
         const clearAllDataBtn = $('clearAllDataBtn');
         const clearStatus = $('clearStatus');
         const clearImportBtn = $('clearImportBtn');
+        const stockCountNumber = $('stockCountNumber');
+        const stockDate = $('stockDate');
+        const stockTime = $('stockTime');
 
-        // --- helpers ---
+        // ---------- Helpers ----------
         function showToast(msg, type = 'info') {
             const c = document.createElement('div');
             c.className = `toast ${type}`;
             c.textContent = msg;
             document.getElementById('toastContainer').appendChild(c);
-            setTimeout(() => { c.style.opacity = '0';
-                c.style.transition = 'opacity 0.4s';
-                setTimeout(() => c.remove(), 500); }, 3000);
+            setTimeout(() => { c.style.opacity = '0'; c.style.transition = 'opacity 0.4s'; setTimeout(() => c.remove(), 500); }, 3000);
         }
 
         function api(method, path, body = null) {
             const opts = {
                 method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                }
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
             };
             if (body) opts.body = JSON.stringify(body);
             return fetch('/api' + path, opts).then(r => r.json());
@@ -953,7 +688,7 @@
             return dt.toLocaleDateString('th-TH');
         }
 
-        // --- auth ---
+        // ---------- Auth ----------
         function setAuth(tokenVal, user) {
             token = tokenVal;
             currentUser = user;
@@ -986,18 +721,17 @@
                 }
                 loadStats();
                 loadTotalCount();
+                loadStockTimestamp();
             } else {
                 app.style.display = 'none';
                 loginOverlay.classList.add('visible');
             }
         }
 
-        // --- login ---
         loginBtn.addEventListener('click', async () => {
             const user = loginUser.value.trim();
             const pass = loginPass.value.trim();
-            if (!user || !pass) { loginError.textContent = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน';
-                return; }
+            if (!user || !pass) { loginError.textContent = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน'; return; }
             loginBtn.disabled = true;
             loginError.textContent = 'กำลังเข้าสู่ระบบ...';
             try {
@@ -1023,10 +757,9 @@
 
         loginUser.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
         loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
-
         logoutBtn.addEventListener('click', logout);
 
-        // --- check saved session ---
+        // ---------- Session check ----------
         (function init() {
             const saved = localStorage.getItem('rolltracker_user');
             if (saved) {
@@ -1034,19 +767,13 @@
                     currentUser = JSON.parse(saved);
                     token = localStorage.getItem('rolltracker_token') || '';
                     if (token) {
-                        // verify token
-                        fetch('/api/auth/me', {
-                            headers: { 'Authorization': 'Bearer ' + token }
-                        }).then(r => r.json()).then(data => {
-                            if (data.user) {
-                                currentUser = data.user;
-                                updateUI();
-                                loadStats();
-                                loadTotalCount();
-                            } else {
-                                logout();
-                            }
-                        }).catch(() => logout());
+                        fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + token } })
+                            .then(r => r.json()).then(data => {
+                                if (data.user) {
+                                    currentUser = data.user;
+                                    updateUI();
+                                } else { logout(); }
+                            }).catch(() => logout());
                         return;
                     }
                 } catch (e) {}
@@ -1054,7 +781,46 @@
             logout();
         })();
 
-        // --- search ---
+        // ---------- Search with autocomplete ----------
+        let suggestTimeout;
+        rollSearch.addEventListener('input', function() {
+            const q = this.value.trim();
+            clearTimeout(suggestTimeout);
+            if (q.length < 1) {
+                suggestions.classList.remove('show');
+                return;
+            }
+            suggestTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch('/api/rolls/suggest?q=' + encodeURIComponent(q), {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length) {
+                        suggestions.innerHTML = data.map(s => `<div class="suggestion-item" data-value="${s}">${s}</div>`).join('');
+                        suggestions.classList.add('show');
+                        suggestions.querySelectorAll('.suggestion-item').forEach(el => {
+                            el.addEventListener('click', function() {
+                                rollSearch.value = this.dataset.value;
+                                suggestions.classList.remove('show');
+                                searchBtn.click();
+                            });
+                        });
+                    } else {
+                        suggestions.classList.remove('show');
+                    }
+                } catch (e) {
+                    suggestions.classList.remove('show');
+                }
+            }, 200);
+        });
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-input-wrapper')) {
+                suggestions.classList.remove('show');
+            }
+        });
+
+        // ---------- Search action ----------
         async function doSearch() {
             const q = rollSearch.value.trim();
             if (!q) {
@@ -1085,19 +851,16 @@
             rFields.roll.textContent = roll.roll_number || '—';
             const status = roll.status || '—';
             rFields.status.textContent = status;
-            rFields.status.className = 'roll-status ' + (status === 'เต็ม' ? 'เต็ม' : status === 'เศษ' ? 'เศษ' : status ===
-            'รอกรอ' ? 'รอกรอ' : '');
-            rFields.loc.textContent = roll.loc || '—';
+            rFields.status.className = 'roll-status ' + (status === 'เต็ม' ? 'เต็ม' : status === 'เศษ' ? 'เศษ' : status === 'รอกรอ' ? 'รอกรอ' : '');
             rFields.group.textContent = roll.group_name || '—';
-            rFields.grade.textContent = roll.grade || '—';
             rFields.width.textContent = roll.width ? roll.width + '"' : '—';
             rFields.dia.textContent = roll.dimeter || '—';
             rFields.kgs.textContent = roll.kgs || '—';
             rFields.meter.textContent = roll.meter || '—';
+            rFields.qlt.textContent = roll.qlt || '—';
             rFields.supplier.textContent = roll.supplier || '—';
-            rFields.sn.textContent = roll.supplier_sn || '—';
             rFields.buyDate.textContent = formatDate(roll.buy_date);
-            rFields.note.textContent = roll.note || '—';
+            rFields.loc.textContent = roll.loc || '—';
             resultCard.classList.add('visible');
         }
 
@@ -1107,15 +870,31 @@
             rollSearch.value = '';
             resultCard.classList.remove('visible');
             notFound.style.display = 'none';
+            suggestions.classList.remove('show');
             rollSearch.focus();
         });
 
-        // --- load stats ---
-        async function loadStats() {
+        // ---------- Load stock timestamp ----------
+        async function loadStockTimestamp() {
             try {
-                const res = await fetch('/api/dashboard/stats', {
+                const res = await fetch('/api/stock/latest', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
+                const data = await res.json();
+                if (res.ok && data.count_number) {
+                    stockTimestamp.textContent = `📅 Stock คงเหลือ ณ วันที่ ${data.stock_date} เวลา ${data.stock_time} (ครั้งที่ ${data.count_number})`;
+                } else {
+                    stockTimestamp.textContent = '📅 ยังไม่มีการตั้งค่า Stock';
+                }
+            } catch (e) {
+                stockTimestamp.textContent = '📅 ยังไม่มีการตั้งค่า Stock';
+            }
+        }
+
+        // ---------- Stats ----------
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/dashboard/stats', { headers: { 'Authorization': 'Bearer ' + token } });
                 const data = await res.json();
                 if (res.ok) {
                     statTotal.textContent = data.total || 0;
@@ -1130,9 +909,7 @@
 
         async function loadTotalCount() {
             try {
-                const res = await fetch('/api/rolls/count', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
+                const res = await fetch('/api/rolls/count', { headers: { 'Authorization': 'Bearer ' + token } });
                 const data = await res.json();
                 const n = data.count || 0;
                 totalRollsDisplay.textContent = '📦 ' + n + ' ม้วน';
@@ -1140,13 +917,11 @@
             } catch (e) { totalRollsDisplay.textContent = '📦 —'; }
         }
 
-        // --- admin: users ---
+        // ---------- Admin: Users ----------
         async function loadUsers() {
             try {
                 const res = await api('GET', '/users');
-                if (res.users) {
-                    renderUsers(res.users);
-                }
+                if (res.users) renderUsers(res.users);
             } catch (e) { console.warn(e); }
         }
 
@@ -1175,17 +950,14 @@
         window.toggleUser = async (id, active) => {
             try {
                 const res = await api('PUT', `/users/${id}/toggle`, { is_active: active });
-                if (res.ok) { showToast('อัปเดตสถานะแล้ว', 'success');
-                    loadUsers(); } else showToast(res.message || 'ผิดพลาด', 'error');
+                if (res.ok) { showToast('อัปเดตสถานะแล้ว', 'success'); loadUsers(); } else showToast(res.message || 'ผิดพลาด', 'error');
             } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
         };
-
         window.deleteUser = async (id) => {
             if (!confirm('ลบผู้ใช้นี้?')) return;
             try {
                 const res = await api('DELETE', `/users/${id}`);
-                if (res.ok) { showToast('ลบผู้ใช้แล้ว', 'success');
-                    loadUsers(); } else showToast(res.message || 'ผิดพลาด', 'error');
+                if (res.ok) { showToast('ลบผู้ใช้แล้ว', 'success'); loadUsers(); } else showToast(res.message || 'ผิดพลาด', 'error');
             } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
         };
 
@@ -1215,27 +987,30 @@
             } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
         });
 
-        // --- admin: import ---
-        let importInProgress = false;
-
+        // ---------- Admin: Import ----------
         excelFileInput.addEventListener('change', (e) => {
             const f = e.target.files[0];
-            if (f) {
-                fileInfo.textContent = '📄 ' + f.name + ' (' + (f.size / 1024 / 1024).toFixed(2) + ' MB)';
-            } else {
-                fileInfo.textContent = 'ยังไม่ได้เลือกไฟล์';
-            }
+            if (f) fileInfo.textContent = '📄 ' + f.name + ' (' + (f.size/1024/1024).toFixed(2) + ' MB)';
+            else fileInfo.textContent = 'ยังไม่ได้เลือกไฟล์';
         });
 
         importBtn.addEventListener('click', async () => {
-            if (importInProgress) { showToast('กำลังนำเข้า กรุณารอ...', 'warning'); return; }
+            const count = stockCountNumber.value.trim();
+            const date = stockDate.value;
+            const time = stockTime.value;
+            if (!count || !date || !time) {
+                showToast('กรุณากรอก ครั้งที่, วันที่ และเวลา', 'warning');
+                return;
+            }
             const file = excelFileInput.files[0];
             if (!file) { showToast('กรุณาเลือกไฟล์ Excel', 'warning'); return; }
 
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('count_number', count);
+            formData.append('stock_date', date);
+            formData.append('stock_time', time);
 
-            importInProgress = true;
             importBtn.disabled = true;
             importProgress.style.width = '30%';
             importStatus.textContent = 'กำลังอัปโหลด...';
@@ -1254,6 +1029,7 @@
                     loadStats();
                     loadTotalCount();
                     loadHistory();
+                    loadStockTimestamp();
                     excelFileInput.value = '';
                     fileInfo.textContent = 'ยังไม่ได้เลือกไฟล์';
                 } else {
@@ -1264,18 +1040,15 @@
                 importStatus.textContent = '❌ เกิดข้อผิดพลาด';
                 showToast('เกิดข้อผิดพลาดในการนำเข้า', 'error');
             }
-            importInProgress = false;
             importBtn.disabled = false;
             setTimeout(() => { importProgress.style.width = '0%'; }, 2000);
         });
 
-        // --- admin: history ---
+        // ---------- Admin: History ----------
         async function loadHistory() {
             try {
                 const res = await api('GET', '/import/history');
-                if (res.history) {
-                    renderHistory(res.history);
-                }
+                if (res.history) renderHistory(res.history);
             } catch (e) { console.warn(e); }
         }
 
@@ -1295,30 +1068,26 @@
                 `).join('');
         }
 
-        // --- admin: clear data ---
+        // ---------- Clear data ----------
         clearImportBtn.addEventListener('click', async () => {
-            if (!confirm('⚠️ ล้างข้อมูลทั้งหมด (ม้วน, ประวัติ, ผู้ใช้)? การกระทำนี้ไม่สามารถกู้คืนได้!')) return;
-            if (!confirm('ยืนยันอีกครั้ง: ล้างข้อมูลทั้งหมด?')) return;
+            if (!confirm('⚠️ ล้างข้อมูลทั้งหมด (ม้วน, ประวัติ)? การกระทำนี้ไม่สามารถกู้คืนได้!')) return;
+            if (!confirm('ยืนยันอีกครั้ง?')) return;
             try {
                 const res = await api('DELETE', '/data/clear');
                 if (res.ok) {
-                    showToast('ล้างข้อมูลทั้งหมดแล้ว', 'warning');
+                    showToast('ล้างข้อมูลแล้ว', 'warning');
                     loadStats();
                     loadTotalCount();
                     loadHistory();
-                    loadUsers();
                     resultCard.classList.remove('visible');
                     notFound.style.display = 'none';
-                } else {
-                    showToast(res.message || 'ผิดพลาด', 'error');
-                }
+                } else showToast(res.message || 'ผิดพลาด', 'error');
             } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
         });
 
-        // --- admin: clear all data (danger) ---
         clearAllDataBtn.addEventListener('click', async () => {
             if (!confirm('⚠️⚠️ ล้างข้อมูลทั้งหมด (รวมผู้ใช้)? การกระทำนี้ไม่สามารถกู้คืนได้!')) return;
-            if (!confirm('ยืนยันอีกครั้ง: ล้างข้อมูลทั้งหมด?')) return;
+            if (!confirm('ยืนยันอีกครั้ง?')) return;
             try {
                 const res = await api('DELETE', '/data/clear-all');
                 if (res.ok) {
@@ -1330,13 +1099,11 @@
                     resultCard.classList.remove('visible');
                     notFound.style.display = 'none';
                     clearStatus.textContent = '✅ ล้างข้อมูลแล้ว';
-                } else {
-                    showToast(res.message || 'ผิดพลาด', 'error');
-                }
+                } else showToast(res.message || 'ผิดพลาด', 'error');
             } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
         });
 
-        // --- admin tabs ---
+        // ---------- Admin tabs ----------
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1347,15 +1114,16 @@
             });
         });
 
-        // --- init ---
-        // (already called from session check)
+        // Set default date/time
+        (function setDefaultDateTime() {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toTimeString().slice(0,5);
+            stockDate.value = dateStr;
+            stockTime.value = timeStr;
+        })();
 
-        // --- global for inline onclick ---
-        window.toggleUser = window.toggleUser;
-        window.deleteUser = window.deleteUser;
-
-        console.log('📦 RollTracker ready');
-        console.log('👤 Admin: admin/admin123 | User: user/user123');
+        console.log('📦 RollTracker v2.0 ready');
     </script>
 </body>
 </html>

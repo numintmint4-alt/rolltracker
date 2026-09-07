@@ -16,13 +16,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Database
+// ---------- Database ----------
 const db = new sqlite3.Database('./rolls.db', (err) => {
     if (err) console.error('Database error:', err.message);
     else console.log('Connected to SQLite database.');
 });
 
 db.serialize(() => {
+    // Users
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
@@ -31,6 +32,8 @@ db.serialize(() => {
         is_active INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Rolls
     db.run(`CREATE TABLE IF NOT EXISTS rolls (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         roll_number TEXT UNIQUE,
@@ -54,6 +57,8 @@ db.serialize(() => {
         group_name TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Import history
     db.run(`CREATE TABLE IF NOT EXISTS import_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         filename TEXT,
@@ -62,6 +67,27 @@ db.serialize(() => {
         import_date DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // Stock count settings (Admin sets this)
+    db.run(`CREATE TABLE IF NOT EXISTS stock_counts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        count_number TEXT,
+        stock_date TEXT,
+        stock_time TEXT,
+        created_by TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // Stock check items (user checks each roll)
+    db.run(`CREATE TABLE IF NOT EXISTS stock_check_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        stock_count_id INTEGER,
+        roll_number TEXT,
+        checked_by TEXT,
+        found INTEGER DEFAULT 0,
+        checked_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // Default users
     const adminUser = 'admin';
     const adminPass = bcrypt.hashSync('admin123', 10);
     db.get(`SELECT id FROM users WHERE username = ?`, [adminUser], (err, row) => {
@@ -80,6 +106,7 @@ db.serialize(() => {
     });
 });
 
+// ---------- Middleware ----------
 function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ message: 'No token' });
@@ -98,6 +125,7 @@ function adminMiddleware(req, res, next) {
     next();
 }
 
+// ---------- Auth Routes ----------
 app.post('/api/auth/login', (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ message: 'Missing credentials' });
@@ -128,6 +156,7 @@ app.post('/api/auth/register', authMiddleware, adminMiddleware, (req, res) => {
     });
 });
 
+// ---------- User Management ----------
 app.get('/api/users', authMiddleware, adminMiddleware, (req, res) => {
     db.all(`SELECT id, username, role, is_active, created_at FROM users`, (err, rows) => {
         if (err) return res.status(500).json({ message: 'DB error' });
@@ -150,12 +179,22 @@ app.delete('/api/users/:id', authMiddleware, adminMiddleware, (req, res) => {
     });
 });
 
+// ---------- Rolls ----------
 app.get('/api/rolls/search', authMiddleware, (req, res) => {
     const q = req.query.q || '';
     db.get(`SELECT * FROM rolls WHERE roll_number = ?`, [q], (err, roll) => {
         if (err) return res.status(500).json({ message: 'DB error' });
         if (!roll) return res.status(404).json({ message: 'Not found' });
         res.json({ roll });
+    });
+});
+
+app.get('/api/rolls/suggest', authMiddleware, (req, res) => {
+    const q = req.query.q || '';
+    if (q.length < 1) return res.json([]);
+    db.all(`SELECT roll_number FROM rolls WHERE roll_number LIKE ? ESCAPE '\\' LIMIT 20`, [`%${q.replace(/%/g,'\\%')}%`], (err, rows) => {
+        if (err) return res.status(500).json([]);
+        res.json(rows.map(r => r.roll_number));
     });
 });
 
@@ -182,18 +221,90 @@ app.get('/api/dashboard/stats', authMiddleware, (req, res) => {
     }, 200);
 });
 
+// ---------- Stock Settings ----------
+app.post('/api/stock/settings', authMiddleware, adminMiddleware, (req, res) => {
+    const { count_number, stock_date, stock_time } = req.body;
+    if (!count_number || !stock_date || !stock_time) {
+        return res.status(400).json({ message: 'Missing fields' });
+    }
+    db.run(`INSERT INTO stock_counts (count_number, stock_date, stock_time, created_by) VALUES (?, ?, ?, ?)`,
+        [count_number, stock_date, stock_time, req.user.username],
+        function(err) {
+            if (err) return res.status(500).json({ message: 'Failed to save settings' });
+            res.json({ ok: true, id: this.lastID });
+        });
+});
+
+app.get('/api/stock/latest', authMiddleware, (req, res) => {
+    db.get(`SELECT * FROM stock_counts ORDER BY id DESC LIMIT 1`, (err, row) => {
+        if (err || !row) return res.status(404).json({ message: 'No settings found' });
+        res.json(row);
+    });
+});
+
+// ---------- Stock Check ----------
+app.get('/api/stock/check-items', authMiddleware, (req, res) => {
+    // get current stock count id
+    db.get(`SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1`, (err, row) => {
+        if (err || !row) {
+            return res.status(404).json({ message: 'No stock count settings' });
+        }
+        const stockCountId = row.id;
+        // fetch all rolls, and check if already checked
+        db.all(`SELECT r.*, 
+                       (SELECT found FROM stock_check_items WHERE stock_count_id = ? AND roll_number = r.roll_number AND checked_by = ?) as found
+                FROM rolls r ORDER BY r.group_name, r.width`, [stockCountId, req.user.username], (err, rolls) => {
+            if (err) return res.status(500).json({ message: 'DB error' });
+            res.json({ stock_count_id: stockCountId, rolls });
+        });
+    });
+});
+
+app.post('/api/stock/check', authMiddleware, (req, res) => {
+    const { stock_count_id, roll_number, found } = req.body;
+    if (!stock_count_id || !roll_number) return res.status(400).json({ message: 'Missing fields' });
+    db.get(`SELECT id FROM stock_check_items WHERE stock_count_id = ? AND roll_number = ? AND checked_by = ?`,
+        [stock_count_id, roll_number, req.user.username], (err, row) => {
+            if (err) return res.status(500).json({ message: 'DB error' });
+            if (row) {
+                // update
+                db.run(`UPDATE stock_check_items SET found = ?, checked_at = CURRENT_TIMESTAMP WHERE id = ?`,
+                    [found ? 1 : 0, row.id], (err) => {
+                        if (err) return res.status(500).json({ message: 'Update failed' });
+                        res.json({ ok: true });
+                    });
+            } else {
+                db.run(`INSERT INTO stock_check_items (stock_count_id, roll_number, checked_by, found) VALUES (?, ?, ?, ?)`,
+                    [stock_count_id, roll_number, req.user.username, found ? 1 : 0], (err) => {
+                        if (err) return res.status(500).json({ message: 'Insert failed' });
+                        res.json({ ok: true });
+                    });
+            }
+        });
+});
+
+// ---------- Import Excel ----------
 const upload = multer({ dest: 'uploads/' });
+
 app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    // Also receive stock settings from form
+    const { count_number, stock_date, stock_time } = req.body;
+    if (!count_number || !stock_date || !stock_time) {
+        return res.status(400).json({ message: 'กรุณากรอกครั้งที่, วันที่ และเวลา' });
+    }
+
     try {
         const workbook = xlsx.readFile(req.file.path);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const data = xlsx.utils.sheet_to_json(sheet, { defval: '' });
+
         let inserted = 0;
         const stmt = db.prepare(`INSERT OR REPLACE INTO rolls (
             roll_number, grade, width, supplier, supplier_grade, supplier_sn, dimeter, kgs, meter,
             supplier_doc_no, buy_date, ageing, qlt, customer, comp_no, loc, status, note, group_name
         ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+
         db.serialize(() => {
             data.forEach(row => {
                 const rollNumber = row['เบอร์ม้วน'] || row['roll_number'] || '';
@@ -222,9 +333,17 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
                 inserted++;
             });
             stmt.finalize();
+
+            // Save stock settings
+            db.run(`INSERT INTO stock_counts (count_number, stock_date, stock_time, created_by) VALUES (?, ?, ?, ?)`,
+                [count_number, stock_date, stock_time, req.user.username]
+            );
+
+            // Save import history
             db.run(`INSERT INTO import_history (filename, imported_by, rows_imported) VALUES (?, ?, ?)`,
                 [req.file.originalname, req.user.username, inserted]
             );
+
             fs.unlinkSync(req.file.path);
             res.json({ ok: true, imported: inserted });
         });
@@ -241,10 +360,12 @@ app.get('/api/import/history', authMiddleware, adminMiddleware, (req, res) => {
     });
 });
 
+// ---------- Clear Data ----------
 app.delete('/api/data/clear', authMiddleware, adminMiddleware, (req, res) => {
     db.run(`DELETE FROM rolls`, (err) => {
         if (err) return res.status(500).json({ message: 'Clear failed' });
         db.run(`DELETE FROM import_history`);
+        db.run(`DELETE FROM stock_check_items`);
         res.json({ ok: true });
     });
 });
@@ -253,13 +374,20 @@ app.delete('/api/data/clear-all', authMiddleware, adminMiddleware, (req, res) =>
     db.serialize(() => {
         db.run(`DELETE FROM rolls`);
         db.run(`DELETE FROM import_history`);
+        db.run(`DELETE FROM stock_check_items`);
+        db.run(`DELETE FROM stock_counts`);
         db.run(`DELETE FROM users WHERE role != 'admin'`);
         res.json({ ok: true });
     });
 });
 
+// ---------- Serve Frontend ----------
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/stock-check', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'stock-check.html'));
 });
 
 app.listen(PORT, () => {
