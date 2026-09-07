@@ -5,92 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>📦 ระบบตรวจสอบ Location ม้วนกระดาษ</title>
     <style>
-        /* ใช้ CSS เดิมทั้งหมด แล้วเพิ่มส่วนของ autocomplete และ stock timestamp */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: #f4f7fc;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        #app {
-            width: 100%;
-            max-width: 1300px;
-            background: #fff;
-            border-radius: 32px;
-            box-shadow: 0 25px 60px rgba(0, 20, 40, 0.15);
-            overflow: hidden;
-        }
-        .app-header {
-            background: linear-gradient(135deg, #0b2b44, #1a4b6d);
-            color: #fff;
-            padding: 18px 28px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-        .app-header h1 {
-            font-size: 22px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .app-header h1 small {
-            font-weight: 400;
-            font-size: 14px;
-            opacity: 0.7;
-        }
-        .header-actions {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
-        }
-        .header-actions .user-badge {
-            background: rgba(255,255,255,0.15);
-            padding: 6px 16px;
-            border-radius: 40px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .header-actions .user-badge .role-tag {
-            background: #ffc107;
-            color: #1a2a3a;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 2px 10px;
-            border-radius: 30px;
-            text-transform: uppercase;
-        }
-        .header-actions .user-badge .role-tag.admin {
-            background: #ff6b6b;
-            color: #fff;
-        }
-        .btn {
-            border: none;
-            padding: 8px 18px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none;
-        }
+        /* ใช้ CSS เดิมทั้งหมด (จากไฟล์ก่อนหน้า) */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f4f7fc; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        #app { width: 100%; max-width: 1300px; background: #fff; border-radius: 32px; box-shadow: 0 25px 60px rgba(0,20,40,0.15); overflow: hidden; }
+        .app-header { background: linear-gradient(135deg, #0b2b44, #1a4b6d); color: #fff; padding: 18px 28px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+        .app-header h1 { font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .app-header h1 small { font-weight: 400; font-size: 14px; opacity: 0.7; }
+        .header-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+        .header-actions .user-badge { background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 40px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .header-actions .user-badge .role-tag { background: #ffc107; color: #1a2a3a; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 30px; text-transform: uppercase; }
+        .header-actions .user-badge .role-tag.admin { background: #ff6b6b; color: #fff; }
+        .btn { border: none; padding: 8px 18px; border-radius: 40px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
         .btn-primary { background: #ffc107; color: #1a2a3a; }
         .btn-primary:hover { background: #ffd966; transform: scale(1.02); }
         .btn-danger { background: #dc3545; color: #fff; }
@@ -103,174 +29,40 @@
         .btn-secondary { background: #6c757d; color: #fff; }
         .btn-secondary:hover { background: #5a6268; }
         .app-body { padding: 24px 28px 32px; }
-        .search-section {
-            background: #f8faff;
-            border-radius: 20px;
-            padding: 20px 24px;
-            margin-bottom: 28px;
-            border: 1px solid #e9edf4;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 14px;
-            position: relative;
-        }
+        .search-section { background: #f8faff; border-radius: 20px; padding: 20px 24px; margin-bottom: 28px; border: 1px solid #e9edf4; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; position: relative; }
         .search-section label { font-weight: 600; color: #1a2a3a; font-size: 15px; }
-        .search-section .search-input-wrapper {
-            flex: 1 1 260px;
-            position: relative;
-        }
-        .search-section .search-input-wrapper input {
-            width: 100%;
-            padding: 12px 18px;
-            border: 2px solid #dce2ec;
-            border-radius: 40px;
-            font-size: 16px;
-            outline: none;
-            background: #fff;
-        }
-        .search-section .search-input-wrapper input:focus {
-            border-color: #1a4b6d;
-            box-shadow: 0 0 0 4px rgba(26,75,109,0.12);
-        }
-        .search-section .search-input-wrapper .suggestions {
-            position: absolute;
-            top: 110%;
-            left: 0;
-            right: 0;
-            background: #fff;
-            border: 1px solid #dce2ec;
-            border-radius: 12px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 100;
-            display: none;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-        }
-        .search-section .search-input-wrapper .suggestions.show {
-            display: block;
-        }
-        .search-section .search-input-wrapper .suggestions .suggestion-item {
-            padding: 10px 18px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f3f8;
-        }
-        .search-section .search-input-wrapper .suggestions .suggestion-item:hover {
-            background: #f0f4fa;
-        }
-        .search-section .search-btn {
-            padding: 12px 30px;
-            border-radius: 40px;
-            background: #1a4b6d;
-            color: #fff;
-            border: none;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+        .search-section .search-input-wrapper { flex: 1 1 260px; position: relative; }
+        .search-section .search-input-wrapper input { width: 100%; padding: 12px 18px; border: 2px solid #dce2ec; border-radius: 40px; font-size: 16px; outline: none; background: #fff; }
+        .search-section .search-input-wrapper input:focus { border-color: #1a4b6d; box-shadow: 0 0 0 4px rgba(26,75,109,0.12); }
+        .search-section .search-input-wrapper .suggestions { position: absolute; top: 110%; left: 0; right: 0; background: #fff; border: 1px solid #dce2ec; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        .search-section .search-input-wrapper .suggestions.show { display: block; }
+        .search-section .search-input-wrapper .suggestions .suggestion-item { padding: 10px 18px; cursor: pointer; border-bottom: 1px solid #f0f3f8; }
+        .search-section .search-input-wrapper .suggestions .suggestion-item:hover { background: #f0f4fa; }
+        .search-section .search-btn { padding: 12px 30px; border-radius: 40px; background: #1a4b6d; color: #fff; border: none; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.2s; }
         .search-section .search-btn:hover { background: #0b2b44; }
         .search-section .search-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .result-card {
-            background: #fff;
-            border-radius: 18px;
-            border: 1px solid #e9edf4;
-            padding: 24px 28px;
-            margin-top: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            display: none;
-            animation: fadeUp 0.35s ease;
-        }
+        .result-card { background: #fff; border-radius: 18px; border: 1px solid #e9edf4; padding: 24px 28px; margin-top: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: none; animation: fadeUp 0.35s ease; }
         .result-card.visible { display: block; }
-        @keyframes fadeUp {
-            0% { opacity: 0; transform: translateY(16px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-        .result-card .roll-header {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #f0f3f8;
-            padding-bottom: 14px;
-            margin-bottom: 18px;
-        }
-        .result-card .roll-header .roll-number {
-            font-size: 26px;
-            font-weight: 700;
-            color: #0b2b44;
-            word-break: break-all;
-        }
-        .result-card .roll-header .roll-status {
-            padding: 6px 18px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 14px;
-            background: #e9edf4;
-            color: #2c3e50;
-        }
+        @keyframes fadeUp { 0% { opacity: 0; transform: translateY(16px); } 100% { opacity: 1; transform: translateY(0); } }
+        .result-card .roll-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f3f8; padding-bottom: 14px; margin-bottom: 18px; }
+        .result-card .roll-header .roll-number { font-size: 26px; font-weight: 700; color: #0b2b44; word-break: break-all; }
+        .result-card .roll-header .roll-status { padding: 6px 18px; border-radius: 40px; font-weight: 600; font-size: 14px; background: #e9edf4; color: #2c3e50; }
         .result-card .roll-header .roll-status.เต็ม { background: #d4edda; color: #155724; }
         .result-card .roll-header .roll-status.เศษ { background: #f8d7da; color: #721c24; }
         .result-card .roll-header .roll-status.รอกรอ { background: #fff3cd; color: #856404; }
-        .result-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 14px 24px;
-        }
-        .result-grid .item {
-            display: flex;
-            flex-direction: column;
-        }
-        .result-grid .item .label {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #7a8a9e;
-        }
-        .result-grid .item .value {
-            font-size: 18px;
-            font-weight: 600;
-            color: #0b2b44;
-            margin-top: 2px;
-            word-break: break-word;
-        }
-        .result-grid .item .value.location {
-            background: #eaf4ff;
-            padding: 2px 14px;
-            border-radius: 30px;
-            display: inline-block;
-        }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px 24px; }
+        .result-grid .item { display: flex; flex-direction: column; }
+        .result-grid .item .label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #7a8a9e; }
+        .result-grid .item .value { font-size: 18px; font-weight: 600; color: #0b2b44; margin-top: 2px; word-break: break-word; }
+        .result-grid .item .value.location { background: #eaf4ff; padding: 2px 14px; border-radius: 30px; display: inline-block; }
         .not-found { text-align: center; padding: 40px 20px; color: #7a8a9e; display: none; }
         .not-found .icon { font-size: 56px; margin-bottom: 12px; }
         .not-found h3 { color: #1a2a3a; margin-bottom: 6px; }
-        .admin-panel {
-            margin-top: 32px;
-            border-top: 2px solid #e9edf4;
-            padding-top: 28px;
-            display: none;
-        }
+        .admin-panel { margin-top: 32px; border-top: 2px solid #e9edf4; padding-top: 28px; display: none; }
         .admin-panel.visible { display: block; }
         .admin-panel h2 { font-size: 20px; color: #0b2b44; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
-        .admin-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e9edf4;
-            padding-bottom: 10px;
-        }
-        .admin-tabs .tab-btn {
-            padding: 8px 22px;
-            border-radius: 40px;
-            border: none;
-            background: transparent;
-            font-weight: 600;
-            color: #5a6a7e;
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 14px;
-        }
+        .admin-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; border-bottom: 2px solid #e9edf4; padding-bottom: 10px; }
+        .admin-tabs .tab-btn { padding: 8px 22px; border-radius: 40px; border: none; background: transparent; font-weight: 600; color: #5a6a7e; cursor: pointer; transition: 0.2s; font-size: 14px; }
         .admin-tabs .tab-btn.active { background: #1a4b6d; color: #fff; }
         .admin-tabs .tab-btn:hover:not(.active) { background: #e9edf4; }
         .tab-content { display: none; animation: fadeUp 0.3s ease; }
@@ -280,83 +72,26 @@
         table th { background: #f0f4fa; text-align: left; padding: 12px 16px; font-weight: 600; color: #1a2a3a; border-bottom: 2px solid #dce2ec; }
         table td { padding: 10px 16px; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
         table tr:hover td { background: #f8faff; }
-        .badge {
-            display: inline-block;
-            padding: 2px 12px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 600;
-        }
+        .badge { display: inline-block; padding: 2px 12px; border-radius: 30px; font-size: 12px; font-weight: 600; }
         .badge.active { background: #d4edda; color: #155724; }
         .badge.inactive { background: #f8d7da; color: #721c24; }
         .badge.admin { background: #cce5ff; color: #004085; }
         .badge.user { background: #e9edf4; color: #2c3e50; }
-        .import-form {
-            background: #f8faff;
-            padding: 20px 24px;
-            border-radius: 16px;
-            border: 1px dashed #bcc9db;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .import-form .row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            align-items: center;
-        }
-        .import-form .row label {
-            font-weight: 600;
-            min-width: 100px;
-        }
-        .import-form .row input, .import-form .row select {
-            padding: 10px 14px;
-            border: 2px solid #dce2ec;
-            border-radius: 10px;
-            font-size: 15px;
-            flex: 1;
-            min-width: 160px;
-        }
+        .import-form { background: #f8faff; padding: 20px 24px; border-radius: 16px; border: 1px dashed #bcc9db; display: flex; flex-direction: column; gap: 16px; }
+        .import-form .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+        .import-form .row label { font-weight: 600; min-width: 100px; }
+        .import-form .row input, .import-form .row select { padding: 10px 14px; border: 2px solid #dce2ec; border-radius: 10px; font-size: 15px; flex: 1; min-width: 160px; }
         .import-form .row input[type="file"] { padding: 10px; background: #fff; }
         .import-form .file-info { font-size: 13px; color: #5a6a7e; }
         .import-form .progress-bar { width: 100%; height: 8px; background: #e9edf4; border-radius: 10px; overflow: hidden; }
         .import-form .progress-bar .fill { height: 100%; width: 0%; background: #28a745; border-radius: 10px; transition: width 0.3s; }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: #f8faff;
-            border-radius: 16px;
-            padding: 16px 20px;
-            border: 1px solid #e9edf4;
-            text-align: center;
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #f8faff; border-radius: 16px; padding: 16px 20px; border: 1px solid #e9edf4; text-align: center; }
         .stat-card .number { font-size: 32px; font-weight: 700; color: #0b2b44; }
         .stat-card .label { font-size: 13px; color: #7a8a9e; margin-top: 2px; }
-        .login-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            z-index: 999;
-            justify-content: center;
-            align-items: center;
-        }
+        .login-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 999; justify-content: center; align-items: center; }
         .login-overlay.visible { display: flex; }
-        .login-box {
-            background: #fff;
-            padding: 40px 36px;
-            border-radius: 28px;
-            max-width: 400px;
-            width: 100%;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
-            animation: fadeUp 0.35s ease;
-        }
+        .login-box { background: #fff; padding: 40px 36px; border-radius: 28px; max-width: 400px; width: 100%; box-shadow: 0 30px 60px rgba(0,0,0,0.3); animation: fadeUp 0.35s ease; }
         .login-box h2 { font-size: 24px; color: #0b2b44; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
         .login-box .sub { color: #7a8a9e; margin-bottom: 24px; font-size: 14px; }
         .login-box .form-group { margin-bottom: 16px; }
@@ -367,50 +102,16 @@
         .login-box .login-btn:hover { background: #0b2b44; }
         .login-box .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .login-box .error-msg { color: #dc3545; font-size: 14px; margin-top: 12px; text-align: center; min-height: 24px; }
-        @media (max-width: 640px) {
-            .app-header { padding: 14px 18px; }
-            .app-header h1 { font-size: 18px; }
-            .app-body { padding: 16px; }
-            .search-section { padding: 16px; }
-            .search-section input[type="text"] { font-size: 15px; padding: 10px 14px; }
-            .result-card { padding: 18px; }
-            .result-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .result-grid .item .value { font-size: 16px; }
-            .login-box { padding: 28px 20px; margin: 16px; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
-        }
-        @media (max-width: 400px) {
-            .result-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 640px) { .app-header { padding: 14px 18px; } .app-header h1 { font-size: 18px; } .app-body { padding: 16px; } .search-section { padding: 16px; } .search-section input[type="text"] { font-size: 15px; padding: 10px 14px; } .result-card { padding: 18px; } .result-grid { grid-template-columns: 1fr 1fr; gap: 10px; } .result-grid .item .value { font-size: 16px; } .login-box { padding: 28px 20px; margin: 16px; } .stats-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 400px) { .result-grid { grid-template-columns: 1fr; } }
         .text-muted { color: #7a8a9e; }
         .flex { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
         .w-full { width: 100%; }
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: #1a2a3a;
-            color: #fff;
-            padding: 14px 24px;
-            border-radius: 14px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-            font-weight: 500;
-            z-index: 2000;
-            animation: fadeUp 0.3s ease;
-            max-width: 400px;
-        }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: #1a2a3a; color: #fff; padding: 14px 24px; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); font-weight: 500; z-index: 2000; animation: fadeUp 0.3s ease; max-width: 400px; }
         .toast.success { background: #28a745; }
         .toast.error { background: #dc3545; }
         .toast.warning { background: #ffc107; color: #1a2a3a; }
-        .stock-timestamp {
-            background: #eaf4ff;
-            padding: 8px 20px;
-            border-radius: 30px;
-            font-size: 14px;
-            color: #0b2b44;
-            display: inline-block;
-            margin-bottom: 16px;
-        }
+        .stock-timestamp { background: #eaf4ff; padding: 8px 20px; border-radius: 30px; font-size: 14px; color: #0b2b44; display: inline-block; margin-bottom: 16px; }
     </style>
 </head>
 <body>
@@ -441,6 +142,7 @@
                     <span id="userNameDisplay">—</span>
                     <span class="role-tag" id="userRoleTag">user</span>
                 </span>
+                <button class="btn btn-outline btn-sm" id="stockCheckBtn">📋 ตรวจนับสต็อก</button>
                 <button class="btn btn-outline btn-sm" id="logoutBtn">🚪 ออกจากระบบ</button>
             </div>
         </header>
@@ -469,6 +171,7 @@
                 </div>
                 <div class="result-grid" id="resultGrid">
                     <div class="item"><span class="label">📂 กลุ่ม</span><span class="value" id="rGroup">—</span></div>
+                    <div class="item"><span class="label">🏷️ grade</span><span class="value" id="rGrade">—</span></div>
                     <div class="item"><span class="label">📐 ขนาด (นิ้ว)</span><span class="value" id="rWidth">—</span></div>
                     <div class="item"><span class="label">📏 DIA. (mm)</span><span class="value" id="rDia">—</span></div>
                     <div class="item"><span class="label">⚖️ kgs</span><span class="value" id="rKgs">—</span></div>
@@ -608,6 +311,7 @@
         const loginError = $('loginError');
         const app = $('app');
         const logoutBtn = $('logoutBtn');
+        const stockCheckBtn = $('stockCheckBtn');
         const userNameDisplay = $('userNameDisplay');
         const userRoleTag = $('userRoleTag');
         const rollSearch = $('rollSearch');
@@ -624,6 +328,7 @@
             roll: $('resultRollNumber'),
             status: $('resultStatus'),
             group: $('rGroup'),
+            grade: $('rGrade'),          // ✅ เพิ่ม grade
             width: $('rWidth'),
             dia: $('rDia'),
             kgs: $('rKgs'),
@@ -685,7 +390,7 @@
             if (!d) return '—';
             const dt = new Date(d);
             if (isNaN(dt)) return d;
-            return dt.toLocaleDateString('th-TH');
+            return dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'numeric', day: 'numeric' });
         }
 
         // ---------- Auth ----------
@@ -758,6 +463,9 @@
         loginUser.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
         loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
         logoutBtn.addEventListener('click', logout);
+        stockCheckBtn.addEventListener('click', () => {
+            window.location.href = '/stock-check';
+        });
 
         // ---------- Session check ----------
         (function init() {
@@ -853,13 +561,14 @@
             rFields.status.textContent = status;
             rFields.status.className = 'roll-status ' + (status === 'เต็ม' ? 'เต็ม' : status === 'เศษ' ? 'เศษ' : status === 'รอกรอ' ? 'รอกรอ' : '');
             rFields.group.textContent = roll.group_name || '—';
+            rFields.grade.textContent = roll.grade || '—';
             rFields.width.textContent = roll.width ? roll.width + '"' : '—';
             rFields.dia.textContent = roll.dimeter || '—';
             rFields.kgs.textContent = roll.kgs || '—';
             rFields.meter.textContent = roll.meter || '—';
             rFields.qlt.textContent = roll.qlt || '—';
             rFields.supplier.textContent = roll.supplier || '—';
-            rFields.buyDate.textContent = formatDate(roll.buy_date);
+            rFields.buyDate.textContent = roll.buy_date || '—';
             rFields.loc.textContent = roll.loc || '—';
             resultCard.classList.add('visible');
         }
