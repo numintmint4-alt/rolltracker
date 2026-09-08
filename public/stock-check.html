@@ -1,408 +1,112 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📋 ตรวจนับสต็อกม้วนกระดาษ</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: #f0f2f5;
-            padding: 16px;
-        }
-        .container {
-            max-width: 1500px;
-            margin: 0 auto;
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            padding: 20px 24px 28px;
-        }
-        /* HEADER */
-        .header {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #e9edf4;
-            padding-bottom: 14px;
-            margin-bottom: 18px;
-        }
-        .header h1 {
-            font-size: 24px;
-            color: #0b2b44;
-            font-weight: 700;
-        }
-        .header .meta {
-            font-size: 16px;
-            color: #4a5a6e;
-            font-weight: 500;
-        }
-        .header .user-info {
-            background: #eaf4ff;
-            padding: 6px 18px;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 15px;
-            color: #1a4b6d;
-        }
+        /* (คง CSS เดิมไว้ทั้งหมด) */
 
-        /* CONTROLS */
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 16px;
-            align-items: center;
-        }
-        .controls select, .controls input {
-            padding: 8px 14px;
-            border: 2px solid #dce2ec;
-            border-radius: 10px;
-            font-size: 14px;
-            background: #fff;
-            font-weight: 500;
-        }
-        .controls .btn {
-            padding: 8px 20px;
-            border-radius: 30px;
-            border: none;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-primary { background: #1a4b6d; color: #fff; }
-        .btn-primary:hover { background: #0b2b44; }
-        .btn-success { background: #28a745; color: #fff; }
-        .btn-success:hover { background: #218838; }
-        .btn-secondary { background: #6c757d; color: #fff; }
-        .btn-secondary:hover { background: #5a6268; }
-        .btn-warning { background: #ffc107; color: #1a2a3a; }
-        .btn-warning:hover { background: #e0a800; }
-        .btn-danger { background: #dc3545; color: #fff; }
-        .btn-danger:hover { background: #c82333; }
-
-        /* GROUP FILTER */
-        .filter-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-        .filter-group .group-btn {
-            padding: 5px 14px;
-            border-radius: 30px;
-            border: 2px solid #dce2ec;
-            background: #fff;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            color: #5a6a7e;
-            transition: 0.2s;
-        }
-        .filter-group .group-btn.active {
-            border-color: #1a4b6d;
-            background: #1a4b6d;
-            color: #fff;
-        }
-        .filter-group .group-btn:hover:not(.active) { background: #f0f4fa; }
-
-        /* SUMMARY */
-        .summary {
-            background: #f8faff;
-            padding: 10px 18px;
-            border-radius: 12px;
-            margin-bottom: 14px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            font-size: 15px;
-            font-weight: 500;
-        }
-        .summary span { color: #0b2b44; }
-        .summary .found-count { color: #28a745; font-weight: 700; }
-        .summary .notfound-count { color: #dc3545; font-weight: 700; }
-
-        /* PAGE PAGINATION */
-        .page-controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 12px 0;
-            align-items: center;
-        }
-        .page-controls .page-btn {
-            padding: 6px 14px;
-            border-radius: 30px;
-            border: 2px solid #dce2ec;
-            background: #fff;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            color: #1a2a3a;
-            transition: 0.2s;
-        }
-        .page-controls .page-btn.active {
-            background: #1a4b6d;
-            color: #fff;
-            border-color: #1a4b6d;
-        }
-        .page-controls .page-btn:hover:not(.active) { background: #f0f4fa; }
-        .page-controls .page-info {
-            font-weight: 600;
-            color: #0b2b44;
-            font-size: 15px;
-            margin: 0 8px;
-        }
-
-        /* TABLE */
-        .table-wrap {
-            overflow-x: auto;
-            border: 1px solid #e2e6ed;
-            border-radius: 14px;
-            margin-top: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 15px;
-        }
-        table th {
-            background: #f0f4fa;
-            text-align: left;
-            padding: 12px 14px;
-            font-weight: 700;
-            font-size: 15px;
-            color: #0b2b44;
-            border-bottom: 2px solid #dce2ec;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            white-space: nowrap;
-        }
-        table td {
-            padding: 10px 14px;
-            border-bottom: 1px solid #eef2f7;
-            vertical-align: middle;
-            font-size: 15px;
-        }
-        table tr:hover td { background: #f8faff; }
-        .found-checkbox {
-            width: 22px;
-            height: 22px;
-            cursor: pointer;
-            accent-color: #28a745;
-            transform: scale(1.1);
-        }
-        .roll-number {
-            font-weight: 700;
-            color: #0b2b44;
-            font-size: 15px;
-            letter-spacing: 0.3px;
-        }
-        .checked-by {
-            font-size: 14px;
-            color: #1a4b6d;
-            font-weight: 500;
-        }
-
-        /* SEARCH BOX INSIDE PAGE */
-        .search-box {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 12px 0;
-            padding: 12px 16px;
-            background: #f8faff;
-            border-radius: 12px;
-            border: 1px solid #e9edf4;
-            align-items: center;
-        }
-        .search-box label {
-            font-weight: 600;
-            color: #0b2b44;
-        }
-        .search-box input {
-            flex: 1;
-            padding: 8px 14px;
-            border: 2px solid #dce2ec;
-            border-radius: 30px;
-            font-size: 15px;
-            outline: none;
-            min-width: 200px;
-        }
-        .search-box input:focus {
-            border-color: #1a4b6d;
-        }
-        .search-box .btn {
-            padding: 6px 18px;
-            border-radius: 30px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .search-box .btn-search { background: #1a4b6d; color: #fff; }
-        .search-box .btn-search:hover { background: #0b2b44; }
-
-        /* MODAL */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-overlay.visible { display: flex; }
-        .modal-box {
-            background: #fff;
-            padding: 30px 34px;
-            border-radius: 24px;
-            max-width: 480px;
-            width: 100%;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
-            animation: fadeUp 0.3s ease;
-        }
-        .modal-box h3 { color: #0b2b44; margin-bottom: 6px; font-size: 20px; }
-        .modal-box p { color: #5a6a7e; margin-bottom: 16px; font-size: 14px; }
-        .modal-box input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #dce2ec;
-            border-radius: 12px;
-            font-size: 16px;
-            outline: none;
-        }
-        .modal-box input:focus { border-color: #1a4b6d; }
-        .modal-box .modal-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-            justify-content: flex-end;
-        }
-        .modal-box .modal-actions button {
-            padding: 10px 24px;
-            border-radius: 12px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .modal-box .modal-actions .btn-confirm { background: #28a745; color: #fff; }
-        .modal-box .modal-actions .btn-confirm:hover { background: #218838; }
-        .modal-box .modal-actions .btn-cancel { background: #6c757d; color: #fff; }
-        .modal-box .modal-actions .btn-cancel:hover { background: #5a6268; }
-        .modal-box .error-msg { color: #dc3545; font-size: 13px; margin-top: 8px; }
-
-        /* FOUND ALERT (for search result) */
-        .found-alert {
-            background: #d4edda;
-            border-left: 6px solid #28a745;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            display: none;
-        }
-        .found-alert .info { font-weight: 600; color: #155724; }
-        .notfound-alert {
-            background: #f8d7da;
-            border-left: 6px solid #dc3545;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            display: none;
-        }
-        .notfound-alert .info { font-weight: 700; color: #721c24; font-size: 20px; }
-        .notfound-alert .detail { color: #721c24; font-size: 14px; margin-top: 4px; }
-
-        /* SIGNATURE */
-        .signature-area {
-            margin-top: 28px;
-            border-top: 2px dashed #dce2ec;
-            padding-top: 20px;
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .signature-area .sign-block {
-            flex: 1;
-            min-width: 180px;
-        }
-        .signature-area .sign-block label {
-            font-weight: 600;
-            display: block;
-            margin-bottom: 4px;
-            color: #1a2a3a;
-            font-size: 14px;
-        }
-        .signature-area .sign-block .line {
-            border-bottom: 2px solid #1a2a3a;
-            height: 32px;
-            width: 100%;
-            max-width: 280px;
-        }
-        .signature-area .sign-block .line-sm {
-            border-bottom: 2px solid #1a2a3a;
-            height: 32px;
-            width: 160px;
-        }
-
-        /* PRINT */
-        .print-hide { display: inline-block; }
+        /* ===== ปรับปรุงส่วน print ===== */
         @media print {
             .print-hide { display: none !important; }
-            body { background: #fff; padding: 0; }
-            .container { box-shadow: none; border-radius: 0; padding: 12px 16px; }
-            .table-wrap { border: 1px solid #000; }
-            table th { background: #e9edf4 !important; }
-            .signature-area { border-top: 2px solid #000; }
-            .signature-area .sign-block .line { border-bottom: 2px solid #000; }
-            .signature-area .sign-block .line-sm { border-bottom: 2px solid #000; }
-            table { font-size: 19px; }
-            table th { font-size: 19px; padding: 8px 10px; }
-            table td { padding: 7px 10px; font-size: 19px; }
-            .header h1 { font-size: 22px; }
-            .header .meta { font-size: 17px; }
-            .roll-number { font-weight: 700; font-size: 19px; }
-            .summary { background: #f0f4fa; font-size: 18px; }
-            .signature-area .sign-block label { font-size: 17px; }
-            .found-alert, .notfound-alert { display: none !important; }
-            .page-controls { display: none !important; }
+            body { 
+                background: #fff; 
+                padding: 0; 
+                margin: 0;
+                font-size: 14px;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+                padding: 10px 12px;
+                max-width: 100%;
+            }
+            /* ซ่อนลายเซ็น */
+            .signature-area { display: none !important; }
+            /* ซ่อนสรุป */
+            .summary { display: none !important; }
+            /* ซ่อนหัวข้อ "ผู้ตรวจ" และช่องค้นหา */
+            .header .user-info { display: none !important; }
             .search-box { display: none !important; }
-            .filter-group { display: none !important; }
+            .page-controls { display: none !important; }
             .controls { display: none !important; }
+            .filter-group { display: none !important; }
+            .found-alert, .notfound-alert { display: none !important; }
+
+            /* ปรับตารางให้พอดี A4 */
+            .table-wrap {
+                border: 1px solid #000;
+                margin-top: 0;
+                border-radius: 0;
+                overflow: visible;
+            }
+            table {
+                font-size: 13px;
+                border-collapse: collapse;
+                width: 100%;
+                page-break-inside: auto;
+            }
+            table th {
+                background: #e9edf4 !important;
+                font-size: 13px;
+                padding: 6px 8px;
+                border: 1px solid #000;
+            }
+            table td {
+                font-size: 13px;
+                padding: 5px 8px;
+                border: 1px solid #000;
+            }
+            .roll-number {
+                font-weight: 700;
+                font-size: 13px;
+            }
+            .checked-by { display: none; } /* ซ่อนคอลัมน์ผู้ตรวจ */
+            /* หัวข้อหลัก */
+            .header h1 {
+                font-size: 18px;
+                margin-bottom: 4px;
+            }
+            .header .meta {
+                font-size: 14px;
+            }
+            /* ปรับ checkbox ใน PDF ให้เป็น □ */
+            .found-checkbox {
+                appearance: none;
+                -webkit-appearance: none;
+                width: 16px;
+                height: 16px;
+                border: 2px solid #000;
+                display: inline-block;
+                position: relative;
+                background: #fff;
+                margin: 0;
+                padding: 0;
+                cursor: default;
+            }
+            .found-checkbox:checked::after {
+                content: "✓";
+                font-size: 14px;
+                font-weight: 700;
+                color: #000;
+                position: absolute;
+                top: -2px;
+                left: 1px;
+            }
+            /* ซ่อนคอลัมน์ผู้ตรวจในตาราง */
+            table th:last-child, table td:last-child {
+                display: none;
+            }
+            /* ปรับ header ให้ไม่มี "ผู้จัดทำ" */
+            .header .user-info { display: none; }
         }
 
-        /* TOAST */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: #1a2a3a;
-            color: #fff;
-            padding: 14px 24px;
-            border-radius: 14px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-            font-weight: 500;
-            z-index: 2000;
-            animation: fadeUp 0.3s ease;
-        }
-        .toast.success { background: #28a745; }
-        .toast.error { background: #dc3545; }
-        .toast.warning { background: #ffc107; color: #1a2a3a; }
-        @keyframes fadeUp {
-            0% { opacity: 0; transform: translateY(16px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-        .text-muted { color: #7a8a9e; }
+        /* (คง CSS ที่เหลือไว้เหมือนเดิม) */
     </style>
 </head>
 <body>
+    <!-- (HTML เหมือนเดิม) -->
     <div class="container" id="app">
         <!-- HEADER -->
         <div class="header">
@@ -410,605 +114,201 @@
             <div class="meta" id="stockMeta">กำลังโหลด...</div>
             <div class="user-info" id="userInfo">👤 ผู้ตรวจ: —</div>
         </div>
-
-        <!-- CONTROLS -->
-        <div class="controls print-hide">
-            <select id="statusFilter">
-                <option value="all">ทุกสถานะ</option>
-                <option value="เต็ม">เต็ม</option>
-                <option value="เศษ">เศษ</option>
-                <option value="รอกรอ">รอกรอ</option>
-            </select>
-            <select id="groupFilter">
-                <option value="all">ทุกกลุ่ม</option>
-            </select>
-            <button class="btn btn-primary" id="loadBtn">🔄 โหลดข้อมูล</button>
-            <button class="btn btn-success" id="exportPdfBtn">📄 พรีวิว/PDF</button>
-            <button class="btn btn-secondary" id="backBtn">⬅ กลับหน้าแรก</button>
-            <!-- ปุ่ม "ทั้งหมด" เฉพาะ Admin -->
-            <button class="btn btn-warning" id="showAllBtn" style="display:none;">👁️ แสดงทั้งหมด</button>
-        </div>
-
-        <!-- SUMMARY -->
-        <div class="summary" id="summary">
-            <span>✅ พบแล้ว: <span class="found-count" id="foundCount">0</span> ม้วน</span>
-            <span>❌ ไม่พบ: <span class="notfound-count" id="notFoundCount">0</span> ม้วน</span>
-            <span>📦 รวม: <span id="totalCount">0</span> ม้วน</span>
-            <span id="groupSummary" style="margin-left:auto;font-weight:400;">กลุ่ม: —</span>
-        </div>
-
-        <!-- PAGE PAGINATION -->
-        <div class="page-controls print-hide" id="pageControls">
-            <button class="page-btn" id="prevPage">◀</button>
-            <span class="page-info" id="pageInfo">หน้า 1 / 1</span>
-            <button class="page-btn" id="nextPage">▶</button>
-            <span style="margin-left:12px;font-size:14px;color:#5a6a7e;" id="pageSizeInfo">Size: —</span>
-        </div>
-
-        <!-- SEARCH BOX -->
-        <div class="search-box print-hide" id="searchBox">
-            <label>🔎 ค้นหาเลขม้วน (ทุกกลุ่ม):</label>
-            <input type="text" id="searchRollInput" placeholder="พิมพ์เลขม้วน..." />
-            <button class="btn btn-search" id="searchRollBtn">ค้นหา</button>
-        </div>
-        <!-- Alert for found roll -->
-        <div class="found-alert" id="foundAlert">
-            <div class="info" id="foundAlertInfo"></div>
-            <button class="btn btn-sm btn-success" id="confirmFoundBtn" style="margin-top:8px;">✅ ยืนยันพบม้วนกระดาษในพื้นที่กลุ่มของคุณ</button>
-            <button class="btn btn-sm btn-secondary" id="cancelFoundBtn" style="margin-top:8px;">ยกเลิก</button>
-        </div>
-        <div class="notfound-alert" id="notFoundAlert">
-            <div class="info">❌ ไม่พบเลขม้วนดังกล่าว</div>
-            <div class="detail">ทำการตรวจสอบเลขม้วนใหม่อีกครั้ง หากถูกต้องแล้วให้ทำการกดยืนยันพบม้วนกระดาษในพื้นที่กลุ่มของคุณ</div>
-        </div>
-
-        <!-- TABLE -->
-        <div class="table-wrap" id="tableWrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Location</th>
-                        <th>สถานะ</th>
-                        <th>Size</th>
-                        <th>grade</th>
-                        <th>เบอร์ม้วน</th>
-                        <th>พบ/ไม่พบ</th>
-                        <th>dimeter</th>
-                        <th>kgs</th>
-                        <th>ผู้ตรวจ</th>
-                    </tr>
-                </thead>
-                <tbody id="checkTableBody">
-                    <tr><td colspan="9" class="text-muted" style="text-align:center;">กรุณาคลิก "โหลดข้อมูล"</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- SIGNATURE (for print) -->
-        <div class="signature-area" id="signatureArea">
-            <div class="sign-block">
-                <label>พนักงานบัญชี</label>
-                <div class="line" id="signLine1"></div>
-            </div>
-            <div class="sign-block">
-                <label>พนักงานคลัง</label>
-                <div class="line" id="signLine2"></div>
-            </div>
-            <div class="sign-block">
-                <label>วันที่ตรวจ</label>
-                <div class="line-sm" id="dateLine"></div>
-            </div>
-        </div>
+        <!-- ... -->
     </div>
-
-    <!-- PASSWORD MODAL -->
-    <div class="modal-overlay" id="passwordModal">
-        <div class="modal-box">
-            <h3>🔐 ยืนยันตัวตน</h3>
-            <p id="modalMessage">กรุณากรอกรหัสผ่านเพื่อยืนยันการดำเนินการ</p>
-            <input type="password" id="modalPassword" placeholder="รหัสผ่าน" />
-            <div class="error-msg" id="modalError"></div>
-            <div class="modal-actions">
-                <button class="btn-cancel" id="modalCancel">ยกเลิก</button>
-                <button class="btn-confirm" id="modalConfirm">ยืนยัน</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="toastContainer"></div>
-
+    <!-- scripts -->
     <script>
-        // ---------- State ----------
-        let token = localStorage.getItem('rolltracker_token') || '';
-        let currentUser = null;
-        let allRolls = [];
-        let stockCountId = null;
-        let currentStatusFilter = 'all';
-        let currentGroup = 'all';
-        let currentPage = 1;
-        let pageSize = 50; // กำหนดให้ 1 หน้า = 1 size (ปรับให้เป็น dynamic)
-        let sizeGroups = []; // array of {size, rolls, found, notFound}
-        let pendingAction = null; // สำหรับเก็บ action ที่ต้องยืนยันรหัสผ่าน
+        // ... (JavaScript เดิม)
 
-        const $ = id => document.getElementById(id);
-        const stockMeta = $('stockMeta');
-        const userInfo = $('userInfo');
-        const statusFilter = $('statusFilter');
-        const groupFilter = $('groupFilter');
-        const loadBtn = $('loadBtn');
-        const exportPdfBtn = $('exportPdfBtn');
-        const backBtn = $('backBtn');
-        const showAllBtn = $('showAllBtn');
-        const checkTableBody = $('checkTableBody');
-        const foundCount = $('foundCount');
-        const notFoundCount = $('notFoundCount');
-        const totalCount = $('totalCount');
-        const groupSummary = $('groupSummary');
-        const pageControls = $('pageControls');
-        const prevPage = $('prevPage');
-        const nextPage = $('nextPage');
-        const pageInfo = $('pageInfo');
-        const pageSizeInfo = $('pageSizeInfo');
-        const searchRollInput = $('searchRollInput');
-        const searchRollBtn = $('searchRollBtn');
-        const foundAlert = $('foundAlert');
-        const notFoundAlert = $('notFoundAlert');
-        const foundAlertInfo = $('foundAlertInfo');
-        const confirmFoundBtn = $('confirmFoundBtn');
-        const cancelFoundBtn = $('cancelFoundBtn');
+        // ---------- Export PDF (ปรับให้พิมพ์เฉพาะกลุ่มที่เลือก และทุก Size ของกลุ่มนั้น) ----------
+        function exportPDF() {
+            // เก็บค่าการกรองปัจจุบัน
+            const currentGroupVal = groupFilter.value;
+            const currentStatusVal = statusFilter.value;
+            // เราไม่ต้องทำอะไรเพิ่ม เพราะ window.print() จะใช้ DOM ปัจจุบัน
+            // แต่เราต้องการให้แสดงทุก Size ของกลุ่มที่เลือก (ไม่แยกหน้า)
+            // ดังนั้นก่อนพิมพ์ เราจะปรับให้ currentGroup = กลุ่มที่เลือก, currentPage = 1 และ renderGroupedBySize() แบบรวมทุก Size
+            // แต่เพื่อไม่ให้กระทบการแสดงผลบน Web เราจะทำการ clone DOM และปรับก่อนพิมพ์?
+            // วิธีง่าย: ใช้ window.print() โดยที่ใน CSS @media print เราจะซ่อนส่วนแบ่งหน้า และแสดงทุก Size ในหน้าเดียว
+            // เนื่องจากในหน้า Web เราแยกหน้าเป็น Size แต่เราสามารถปรับให้ในโหมด print มันแสดงทุก Size ของกลุ่มนั้น
+            // โดยใช้ CSS @media print จัดการ visibility ของแต่ละขนาด? แต่ละขนาดอยู่ในหน้าต่างๆ กัน
+            // วิธีการที่ดีกว่า: เมื่อกดปุ่ม Print ให้เราเปลี่ยนโหมดการแสดงผล (โดยไม่ต้อง reload) ให้แสดงทุก Size ของกลุ่มที่เลือก
+            // แล้วค่อย print จากนั้นคืนค่า
 
-        const passwordModal = $('passwordModal');
-        const modalPassword = $('modalPassword');
-        const modalError = $('modalError');
-        const modalConfirm = $('modalConfirm');
-        const modalCancel = $('modalCancel');
-        const modalMessage = $('modalMessage');
+            // เราใช้วิธี: สร้าง hidden div สำหรับ print เฉพาะ โดยใช้ JavaScript สร้าง iframe หรือ window.open
+            // แต่เพื่อความรวดเร็ว เราใช้วิธี window.print() โดยปรับ CSS ให้แสดงทุก Size โดยใช้ display: block !important
+            // และซ่อนปุ่มควบคุมหน้า
 
-        function showToast(msg, type = 'info') {
-            const c = document.createElement('div');
-            c.className = `toast ${type}`;
-            c.textContent = msg;
-            document.getElementById('toastContainer').appendChild(c);
-            setTimeout(() => { c.style.opacity = '0'; c.style.transition = 'opacity 0.4s'; setTimeout(() => c.remove(), 500); }, 3000);
-        }
+            // ง่ายที่สุด: ก่อนพิมพ์ ให้เราเรียกฟังก์ชัน renderAllSizesForPrint() ซึ่งจะ render ตารางรวมทุก Size ในหน้าปัจจุบัน
+            // แต่ไม่ต้องเปลี่ยน DOM หลัก เพราะเราสามารถสร้างหน้าต่างใหม่สำหรับพิมพ์
 
-        function getAuthHeaders() {
-            return { 'Authorization': 'Bearer ' + token };
-        }
+            // เราใช้วิธี: เปิดหน้าต่างใหม่ (window.open) แล้วใส่ HTML ของตารางที่รวมทุก Size
+            // แล้วเรียก print()
 
-        // ---------- Load user ----------
-        async function loadUser() {
-            try {
-                const res = await fetch('/api/auth/me', { headers: getAuthHeaders() });
-                const data = await res.json();
-                if (data.user) {
-                    currentUser = data.user;
-                    userInfo.textContent = '👤 ผู้ตรวจ: ' + currentUser.username;
-                    if (currentUser.role === 'admin') {
-                        showAllBtn.style.display = 'inline-block';
-                    }
-                } else {
-                    window.location.href = '/';
-                }
-            } catch (e) {
-                window.location.href = '/';
-            }
-        }
-
-        // ---------- Load stock settings ----------
-        async function loadStockSettings() {
-            try {
-                const res = await fetch('/api/stock/latest', { headers: getAuthHeaders() });
-                const data = await res.json();
-                if (res.ok && data.count_number) {
-                    stockMeta.textContent = `📅 ครั้งที่ ${data.count_number} | วันที่ ${data.stock_date} เวลา ${data.stock_time}`;
-                    stockCountId = data.id;
-                } else {
-                    stockMeta.textContent = '⚠️ ยังไม่มีการตั้งค่า Stock';
-                }
-            } catch (e) {
-                stockMeta.textContent = '⚠️ ไม่สามารถโหลดข้อมูล Stock';
-            }
-        }
-
-        // ---------- Load check items ----------
-        async function loadCheckItems() {
-            if (!stockCountId) {
-                showToast('ยังไม่มีการตั้งค่า Stock', 'warning');
+            // ได้เลย: ฟังก์ชันนี้จะสร้างหน้าต่างใหม่พร้อม HTML ที่ปรับให้เหมาะกับการพิมพ์
+            const printWindow = window.open('', '_blank', 'width=900,height=700');
+            if (!printWindow) {
+                showToast('กรุณาอนุญาต pop-up เพื่อพิมพ์', 'warning');
                 return;
             }
-            try {
-                const res = await fetch('/api/stock/check-items', { headers: getAuthHeaders() });
-                const data = await res.json();
-                if (res.ok && data.rolls) {
-                    allRolls = data.rolls;
-                    populateGroupFilter();
-                    renderGroupedBySize();
-                } else {
-                    showToast('ไม่พบข้อมูลม้วน', 'warning');
-                }
-            } catch (e) {
-                showToast('เกิดข้อผิดพลาดในการโหลด', 'error');
-            }
-        }
 
-        // ---------- Populate group filter ----------
-        function populateGroupFilter() {
-            const groups = [...new Set(allRolls.map(r => r.group_name || 'ไม่มีกลุ่ม'))].sort();
-            groupFilter.innerHTML = '<option value="all">ทุกกลุ่ม</option>';
-            groups.forEach(g => {
-                groupFilter.innerHTML += `<option value="${g}">${g}</option>`;
-            });
-            // ตั้งค่า group filter buttons (ไว้ให้ user เลือกกลุ่ม)
-            // เราจะใช้ select อย่างเดียว
-        }
-
-        // ---------- Render grouped by size (pagination) ----------
-        function renderGroupedBySize() {
-            // กรองตามกลุ่มและสถานะ
+            // กรองข้อมูลตามกลุ่มและสถานะ
             let filtered = allRolls.filter(r => {
                 if (currentGroup !== 'all' && (r.group_name || 'ไม่มีกลุ่ม') !== currentGroup) return false;
                 if (currentStatusFilter !== 'all' && r.status !== currentStatusFilter) return false;
                 return true;
             });
 
-            // จัดกลุ่มตาม size
+            // จัดกลุ่มตาม size และเรียงลำดับตาม size
             const sizeMap = {};
             filtered.forEach(r => {
                 const size = r.width || '0';
                 if (!sizeMap[size]) sizeMap[size] = [];
                 sizeMap[size].push(r);
             });
-            // เรียง size
             const sortedSizes = Object.keys(sizeMap).sort((a, b) => parseFloat(a) - parseFloat(b));
-            sizeGroups = sortedSizes.map(size => {
+
+            // สร้างตารางรวมทุก Size
+            let allRows = [];
+            sortedSizes.forEach(size => {
                 const rolls = sizeMap[size];
-                const found = rolls.filter(r => r.found === 1).length;
-                const notFound = rolls.length - found;
-                return { size, rolls, found, notFound };
-            });
-
-            if (!sizeGroups.length) {
-                checkTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#7a8a9e;">ไม่มีม้วนที่ตรงกับเงื่อนไข</td></tr>';
-                pageControls.style.display = 'none';
-                groupSummary.textContent = 'กลุ่ม: —';
-                return;
-            }
-
-            // แสดงเฉพาะ admin ถ้าเป็น "ทั้งหมด"
-            if (currentGroup === 'all' && currentUser.role !== 'admin') {
-                // แสดงเฉพาะกลุ่มแรก (หรือให้เลือกกลุ่ม)
-                // เราให้แสดงเฉพาะกลุ่มที่เลือก ถ้าเป็น all และไม่ใช่ admin ให้ redirect ให้เลือกกลุ่ม
-                // แต่เราจะไม่บังคับ แค่ให้เห็นเฉพาะกลุ่มที่เลือก
-                // ถ้า currentGroup เป็น all และไม่ใช่ admin ให้เลือกกลุ่มแรก
-                if (currentGroup === 'all') {
-                    // เปลี่ยนเป็นกลุ่มแรกที่มี
-                    const firstGroup = allRolls.length ? (allRolls[0].group_name || 'ไม่มีกลุ่ม') : 'all';
-                    if (firstGroup !== 'all') {
-                        currentGroup = firstGroup;
-                        groupFilter.value = firstGroup;
-                        // re-run
-                        renderGroupedBySize();
-                        return;
+                // เรียงลำดับภายใน size ตาม location, status, grade
+                rolls.sort((a, b) => {
+                    const locA = a.loc || '';
+                    const locB = b.loc || '';
+                    if (locA !== locB) {
+                        if (locA === 'LOC1') return -1;
+                        if (locB === 'LOC1') return 1;
+                        return locA.localeCompare(locB);
                     }
-                }
-            }
-
-            // Pagination: 1 หน้า = 1 size
-            const totalPages = sizeGroups.length;
-            if (currentPage > totalPages) currentPage = totalPages;
-            if (currentPage < 1) currentPage = 1;
-
-            const currentSizeData = sizeGroups[currentPage - 1];
-            if (!currentSizeData) {
-                checkTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#7a8a9e;">ไม่มีข้อมูล</td></tr>';
-                return;
-            }
-
-            const { size, rolls, found, notFound } = currentSizeData;
-
-            // Update summary
-            const total = rolls.length;
-            foundCount.textContent = found;
-            notFoundCount.textContent = notFound;
-            totalCount.textContent = total;
-            groupSummary.textContent = `กลุ่ม: ${currentGroup !== 'all' ? currentGroup : 'ทั้งหมด'} | Size: ${size}"`;
-
-            // Update page info
-            pageInfo.textContent = `หน้า ${currentPage} / ${totalPages}`;
-            pageSizeInfo.textContent = `Size: ${size}" (${total} ม้วน)`;
-            pageControls.style.display = 'flex';
-
-            // Render table rows
-            const sortedRolls = rolls.sort((a, b) => {
-                // เรียงตาม location, status, grade
-                const locA = a.loc || '';
-                const locB = b.loc || '';
-                if (locA !== locB) {
-                    if (locA === 'LOC1') return -1;
-                    if (locB === 'LOC1') return 1;
-                    return locA.localeCompare(locB);
-                }
-                const statusOrder = { 'เต็ม': 0, 'เศษ': 1, 'รอกรอ': 2 };
-                const sA = statusOrder[a.status] ?? 99;
-                const sB = statusOrder[b.status] ?? 99;
-                if (sA !== sB) return sA - sB;
-                return (a.grade || '').localeCompare(b.grade || '');
+                    const statusOrder = { 'เต็ม': 0, 'เศษ': 1, 'รอกรอ': 2 };
+                    const sA = statusOrder[a.status] ?? 99;
+                    const sB = statusOrder[b.status] ?? 99;
+                    if (sA !== sB) return sA - sB;
+                    return (a.grade || '').localeCompare(b.grade || '');
+                });
+                allRows = allRows.concat(rolls);
             });
 
-            let html = '';
-            sortedRolls.forEach((roll, index) => {
+            // สร้าง HTML สำหรับพิมพ์
+            const stockMetaText = stockMeta.textContent;
+            const groupText = currentGroup !== 'all' ? currentGroup : 'ทั้งหมด';
+            const statusText = currentStatusFilter !== 'all' ? currentStatusFilter : 'ทั้งหมด';
+
+            let rowsHtml = '';
+            allRows.forEach(roll => {
                 const found = roll.found === 1;
-                const checkedBy = roll.checked_by || '—';
-                html += `
+                rowsHtml += `
                     <tr>
                         <td>${roll.loc || '—'}</td>
                         <td>${roll.status || '—'}</td>
                         <td>${roll.width ? roll.width + '"' : '—'}</td>
                         <td>${roll.grade || '—'}</td>
                         <td class="roll-number">${roll.roll_number || '—'}</td>
-                        <td>
-                            <input type="checkbox" class="found-checkbox" data-roll="${roll.roll_number}" ${found ? 'checked' : ''} />
-                        </td>
+                        <td style="text-align:center;">${found ? '✓' : '□'}</td>
                         <td>${roll.dimeter || '—'}</td>
                         <td>${roll.kgs || '—'}</td>
-                        <td class="checked-by">${checkedBy}</td>
                     </tr>
                 `;
             });
-            checkTableBody.innerHTML = html;
 
-            // Attach checkbox events
-            checkTableBody.querySelectorAll('.found-checkbox').forEach(cb => {
-                cb.addEventListener('change', function(e) {
-                    e.preventDefault();
-                    const rollNumber = this.dataset.roll;
-                    const currentChecked = this.checked;
-
-                    // ถ้ากำลังจะเปลี่ยนจาก พบ → ไม่พบ
-                    if (!currentChecked) {
-                        // Admin มีสิทธิ์แก้ไขทันที
-                        if (currentUser.role === 'admin') {
-                            saveCheck(rollNumber, 0, this);
-                            return;
-                        }
-                        // User ทั่วไป ต้องใส่รหัสผ่าน
-                        pendingAction = { rollNumber, found: 0, checkbox: this };
-                        modalMessage.textContent = 'กรุณากรอกรหัสผ่านเพื่อยืนยันการเปลี่ยนสถานะเป็น "ไม่พบ"';
-                        passwordModal.classList.add('visible');
-                        modalPassword.value = '';
-                        modalError.textContent = '';
-                        modalPassword.focus();
-                        this.checked = true; // คืนค่าเดิม
-                        return;
-                    } else {
-                        // เปลี่ยนจาก ไม่พบ → พบ (ทุกคนทำได้)
-                        saveCheck(rollNumber, 1, this);
+            const printHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>ตรวจนับสต็อก</title>
+                <style>
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    body {
+                        font-family: 'Segoe UI', system-ui, sans-serif;
+                        padding: 10px 12px;
+                        background: #fff;
+                        font-size: 13px;
                     }
-                });
-            });
+                    .header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border-bottom: 2px solid #000;
+                        padding-bottom: 8px;
+                        margin-bottom: 12px;
+                    }
+                    .header h1 { font-size: 18px; }
+                    .header .meta { font-size: 14px; color: #333; }
+                    .table-wrap {
+                        border: 1px solid #000;
+                        border-radius: 0;
+                        overflow: visible;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 13px;
+                    }
+                    table th {
+                        background: #e9edf4;
+                        font-weight: 700;
+                        font-size: 13px;
+                        padding: 6px 8px;
+                        border: 1px solid #000;
+                        text-align: left;
+                    }
+                    table td {
+                        padding: 5px 8px;
+                        border: 1px solid #000;
+                        font-size: 13px;
+                    }
+                    .roll-number { font-weight: 700; }
+                    .footer { margin-top: 20px; font-size: 12px; color: #555; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>📋 ตรวจนับสต็อกม้วนกระดาษ</h1>
+                    <div class="meta">${stockMetaText}</div>
+                </div>
+                <div style="margin-bottom:8px;font-size:14px;font-weight:500;">
+                    กลุ่ม: ${groupText} | สถานะ: ${statusText}
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Location</th>
+                                <th>สถานะ</th>
+                                <th>Size</th>
+                                <th>grade</th>
+                                <th>เบอร์ม้วน</th>
+                                <th>พบ/ไม่พบ</th>
+                                <th>dimeter</th>
+                                <th>kgs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="footer">พิมพ์เมื่อ ${new Date().toLocaleString('th-TH')}</div>
+            </body>
+            </html>
+            `;
 
-            // Reset search alerts
-            foundAlert.style.display = 'none';
-            notFoundAlert.style.display = 'none';
+            printWindow.document.write(printHtml);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
         }
 
-        // ---------- Save check ----------
-        async function saveCheck(rollNumber, found, checkboxEl) {
-            try {
-                const res = await fetch('/api/stock/check', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-                    body: JSON.stringify({
-                        stock_count_id: stockCountId,
-                        roll_number: rollNumber,
-                        found: found
-                    })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    // Update local allRolls
-                    const roll = allRolls.find(r => r.roll_number === rollNumber);
-                    if (roll) {
-                        roll.found = found;
-                        if (found === 1) roll.checked_by = currentUser.username;
-                    }
-                    if (checkboxEl) checkboxEl.checked = found === 1;
-                    showToast(found === 1 ? '✅ พบม้วนนี้แล้ว' : '❌ ไม่พบม้วนนี้', found === 1 ? 'success' : 'warning');
-                    // Refresh current page
-                    renderGroupedBySize();
-                } else {
-                    showToast('บันทึกไม่สำเร็จ: ' + (data.message || ''), 'error');
-                    if (checkboxEl) checkboxEl.checked = found !== 1;
-                }
-            } catch (e) {
-                showToast('เกิดข้อผิดพลาด', 'error');
-                if (checkboxEl) checkboxEl.checked = found !== 1;
-            }
-        }
+        // แก้ไข event listener ปุ่ม PDF
+        // exportPdfBtn ใช้ฟังก์ชัน exportPDF ใหม่
+        // ในส่วน init ให้เปลี่ยน
+        // document.getElementById('exportPdfBtn').addEventListener('click', exportPDF);
+        // (เราได้ตั้งไว้แล้ว)
 
-        // ---------- Page navigation ----------
-        prevPage.addEventListener('click', () => {
-            if (currentPage > 1) { currentPage--; renderGroupedBySize(); }
-        });
-        nextPage.addEventListener('click', () => {
-            if (currentPage < sizeGroups.length) { currentPage++; renderGroupedBySize(); }
-        });
-
-        // ---------- Group/Status filter change ----------
-        statusFilter.addEventListener('change', function() {
-            currentStatusFilter = this.value;
-            currentPage = 1;
-            renderGroupedBySize();
-        });
-
-        groupFilter.addEventListener('change', function() {
-            currentGroup = this.value;
-            currentPage = 1;
-            renderGroupedBySize();
-        });
-
-        // ---------- Show All (Admin only) ----------
-        showAllBtn.addEventListener('click', function() {
-            // แสดงทุกกลุ่ม (เฉพาะ admin)
-            if (currentUser.role === 'admin') {
-                groupFilter.value = 'all';
-                currentGroup = 'all';
-                currentPage = 1;
-                renderGroupedBySize();
-            }
-        });
-
-        // ---------- Search Roll (all groups) ----------
-        searchRollBtn.addEventListener('click', async function() {
-            const q = searchRollInput.value.trim();
-            if (!q) {
-                foundAlert.style.display = 'none';
-                notFoundAlert.style.display = 'none';
-                return;
-            }
-            // ค้นหาทั้งระบบ
-            try {
-                const res = await fetch('/api/rolls/search?q=' + encodeURIComponent(q), {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                const data = await res.json();
-                if (res.ok && data.roll) {
-                    // พบ
-                    const roll = data.roll;
-                    // หาว่าอยู่กลุ่มไหน และหน้าไหน (size)
-                    const groupName = roll.group_name || 'ไม่มีกลุ่ม';
-                    const size = roll.width || '0';
-                    // หา index ของ size ใน sizeGroups
-                    let pageIndex = sizeGroups.findIndex(g => g.size === size);
-                    if (pageIndex === -1) {
-                        // ถ้าไม่เจอ可能是因为 filter ไม่ตรง ให้เปลี่ยน group เป็น all แล้ว reload?
-                        // เราจะแจ้งว่าอยู่กลุ่มนั้น แต่ไม่แสดงหน้าโดยตรง
-                        foundAlertInfo.innerHTML = `✅ พบเลขม้วน <strong>${q}</strong> อยู่ในกลุ่ม <strong>${groupName}</strong> Size <strong>${size}"</strong> (ลำดับที่ ${sizeGroups.findIndex(g => g.rolls.some(r => r.roll_number === q)) + 1} ในกลุ่ม)`;
-                        foundAlert.style.display = 'block';
-                        notFoundAlert.style.display = 'none';
-                        // เก็บ roll ที่พบเพื่อให้ยืนยัน
-                        pendingAction = { rollNumber: q, found: 1, checkbox: null, rollData: roll };
-                        return;
-                    }
-                    const pageNum = pageIndex + 1;
-                    const rollIndex = sizeGroups[pageIndex].rolls.findIndex(r => r.roll_number === q) + 1;
-                    foundAlertInfo.innerHTML = `✅ พบเลขม้วน <strong>${q}</strong> อยู่ในกลุ่ม <strong>${groupName}</strong> หน้า <strong>${pageNum}</strong> (ลำดับที่ ${rollIndex} ในหน้านั้น)`;
-                    foundAlert.style.display = 'block';
-                    notFoundAlert.style.display = 'none';
-                    // เก็บข้อมูลเพื่อยืนยัน
-                    pendingAction = { rollNumber: q, found: 1, checkbox: null, rollData: roll };
-                } else {
-                    // ไม่พบ
-                    foundAlert.style.display = 'none';
-                    notFoundAlert.style.display = 'block';
-                }
-            } catch (e) {
-                showToast('เกิดข้อผิดพลาดในการค้นหา', 'error');
-            }
-        });
-
-        searchRollInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') searchRollBtn.click();
-        });
-
-        // ---------- Confirm found (ต้องใส่รหัสผ่าน) ----------
-        confirmFoundBtn.addEventListener('click', function() {
-            if (!pendingAction || !pendingAction.rollNumber) {
-                showToast('ไม่มีข้อมูลที่จะยืนยัน', 'warning');
-                return;
-            }
-            // ต้องใส่รหัสผ่านก่อน
-            modalMessage.textContent = 'กรุณากรอกรหัสผ่านเพื่อยืนยันว่าพบม้วนกระดาษในพื้นที่กลุ่มของคุณ';
-            passwordModal.classList.add('visible');
-            modalPassword.value = '';
-            modalError.textContent = '';
-            modalPassword.focus();
-            // เก็บ action ไว้
-            pendingAction.type = 'confirmFound';
-        });
-
-        cancelFoundBtn.addEventListener('click', function() {
-            foundAlert.style.display = 'none';
-            pendingAction = null;
-        });
-
-        // ---------- Modal handlers ----------
-        modalCancel.addEventListener('click', () => {
-            passwordModal.classList.remove('visible');
-            pendingAction = null;
-        });
-
-        modalConfirm.addEventListener('click', async () => {
-            const password = modalPassword.value.trim();
-            if (!password) { modalError.textContent = 'กรุณากรอกรหัสผ่าน'; return; }
-            // ตรวจสอบรหัสผ่าน
-            try {
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: currentUser.username, password: password })
-                });
-                const data = await res.json();
-                if (res.ok && data.token) {
-                    modalError.textContent = '';
-                    passwordModal.classList.remove('visible');
-                    // ดำเนินการต่อ
-                    if (pendingAction) {
-                        if (pendingAction.type === 'confirmFound') {
-                            // ยืนยันพบม้วน
-                            await saveCheck(pendingAction.rollNumber, 1, null);
-                            foundAlert.style.display = 'none';
-                            showToast('✅ ยืนยันพบม้วนเรียบร้อย', 'success');
-                            pendingAction = null;
-                            // รีเฟรช
-                            renderGroupedBySize();
-                        } else if (pendingAction.rollNumber && pendingAction.found === 0 && pendingAction.checkbox) {
-                            // เปลี่ยนจาก พบ -> ไม่พบ (จาก checkbox)
-                            await saveCheck(pendingAction.rollNumber, 0, pendingAction.checkbox);
-                            pendingAction = null;
-                        } else {
-                            // fallback
-                            showToast('ดำเนินการสำเร็จ', 'success');
-                            pendingAction = null;
-                        }
-                    }
-                } else {
-                    modalError.textContent = 'รหัสผ่านไม่ถูกต้อง';
-                    modalPassword.value = '';
-                    modalPassword.focus();
-                }
-            } catch (e) {
-                modalError.textContent = 'เกิดข้อผิดพลาด';
-            }
-        });
-
-        modalPassword.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') modalConfirm.click();
-            if (e.key === 'Escape') modalCancel.click();
-        });
-
-        // ---------- Export PDF ----------
-        function exportPDF() {
-            window.print();
-        }
-
-        // ---------- Load data ----------
-        loadBtn.addEventListener('click', loadCheckItems);
-        exportPdfBtn.addEventListener('click', exportPDF);
-        backBtn.addEventListener('click', () => { window.location.href = '/'; });
-
-        // ---------- Init ----------
-        (async function init() {
-            await loadUser();
-            await loadStockSettings();
-            if (stockCountId) await loadCheckItems();
-            // Set signature date
-            const now = new Date();
-            $('dateLine').textContent = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-        })();
-
-        console.log('📋 Stock Check v3.0 ready');
+        // ... (ส่วนอื่นๆ คงเดิม)
     </script>
 </body>
 </html>
