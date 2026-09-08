@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📋 ตรวจนับสต็อกม้วนกระดาษ</title>
     <style>
-        /* (CSS เดิมทั้งหมด คงไว้) */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -179,7 +178,7 @@
             font-weight: 500;
         }
 
-        /* ===== กล่องค้นหา (ปรับปุ่มให้อยู่ขวา) ===== */
+        /* ===== SEARCH BOX - แบบปุ่มอยู่ข้างขวา ===== */
         .search-box {
             display: flex;
             flex-wrap: nowrap;
@@ -238,18 +237,44 @@
         .search-box .search-input-wrapper .suggestions .suggestion-item:hover {
             background: #f0f4fa;
         }
-        .search-box .btn {
-            padding: 6px 18px;
+        .search-box .btn-search {
+            padding: 8px 24px;
             border-radius: 30px;
             border: none;
+            background: #1a4b6d;
+            color: #fff;
             font-weight: 600;
+            font-size: 15px;
             cursor: pointer;
             white-space: nowrap;
+            transition: 0.2s;
         }
-        .search-box .btn-search { background: #1a4b6d; color: #fff; }
-        .search-box .btn-search:hover { background: #0b2b44; }
+        .search-box .btn-search:hover {
+            background: #0b2b44;
+        }
 
-        /* ===== Alert modals ===== */
+        /* ===== ALERT BOXES ===== */
+        .found-alert {
+            background: #d4edda;
+            border-left: 6px solid #28a745;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .found-alert .info { font-weight: 600; color: #155724; }
+        .notfound-alert {
+            background: #f8d7da;
+            border-left: 6px solid #dc3545;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .notfound-alert .info { font-weight: 700; color: #721c24; font-size: 20px; }
+        .notfound-alert .detail { color: #721c24; font-size: 14px; margin-top: 4px; }
+
+        /* ===== MODAL ===== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -313,26 +338,7 @@
             font-size: 14px;
         }
 
-        .found-alert {
-            background: #d4edda;
-            border-left: 6px solid #28a745;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            display: none;
-        }
-        .found-alert .info { font-weight: 600; color: #155724; }
-        .notfound-alert {
-            background: #f8d7da;
-            border-left: 6px solid #dc3545;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            display: none;
-        }
-        .notfound-alert .info { font-weight: 700; color: #721c24; font-size: 20px; }
-        .notfound-alert .detail { color: #721c24; font-size: 14px; margin-top: 4px; }
-
+        /* ===== PRINT ===== */
         .print-hide { display: inline-block; }
         @media print {
             .print-hide { display: none !important; }
@@ -381,6 +387,7 @@
             }
         }
 
+        /* ===== TOAST ===== */
         .toast {
             position: fixed;
             bottom: 24px;
@@ -407,12 +414,14 @@
 </head>
 <body>
 <div class="container" id="app">
+    <!-- HEADER -->
     <div class="header">
         <h1>📋 ตรวจนับสต็อกม้วนกระดาษ</h1>
         <div class="meta" id="stockMeta">กำลังโหลด...</div>
         <div class="user-info" id="userInfo">👤 ผู้ตรวจ: —</div>
     </div>
 
+    <!-- CONTROLS -->
     <div class="controls print-hide">
         <select id="statusFilter">
             <option value="all">ทุกสถานะ</option>
@@ -426,10 +435,10 @@
         <button class="btn btn-primary" id="loadBtn">🔄 โหลดข้อมูล</button>
         <button class="btn btn-success" id="exportPdfBtn">📄 พรีวิว/PDF</button>
         <button class="btn btn-secondary" id="backBtn">⬅ กลับหน้าแรก</button>
-        <!-- ปุ่มสำหรับ Admin: แสดงม้วนที่พบไม่มีใน Stock -->
         <button class="btn btn-danger" id="showAlertsBtn" style="display:none;">⚠️ ม้วนที่พบไม่มีในสต็อก</button>
     </div>
 
+    <!-- SUMMARY -->
     <div class="summary" id="summary">
         <span>✅ พบแล้ว: <span class="found-count" id="foundCount">0</span> ม้วน</span>
         <span>❌ ไม่พบ: <span class="notfound-count" id="notFoundCount">0</span> ม้วน</span>
@@ -437,6 +446,7 @@
         <span id="groupSummary" style="margin-left:auto;font-weight:400;">กลุ่ม: —</span>
     </div>
 
+    <!-- PAGINATION -->
     <div class="page-controls print-hide" id="pageControls">
         <button class="page-btn" id="prevPage">◀</button>
         <span class="page-info" id="pageInfo">หน้า 1 / 1</span>
@@ -444,16 +454,17 @@
         <span style="margin-left:12px;font-size:14px;color:#5a6a7e;" id="pageSizeInfo">แสดง 50 รายการ</span>
     </div>
 
-    <!-- Search Box with Autocomplete (ปุ่มอยู่ขวา) -->
+    <!-- SEARCH BOX (ปุ่มอยู่ข้างขวา) -->
     <div class="search-box print-hide" id="searchBox">
         <label>🔎 ค้นหาเลขม้วน (ทุกกลุ่ม):</label>
         <div class="search-input-wrapper">
             <input type="text" id="searchRollInput" placeholder="" autocomplete="off" />
             <div class="suggestions" id="suggestions"></div>
         </div>
-        <button class="btn btn-search" id="searchRollBtn">ค้นหา</button>
+        <button class="btn-search" id="searchRollBtn">ค้นหา</button>
     </div>
 
+    <!-- ALERT BOXES -->
     <div class="found-alert" id="foundAlert">
         <div class="info" id="foundAlertInfo"></div>
         <button class="btn btn-sm btn-success" id="confirmFoundBtn" style="margin-top:8px;">✅ ยืนยันพบม้วนกระดาษในพื้นที่กลุ่มของคุณ</button>
@@ -462,8 +473,11 @@
     <div class="notfound-alert" id="notFoundAlert">
         <div class="info">❌ ไม่พบเลขม้วนดังกล่าว</div>
         <div class="detail">ทำการตรวจสอบเลขม้วนใหม่อีกครั้ง หากถูกต้องแล้วให้ทำการกดยืนยันพบม้วนกระดาษในพื้นที่กลุ่มของคุณ</div>
+        <button class="btn btn-sm btn-success" id="confirmNotFoundBtn" style="margin-top:8px;">✅ ยืนยันพบม้วนกระดาษในพื้นที่กลุ่มของคุณ</button>
+        <button class="btn btn-sm btn-secondary" id="cancelNotFoundBtn" style="margin-top:8px;">ยกเลิก</button>
     </div>
 
+    <!-- TABLE -->
     <div class="table-wrap" id="tableWrap">
         <table>
             <thead>
@@ -500,7 +514,7 @@
     </div>
 </div>
 
-<!-- ALERT MODAL (for showing rolls not in stock) -->
+<!-- ALERT MODAL -->
 <div class="modal-overlay" id="alertModal">
     <div class="modal-box">
         <h3>⚠️ ม้วนที่พบไม่มีในสต็อก</h3>
@@ -517,7 +531,7 @@
 <div id="toastContainer"></div>
 
 <script>
-    // ---------- State ----------
+    // ---------- STATE ----------
     let token = localStorage.getItem('rolltracker_token') || '';
     let currentUser = null;
     let allRolls = [];
@@ -557,6 +571,8 @@
     const foundAlertInfo = $('foundAlertInfo');
     const confirmFoundBtn = $('confirmFoundBtn');
     const cancelFoundBtn = $('cancelFoundBtn');
+    const confirmNotFoundBtn = $('confirmNotFoundBtn');
+    const cancelNotFoundBtn = $('cancelNotFoundBtn');
 
     const passwordModal = $('passwordModal');
     const modalPassword = $('modalPassword');
@@ -581,7 +597,7 @@
         return { 'Authorization': 'Bearer ' + token };
     }
 
-    // ---------- Load user ----------
+    // ---------- LOAD USER ----------
     async function loadUser() {
         try {
             const res = await fetch('/api/auth/me', { headers: getAuthHeaders() });
@@ -600,7 +616,7 @@
         }
     }
 
-    // ---------- Load stock settings ----------
+    // ---------- LOAD STOCK SETTINGS ----------
     async function loadStockSettings() {
         try {
             const res = await fetch('/api/stock/latest', { headers: getAuthHeaders() });
@@ -616,7 +632,7 @@
         }
     }
 
-    // ---------- Load groups ----------
+    // ---------- LOAD GROUPS ----------
     async function loadGroups() {
         try {
             const res = await fetch('/api/stock/groups', { headers: getAuthHeaders() });
@@ -632,7 +648,7 @@
         }
     }
 
-    // ---------- Load check items ----------
+    // ---------- LOAD CHECK ITEMS ----------
     async function loadCheckItems(page = 1) {
         const group = groupFilter.value;
         const status = statusFilter.value;
@@ -662,7 +678,7 @@
         }
     }
 
-    // ---------- Render table ----------
+    // ---------- RENDER TABLE ----------
     function renderTable() {
         const rolls = allRolls;
         if (!rolls || !rolls.length) {
@@ -672,7 +688,6 @@
         let html = '';
         rolls.forEach(roll => {
             const found = roll.found === 1;
-            // ใช้ checked_by ที่ได้จาก API (ถ้ามี) หรือ roll.checked_by
             const checkedBy = roll.checked_by || '—';
             html += `
                 <tr>
@@ -698,7 +713,6 @@
                 const rollNumber = this.dataset.roll;
                 const currentChecked = this.checked;
                 if (!currentChecked) {
-                    // เปลี่ยนจาก พบ -> ไม่พบ
                     if (currentUser.role === 'admin') {
                         saveCheck(rollNumber, 0, this);
                         return;
@@ -712,7 +726,6 @@
                     this.checked = true;
                     return;
                 } else {
-                    // เปลี่ยนจาก ไม่พบ -> พบ
                     saveCheck(rollNumber, 1, this);
                 }
             });
@@ -737,31 +750,28 @@
         nextPage.disabled = currentPage >= totalPages;
     }
 
-    // ---------- Save check ----------
+    // ---------- SAVE CHECK (แก้ไขให้ checked_by เป็น User ที่ Login) ----------
     async function saveCheck(rollNumber, found, checkboxEl) {
         try {
+            const payload = {
+                roll_number: rollNumber,
+                found: found,
+                checked_by: currentUser.username  // ✅ ส่งชื่อ User ไปด้วย
+            };
             const res = await fetch('/api/stock/check', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-                body: JSON.stringify({ roll_number: rollNumber, found: found })
+                body: JSON.stringify(payload)
             });
             if (res.ok) {
                 const roll = allRolls.find(r => r.roll_number === rollNumber);
                 if (roll) {
                     roll.found = found;
-                    // ตรวจสอบว่า found=1 ให้ set checked_by เป็น username ของ user ที่กำลัง login
-                    if (found === 1) {
-                        // ใช้ currentUser.username ที่ได้จาก session จริงๆ
-                        roll.checked_by = currentUser.username;
-                    } else {
-                        // ถ้าเปลี่ยนเป็นไม่พบ ให้ clear checked_by หรือปล่อยว่าง
-                        roll.checked_by = null;
-                    }
+                    roll.checked_by = found === 1 ? currentUser.username : null;
                 }
                 if (checkboxEl) checkboxEl.checked = found === 1;
                 showToast(found === 1 ? '✅ พบม้วนนี้แล้ว' : '❌ ไม่พบม้วนนี้', found === 1 ? 'success' : 'warning');
                 updateSummary();
-                // Reload current page เพื่อให้แสดงชื่อผู้ตรวจถูกต้อง
                 loadCheckItems(currentPage);
             } else {
                 showToast('บันทึกไม่สำเร็จ', 'error');
@@ -773,7 +783,7 @@
         }
     }
 
-    // ---------- Page navigation ----------
+    // ---------- PAGE NAVIGATION ----------
     prevPage.addEventListener('click', () => {
         if (currentPage > 1) loadCheckItems(currentPage - 1);
     });
@@ -784,7 +794,7 @@
     statusFilter.addEventListener('change', () => loadCheckItems(1));
     groupFilter.addEventListener('change', () => loadCheckItems(1));
 
-    // ---------- Show Alerts (Admin only) ----------
+    // ---------- SHOW ALERTS (Admin) ----------
     showAlertsBtn.addEventListener('click', async () => {
         try {
             const res = await fetch('/api/alerts', { headers: getAuthHeaders() });
@@ -806,7 +816,7 @@
         alertModal.classList.remove('visible');
     });
 
-    // ---------- Search with Autocomplete ----------
+    // ---------- SEARCH AUTOCOMPLETE ----------
     let suggestTimeout;
     searchRollInput.addEventListener('input', function() {
         const q = this.value.trim();
@@ -846,9 +856,8 @@
         }
     });
 
-    // ---------- Search Roll (แสดงปุ่มยืนยันเสมอเมื่อพบ) ----------
-    searchRollBtn.addEventListener('click', async () => {
-        const q = searchRollInput.value.trim();
+    // ---------- SEARCH ROLL (ทุกกรณี) ----------
+    async function performSearch(q) {
         if (!q) {
             foundAlert.style.display = 'none';
             notFoundAlert.style.display = 'none';
@@ -860,56 +869,28 @@
             });
             const data = await res.json();
             if (res.ok && data.roll) {
+                // ✅ พบใน Stock
                 const roll = data.roll;
                 const groupName = roll.group_name || 'ไม่มีกลุ่ม';
                 const size = roll.width || '0';
-                // แสดงข้อมูลและปุ่มยืนยัน
                 foundAlertInfo.innerHTML = `✅ พบเลขม้วน <strong>${q}</strong> อยู่ในกลุ่ม <strong>${groupName}</strong> Size <strong>${size}"</strong>`;
                 foundAlert.style.display = 'block';
                 notFoundAlert.style.display = 'none';
-                // เก็บข้อมูลเพื่อยืนยัน (ไม่ต้องเช็คว่ามีใน stock หรือไม่)
-                pendingAction = { rollNumber: q, found: 1, checkbox: null, rollData: roll };
-                // แสดงปุ่มยืนยันเสมอ (ถ้ามีใน stock ก็ยืนยันได้ ถ้าไม่มีก็ยืนยันและจะแจ้งเตือน admin)
+                pendingAction = { rollNumber: q, found: 1, checkbox: null, rollData: roll, type: 'confirmFound' };
             } else {
-                // ไม่พบใน stock
+                // ❌ ไม่พบใน Stock (ให้มีปุ่มยืนยัน)
                 foundAlert.style.display = 'none';
                 notFoundAlert.style.display = 'block';
-                // ถึงไม่พบใน stock ก็ยังให้ปุ่มยืนยันได้ (สำหรับกรณีที่ไม่มีใน stock)
-                // เราจะเพิ่มปุ่มยืนยันใน notFoundAlert ได้ไหม? ตามที่ต้องการให้มีปุ่มยืนยันเสมอ
-                // เนื่องจากไม่พบใน stock แต่ต้องการให้ยืนยันได้ เราจะเพิ่มปุ่มใน notFoundAlert ด้วย
-                // ปรับปรุง notFoundAlert ให้มีปุ่มยืนยัน
-                // แต่ไม่ต้องทำเพราะ foundAlert จะแสดงเมื่อพบ แสดงว่าถ้าไม่พบก็ไม่แสดงปุ่ม
-                // ตามความต้องการข้อ 1: "ค้นหาม้วนที่ไม่มีใน Stock แล้วกดยืนยัน ต้องใส่รหัสผ่าน"
-                // ดังนั้นเราต้องให้ปุ่มยืนยันปรากฏทั้งสองกรณี (พบและไม่พบใน stock)
-                // เราเลยจะเพิ่มปุ่มยืนยันใน notFoundAlert ด้วย
-                // เราใช้วิธี: ถ้าไม่พบ ให้แสดง notFoundAlert พร้อมปุ่ม "ยืนยันพบ" (เพื่อให้ยืนยันได้)
-                // แก้ไม่พบ alert:
-                notFoundAlert.innerHTML = `
-                    <div class="info">❌ ไม่พบเลขม้วนดังกล่าวใน Stock</div>
-                    <div class="detail">ทำการตรวจสอบเลขม้วนใหม่อีกครั้ง หากถูกต้องแล้วให้ทำการกดยืนยันพบม้วนกระดาษในพื้นที่กลุ่มของคุณ</div>
-                    <button class="btn btn-sm btn-success" id="confirmNotFoundBtn" style="margin-top:8px;">✅ ยืนยันพบม้วนกระดาษในพื้นที่กลุ่มของคุณ</button>
-                    <button class="btn btn-sm btn-secondary" id="cancelNotFoundBtn" style="margin-top:8px;">ยกเลิก</button>
-                `;
-                notFoundAlert.style.display = 'block';
-                // กำหนด event ให้ปุ่มยืนยัน
-                document.getElementById('confirmNotFoundBtn').addEventListener('click', function() {
-                    // ตั้ง pendingAction สำหรับม้วนที่ไม่มีใน stock
-                    pendingAction = { rollNumber: q, found: 1, checkbox: null, rollData: null };
-                    modalMessage.textContent = 'กรุณากรอกรหัสผ่านเพื่อยืนยันว่าพบม้วนกระดาษ (แม้ไม่มีใน Stock) ในพื้นที่กลุ่มของคุณ';
-                    passwordModal.classList.add('visible');
-                    modalPassword.value = '';
-                    modalError.textContent = '';
-                    modalPassword.focus();
-                    pendingAction.type = 'confirmFound';
-                });
-                document.getElementById('cancelNotFoundBtn').addEventListener('click', function() {
-                    notFoundAlert.style.display = 'none';
-                    pendingAction = null;
-                });
+                pendingAction = { rollNumber: q, found: 1, checkbox: null, rollData: null, type: 'confirmNotFound' };
             }
         } catch (e) {
             showToast('เกิดข้อผิดพลาดในการค้นหา', 'error');
         }
+    }
+
+    searchRollBtn.addEventListener('click', async () => {
+        const q = searchRollInput.value.trim();
+        await performSearch(q);
     });
 
     searchRollInput.addEventListener('keydown', (e) => {
@@ -917,7 +898,7 @@
         if (e.key === 'Escape') suggestions.classList.remove('show');
     });
 
-    // Confirm found (ใช้ร่วมกัน)
+    // ---------- ปุ่มยืนยัน (พบใน Stock) ----------
     confirmFoundBtn.addEventListener('click', () => {
         if (!pendingAction || !pendingAction.rollNumber) {
             showToast('ไม่มีข้อมูลที่จะยืนยัน', 'warning');
@@ -928,7 +909,6 @@
         modalPassword.value = '';
         modalError.textContent = '';
         modalPassword.focus();
-        pendingAction.type = 'confirmFound';
     });
 
     cancelFoundBtn.addEventListener('click', () => {
@@ -936,7 +916,25 @@
         pendingAction = null;
     });
 
-    // ---------- Modal handlers ----------
+    // ---------- ปุ่มยืนยัน (ไม่พบใน Stock) ----------
+    confirmNotFoundBtn.addEventListener('click', () => {
+        if (!pendingAction || !pendingAction.rollNumber) {
+            showToast('ไม่มีข้อมูลที่จะยืนยัน', 'warning');
+            return;
+        }
+        modalMessage.textContent = 'กรุณากรอกรหัสผ่านเพื่อยืนยันว่าพบม้วนกระดาษในพื้นที่กลุ่มของคุณ (ม้วนนี้ไม่มีใน Stock)';
+        passwordModal.classList.add('visible');
+        modalPassword.value = '';
+        modalError.textContent = '';
+        modalPassword.focus();
+    });
+
+    cancelNotFoundBtn.addEventListener('click', () => {
+        notFoundAlert.style.display = 'none';
+        pendingAction = null;
+    });
+
+    // ---------- MODAL HANDLERS ----------
     modalCancel.addEventListener('click', () => {
         passwordModal.classList.remove('visible');
         pendingAction = null;
@@ -956,7 +954,8 @@
                 modalError.textContent = '';
                 passwordModal.classList.remove('visible');
                 if (pendingAction) {
-                    if (pendingAction.type === 'confirmFound') {
+                    if (pendingAction.type === 'confirmFound' || pendingAction.type === 'confirmNotFound') {
+                        // ✅ บันทึกว่าพบ (แม้ไม่มีใน Stock)
                         await saveCheck(pendingAction.rollNumber, 1, null);
                         foundAlert.style.display = 'none';
                         notFoundAlert.style.display = 'none';
@@ -983,7 +982,7 @@
         if (e.key === 'Escape') modalCancel.click();
     });
 
-    // ---------- Export PDF ----------
+    // ---------- EXPORT PDF ----------
     function exportPDF() {
         const printWindow = window.open('', '_blank', 'width=900,height=700');
         if (!printWindow) {
@@ -1071,12 +1070,12 @@
         printWindow.close();
     }
 
-    // ---------- Event listeners ----------
+    // ---------- EVENT LISTENERS ----------
     loadBtn.addEventListener('click', () => loadCheckItems(1));
     exportPdfBtn.addEventListener('click', exportPDF);
     backBtn.addEventListener('click', () => { window.location.href = '/'; });
 
-    // ---------- Init ----------
+    // ---------- INIT ----------
     (async function init() {
         await loadUser();
         await loadStockSettings();
@@ -1084,7 +1083,7 @@
         if (stockCountId) loadCheckItems(1);
     })();
 
-    console.log('📋 Stock Check v6.0 ready');
+    console.log('📋 Stock Check v5.1 ready');
 </script>
 </body>
 </html>
