@@ -276,6 +276,15 @@ app.get('/api/stock/latest', authMiddleware, (req, res) => {
     });
 });
 
+// ---------- Get all groups ----------
+app.get('/api/stock/groups', authMiddleware, (req, res) => {
+    db.all(`SELECT DISTINCT group_name FROM rolls WHERE group_name IS NOT NULL AND group_name != '' ORDER BY group_name`, (err, rows) => {
+        if (err) return res.status(500).json({ message: 'DB error' });
+        const groups = rows.map(row => row.group_name);
+        res.json({ groups });
+    });
+});
+
 // ---------- Stock Check (PAGINATED) ----------
 app.get('/api/stock/check-items', authMiddleware, (req, res) => {
     const group = req.query.group || 'all';
@@ -284,7 +293,6 @@ app.get('/api/stock/check-items', authMiddleware, (req, res) => {
     const limit = parseInt(req.query.limit) || 50;
     const offset = (page - 1) * limit;
 
-    // Build WHERE clause
     let whereClause = '1=1';
     const params = [];
     if (group !== 'all') {
@@ -296,12 +304,10 @@ app.get('/api/stock/check-items', authMiddleware, (req, res) => {
         params.push(status);
     }
 
-    // Get total count
     db.get(`SELECT COUNT(*) as total FROM rolls WHERE ${whereClause}`, params, (err, countRow) => {
         if (err) return res.status(500).json({ message: 'DB error' });
         const total = countRow.total;
 
-        // Get paginated rolls
         const query = `
             SELECT r.*,
                    (SELECT found FROM stock_check_items WHERE stock_count_id = (SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1) AND roll_number = r.roll_number AND checked_by = ?) as found,
@@ -318,7 +324,7 @@ app.get('/api/stock/check-items', authMiddleware, (req, res) => {
         db.all(query, queryParams, (err, rolls) => {
             if (err) return res.status(500).json({ message: 'DB error' });
             res.json({
-                stock_count_id: null, // not needed for frontend, but keep
+                stock_count_id: null,
                 rolls,
                 total,
                 page,
@@ -333,20 +339,16 @@ app.post('/api/stock/check', authMiddleware, (req, res) => {
     const { roll_number, found } = req.body;
     if (!roll_number) return res.status(400).json({ message: 'Missing roll number' });
     
-    // Get latest stock count id
     db.get(`SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1`, (err, stockRow) => {
         if (err || !stockRow) {
             return res.status(400).json({ message: 'No stock count settings' });
         }
         const stockCountId = stockRow.id;
 
-        // Check if roll exists in stock
         db.get(`SELECT roll_number FROM rolls WHERE roll_number = ?`, [roll_number], (err, rollRow) => {
             if (!rollRow && found === 1) {
-                // Alert admin
                 db.run(`INSERT INTO stock_alerts (roll_number, checked_by) VALUES (?, ?)`, [roll_number, req.user.username]);
             }
-            // Save check
             db.get(`SELECT id FROM stock_check_items WHERE stock_count_id = ? AND roll_number = ? AND checked_by = ?`,
                 [stockCountId, roll_number, req.user.username], (err, row) => {
                     if (err) return res.status(500).json({ message: 'DB error' });
