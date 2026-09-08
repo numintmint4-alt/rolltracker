@@ -213,7 +213,6 @@
         .search-box .btn-search { background: #1a4b6d; color: #fff; }
         .search-box .btn-search:hover { background: #0b2b44; }
 
-        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -285,12 +284,11 @@
         .notfound-alert .info { font-weight: 700; color: #721c24; font-size: 20px; }
         .notfound-alert .detail { color: #721c24; font-size: 14px; margin-top: 4px; }
 
-        /* Print */
         .print-hide { display: inline-block; }
         @media print {
             .print-hide { display: none !important; }
-            body { background: #fff; padding: 0; margin: 0; font-size: 14px; }
-            .container { box-shadow: none; border-radius: 0; padding: 10px 12px; max-width: 100%; }
+            body { background: #fff; padding: 0; margin: 0; }
+            .container { box-shadow: none; border-radius: 0; padding: 10px 12px; }
             .signature-area { display: none !important; }
             .summary { display: none !important; }
             .header .user-info { display: none !important; }
@@ -300,12 +298,12 @@
             .filter-group { display: none !important; }
             .found-alert, .notfound-alert { display: none !important; }
             .table-wrap { border: 1px solid #000; margin-top: 0; border-radius: 0; overflow: visible; }
-            table { font-size: 13px; border-collapse: collapse; width: 100%; page-break-inside: auto; }
+            table { font-size: 13px; border-collapse: collapse; width: 100%; }
             table th { background: #e9edf4 !important; font-size: 13px; padding: 6px 8px; border: 1px solid #000; }
             table td { font-size: 13px; padding: 5px 8px; border: 1px solid #000; }
             .roll-number { font-weight: 700; font-size: 13px; }
             .checked-by { display: none; }
-            .header h1 { font-size: 18px; margin-bottom: 4px; }
+            .header h1 { font-size: 18px; }
             .header .meta { font-size: 14px; }
             .found-checkbox {
                 appearance: none;
@@ -332,7 +330,6 @@
             table th:last-child, table td:last-child {
                 display: none;
             }
-            .header .user-info { display: none; }
         }
 
         .toast {
@@ -434,7 +431,6 @@
     </div>
 </div>
 
-<!-- PASSWORD MODAL -->
 <div class="modal-overlay" id="passwordModal">
     <div class="modal-box">
         <h3>🔐 ยืนยันตัวตน</h3>
@@ -454,7 +450,7 @@
     // ---------- State ----------
     let token = localStorage.getItem('rolltracker_token') || '';
     let currentUser = null;
-    let allRolls = []; // used for print/search
+    let allRolls = [];
     let stockCountId = null;
     let currentStatusFilter = 'all';
     let currentGroup = 'all';
@@ -545,14 +541,11 @@
         }
     }
 
-    // ---------- Load group options ----------
+    // ---------- Load groups ----------
     async function loadGroups() {
         try {
-            const res = await fetch('/api/rolls/count', { headers: getAuthHeaders() });
-            // Actually we need distinct groups, but we can get from all rolls later
-            // We'll use a simple query to get distinct groups
-            const resGroups = await fetch('/api/stock/groups', { headers: getAuthHeaders() });
-            const data = await resGroups.json();
+            const res = await fetch('/api/stock/groups', { headers: getAuthHeaders() });
+            const data = await res.json();
             if (data.groups) {
                 groupFilter.innerHTML = '<option value="all">ทุกกลุ่ม</option>';
                 data.groups.forEach(g => {
@@ -560,19 +553,11 @@
                 });
             }
         } catch (e) {
-            // fallback: try to get from all rolls via count? we'll just set default
-            console.warn('Could not load groups, using default');
+            console.warn('Could not load groups');
         }
     }
-    // Add a new endpoint for groups
-    // We'll add in server.js later, but for now we'll use a simple query inside this page
 
-    // Actually we'll add a new API endpoint in server.js: /api/stock/groups
-    // For now, we'll just fetch all rolls once to populate groups? That defeats performance.
-    // We'll add the endpoint now (see server.js later)
-    // But since we're sending code, we'll include it in server.js
-
-    // ---------- Load check items with pagination ----------
+    // ---------- Load check items ----------
     async function loadCheckItems(page = 1) {
         const group = groupFilter.value;
         const status = statusFilter.value;
@@ -590,7 +575,6 @@
                 renderTable();
                 updateSummary();
                 updatePagination();
-                // Store for print
                 window._allRollsForPrint = data.rolls || [];
             } else {
                 showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
@@ -632,14 +616,12 @@
         });
         checkTableBody.innerHTML = html;
 
-        // Attach checkbox events
         checkTableBody.querySelectorAll('.found-checkbox').forEach(cb => {
             cb.addEventListener('change', function(e) {
                 e.preventDefault();
                 const rollNumber = this.dataset.roll;
                 const currentChecked = this.checked;
                 if (!currentChecked) {
-                    // changing from found to not found
                     if (currentUser.role === 'admin') {
                         saveCheck(rollNumber, 0, this);
                         return;
@@ -653,14 +635,12 @@
                     this.checked = true;
                     return;
                 } else {
-                    // not found -> found
                     saveCheck(rollNumber, 1, this);
                 }
             });
         });
     }
 
-    // ---------- Update summary ----------
     function updateSummary() {
         const rolls = allRolls || [];
         const total = rolls.length;
@@ -672,7 +652,6 @@
         groupSummary.textContent = `กลุ่ม: ${groupFilter.value !== 'all' ? groupFilter.value : 'ทั้งหมด'} | สถานะ: ${statusFilter.value !== 'all' ? statusFilter.value : 'ทั้งหมด'}`;
     }
 
-    // ---------- Update pagination ----------
     function updatePagination() {
         pageInfo.textContent = `หน้า ${currentPage} / ${totalPages}`;
         pageSizeInfo.textContent = `แสดง ${allRolls.length} รายการ (ทั้งหมด ${totalItems} รายการ)`;
@@ -689,7 +668,6 @@
                 body: JSON.stringify({ roll_number: rollNumber, found: found })
             });
             if (res.ok) {
-                // Update local
                 const roll = allRolls.find(r => r.roll_number === rollNumber);
                 if (roll) {
                     roll.found = found;
@@ -710,21 +688,15 @@
 
     // ---------- Page navigation ----------
     prevPage.addEventListener('click', () => {
-        if (currentPage > 1) {
-            loadCheckItems(currentPage - 1);
-        }
+        if (currentPage > 1) loadCheckItems(currentPage - 1);
     });
     nextPage.addEventListener('click', () => {
-        if (currentPage < totalPages) {
-            loadCheckItems(currentPage + 1);
-        }
+        if (currentPage < totalPages) loadCheckItems(currentPage + 1);
     });
 
-    // ---------- Group/Status filter change ----------
-    statusFilter.addEventListener('change', () => { loadCheckItems(1); });
-    groupFilter.addEventListener('change', () => { loadCheckItems(1); });
+    statusFilter.addEventListener('change', () => loadCheckItems(1));
+    groupFilter.addEventListener('change', () => loadCheckItems(1));
 
-    // ---------- Show All (Admin) ----------
     showAllBtn.addEventListener('click', () => {
         if (currentUser.role === 'admin') {
             groupFilter.value = 'all';
@@ -749,7 +721,6 @@
                 const roll = data.roll;
                 const groupName = roll.group_name || 'ไม่มีกลุ่ม';
                 const size = roll.width || '0';
-                // Check if this group is currently loaded? We can show info
                 foundAlertInfo.innerHTML = `✅ พบเลขม้วน <strong>${q}</strong> อยู่ในกลุ่ม <strong>${groupName}</strong> Size <strong>${size}"</strong>`;
                 foundAlert.style.display = 'block';
                 notFoundAlert.style.display = 'none';
@@ -785,7 +756,7 @@
         pendingAction = null;
     });
 
-    // ---------- Modal handlers ----------
+    // ---------- Modal ----------
     modalCancel.addEventListener('click', () => {
         passwordModal.classList.remove('visible');
         pendingAction = null;
@@ -831,9 +802,8 @@
         if (e.key === 'Escape') modalCancel.click();
     });
 
-    // ---------- Export PDF (print) ----------
+    // ---------- Export PDF ----------
     function exportPDF() {
-        // ใช้ข้อมูลที่โหลดอยู่แล้ว (allRolls) สร้างหน้าต่างพิมพ์
         const printWindow = window.open('', '_blank', 'width=900,height=700');
         if (!printWindow) {
             showToast('กรุณาอนุญาต pop-up เพื่อพิมพ์', 'warning');
@@ -929,29 +899,11 @@
     (async function init() {
         await loadUser();
         await loadStockSettings();
-        // Populate groups by fetching from API
-        try {
-            const resGroups = await fetch('/api/stock/groups', { headers: getAuthHeaders() });
-            const data = await resGroups.json();
-            if (data.groups) {
-                groupFilter.innerHTML = '<option value="all">ทุกกลุ่ม</option>';
-                data.groups.forEach(g => {
-                    groupFilter.innerHTML += `<option value="${g}">${g}</option>`;
-                });
-            }
-        } catch (e) {
-            console.warn('Could not load groups');
-        }
-        // Auto load first page
-        if (stockCountId) {
-            loadCheckItems(1);
-        }
-        // Set signature date
-        const now = new Date();
-        // Not used in print anymore
+        await loadGroups();
+        if (stockCountId) loadCheckItems(1);
     })();
 
-    console.log('📋 Stock Check v4.0 (Pagination) ready');
+    console.log('📋 Stock Check v4.0 ready');
 </script>
 </body>
 </html>
