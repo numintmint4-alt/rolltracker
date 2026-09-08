@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>📦 ระบบตรวจสอบ Location ม้วนกระดาษ</title>
     <style>
-        /* ใช้ CSS เดิมทั้งหมด (จากไฟล์ก่อนหน้า) */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f4f7fc; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
         #app { width: 100%; max-width: 1300px; background: #fff; border-radius: 32px; box-shadow: 0 25px 60px rgba(0,20,40,0.15); overflow: hidden; }
@@ -112,6 +111,10 @@
         .toast.error { background: #dc3545; }
         .toast.warning { background: #ffc107; color: #1a2a3a; }
         .stock-timestamp { background: #eaf4ff; padding: 8px 20px; border-radius: 30px; font-size: 14px; color: #0b2b44; display: inline-block; margin-bottom: 16px; }
+        .alert-banner { background: #fff3cd; border-left: 6px solid #ffc107; padding: 12px 20px; border-radius: 8px; margin-bottom: 16px; display: none; }
+        .alert-banner .alert-title { font-weight: 700; color: #856404; }
+        .alert-banner .alert-list { margin-top: 6px; font-size: 14px; }
+        .alert-banner .alert-list li { margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -148,7 +151,13 @@
         </header>
 
         <div class="app-body">
-            <!-- Stock timestamp -->
+            <!-- Admin Alert Banner -->
+            <div class="alert-banner" id="alertBanner">
+                <div class="alert-title">⚠️ แจ้งเตือน: พบเลขม้วนที่ไม่มีใน Stock</div>
+                <ul class="alert-list" id="alertList"></ul>
+                <button class="btn btn-sm btn-secondary" id="resolveAlertsBtn" style="margin-top:8px;">✅ เคลียร์ทั้งหมด</button>
+            </div>
+
             <div id="stockTimestamp" class="stock-timestamp">📅 โหลดข้อมูล...</div>
 
             <!-- Search -->
@@ -323,12 +332,15 @@
         const totalRollsDisplay = $('totalRollsDisplay');
         const footerTotal = $('footerTotal');
         const stockTimestamp = $('stockTimestamp');
+        const alertBanner = $('alertBanner');
+        const alertList = $('alertList');
+        const resolveAlertsBtn = $('resolveAlertsBtn');
 
         const rFields = {
             roll: $('resultRollNumber'),
             status: $('resultStatus'),
             group: $('rGroup'),
-            grade: $('rGrade'),          // ✅ เพิ่ม grade
+            grade: $('rGrade'),
             width: $('rWidth'),
             dia: $('rDia'),
             kgs: $('rKgs'),
@@ -423,6 +435,7 @@
                 if (currentUser.role === 'admin') {
                     loadUsers();
                     loadHistory();
+                    loadAlerts();
                 }
                 loadStats();
                 loadTotalCount();
@@ -625,6 +638,32 @@
                 footerTotal.textContent = n;
             } catch (e) { totalRollsDisplay.textContent = '📦 —'; }
         }
+
+        // ---------- Admin Alerts ----------
+        async function loadAlerts() {
+            try {
+                const res = await api('GET', '/alerts');
+                if (res.alerts && res.alerts.length) {
+                    alertBanner.style.display = 'block';
+                    alertList.innerHTML = res.alerts.map(a => `<li>🔔 ม้วน ${a.roll_number} ถูกตรวจพบโดย ${a.checked_by} เมื่อ ${formatDate(a.alert_date)}</li>`).join('');
+                } else {
+                    alertBanner.style.display = 'none';
+                }
+            } catch (e) { console.warn(e); }
+        }
+
+        resolveAlertsBtn.addEventListener('click', async () => {
+            try {
+                const res = await api('GET', '/alerts');
+                if (res.alerts) {
+                    for (let a of res.alerts) {
+                        await api('PUT', `/alerts/${a.id}/resolve`);
+                    }
+                    showToast('เคลียร์การแจ้งเตือนแล้ว', 'success');
+                    loadAlerts();
+                }
+            } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
+        });
 
         // ---------- Admin: Users ----------
         async function loadUsers() {
