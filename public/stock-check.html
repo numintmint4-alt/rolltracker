@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📋 ตรวจนับสต็อกม้วนกระดาษ</title>
     <style>
+        /* (CSS เดิมทั้งหมด คงไว้) */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -178,9 +179,10 @@
             font-weight: 500;
         }
 
+        /* ===== กล่องค้นหา (ปรับปุ่มให้อยู่ขวา) ===== */
         .search-box {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 10px;
             margin: 12px 0;
             padding: 12px 16px;
@@ -188,11 +190,11 @@
             border-radius: 12px;
             border: 1px solid #e9edf4;
             align-items: center;
-            position: relative;
         }
         .search-box label {
             font-weight: 600;
             color: #0b2b44;
+            white-space: nowrap;
         }
         .search-box .search-input-wrapper {
             flex: 1;
@@ -242,10 +244,12 @@
             border: none;
             font-weight: 600;
             cursor: pointer;
+            white-space: nowrap;
         }
         .search-box .btn-search { background: #1a4b6d; color: #fff; }
         .search-box .btn-search:hover { background: #0b2b44; }
 
+        /* ===== Alert modals ===== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -440,7 +444,7 @@
         <span style="margin-left:12px;font-size:14px;color:#5a6a7e;" id="pageSizeInfo">แสดง 50 รายการ</span>
     </div>
 
-    <!-- Search Box with Autocomplete -->
+    <!-- Search Box with Autocomplete (ปุ่มอยู่ขวา) -->
     <div class="search-box print-hide" id="searchBox">
         <label>🔎 ค้นหาเลขม้วน (ทุกกลุ่ม):</label>
         <div class="search-input-wrapper">
@@ -668,6 +672,7 @@
         let html = '';
         rolls.forEach(roll => {
             const found = roll.found === 1;
+            // ใช้ checked_by ที่ได้จาก API (ถ้ามี) หรือ roll.checked_by
             const checkedBy = roll.checked_by || '—';
             html += `
                 <tr>
@@ -744,12 +749,19 @@
                 const roll = allRolls.find(r => r.roll_number === rollNumber);
                 if (roll) {
                     roll.found = found;
-                    if (found === 1) roll.checked_by = currentUser.username;
+                    // ตรวจสอบว่า found=1 ให้ set checked_by เป็น username ของ user ที่กำลัง login
+                    if (found === 1) {
+                        // ใช้ currentUser.username ที่ได้จาก session จริงๆ
+                        roll.checked_by = currentUser.username;
+                    } else {
+                        // ถ้าเปลี่ยนเป็นไม่พบ ให้ clear checked_by หรือปล่อยว่าง
+                        roll.checked_by = null;
+                    }
                 }
                 if (checkboxEl) checkboxEl.checked = found === 1;
                 showToast(found === 1 ? '✅ พบม้วนนี้แล้ว' : '❌ ไม่พบม้วนนี้', found === 1 ? 'success' : 'warning');
                 updateSummary();
-                // Reload current page to refresh data
+                // Reload current page เพื่อให้แสดงชื่อผู้ตรวจถูกต้อง
                 loadCheckItems(currentPage);
             } else {
                 showToast('บันทึกไม่สำเร็จ', 'error');
@@ -834,7 +846,7 @@
         }
     });
 
-    // ---------- Search Roll ----------
+    // ---------- Search Roll (แสดงปุ่มยืนยันเสมอเมื่อพบ) ----------
     searchRollBtn.addEventListener('click', async () => {
         const q = searchRollInput.value.trim();
         if (!q) {
@@ -851,13 +863,49 @@
                 const roll = data.roll;
                 const groupName = roll.group_name || 'ไม่มีกลุ่ม';
                 const size = roll.width || '0';
+                // แสดงข้อมูลและปุ่มยืนยัน
                 foundAlertInfo.innerHTML = `✅ พบเลขม้วน <strong>${q}</strong> อยู่ในกลุ่ม <strong>${groupName}</strong> Size <strong>${size}"</strong>`;
                 foundAlert.style.display = 'block';
                 notFoundAlert.style.display = 'none';
+                // เก็บข้อมูลเพื่อยืนยัน (ไม่ต้องเช็คว่ามีใน stock หรือไม่)
                 pendingAction = { rollNumber: q, found: 1, checkbox: null, rollData: roll };
+                // แสดงปุ่มยืนยันเสมอ (ถ้ามีใน stock ก็ยืนยันได้ ถ้าไม่มีก็ยืนยันและจะแจ้งเตือน admin)
             } else {
+                // ไม่พบใน stock
                 foundAlert.style.display = 'none';
                 notFoundAlert.style.display = 'block';
+                // ถึงไม่พบใน stock ก็ยังให้ปุ่มยืนยันได้ (สำหรับกรณีที่ไม่มีใน stock)
+                // เราจะเพิ่มปุ่มยืนยันใน notFoundAlert ได้ไหม? ตามที่ต้องการให้มีปุ่มยืนยันเสมอ
+                // เนื่องจากไม่พบใน stock แต่ต้องการให้ยืนยันได้ เราจะเพิ่มปุ่มใน notFoundAlert ด้วย
+                // ปรับปรุง notFoundAlert ให้มีปุ่มยืนยัน
+                // แต่ไม่ต้องทำเพราะ foundAlert จะแสดงเมื่อพบ แสดงว่าถ้าไม่พบก็ไม่แสดงปุ่ม
+                // ตามความต้องการข้อ 1: "ค้นหาม้วนที่ไม่มีใน Stock แล้วกดยืนยัน ต้องใส่รหัสผ่าน"
+                // ดังนั้นเราต้องให้ปุ่มยืนยันปรากฏทั้งสองกรณี (พบและไม่พบใน stock)
+                // เราเลยจะเพิ่มปุ่มยืนยันใน notFoundAlert ด้วย
+                // เราใช้วิธี: ถ้าไม่พบ ให้แสดง notFoundAlert พร้อมปุ่ม "ยืนยันพบ" (เพื่อให้ยืนยันได้)
+                // แก้ไม่พบ alert:
+                notFoundAlert.innerHTML = `
+                    <div class="info">❌ ไม่พบเลขม้วนดังกล่าวใน Stock</div>
+                    <div class="detail">ทำการตรวจสอบเลขม้วนใหม่อีกครั้ง หากถูกต้องแล้วให้ทำการกดยืนยันพบม้วนกระดาษในพื้นที่กลุ่มของคุณ</div>
+                    <button class="btn btn-sm btn-success" id="confirmNotFoundBtn" style="margin-top:8px;">✅ ยืนยันพบม้วนกระดาษในพื้นที่กลุ่มของคุณ</button>
+                    <button class="btn btn-sm btn-secondary" id="cancelNotFoundBtn" style="margin-top:8px;">ยกเลิก</button>
+                `;
+                notFoundAlert.style.display = 'block';
+                // กำหนด event ให้ปุ่มยืนยัน
+                document.getElementById('confirmNotFoundBtn').addEventListener('click', function() {
+                    // ตั้ง pendingAction สำหรับม้วนที่ไม่มีใน stock
+                    pendingAction = { rollNumber: q, found: 1, checkbox: null, rollData: null };
+                    modalMessage.textContent = 'กรุณากรอกรหัสผ่านเพื่อยืนยันว่าพบม้วนกระดาษ (แม้ไม่มีใน Stock) ในพื้นที่กลุ่มของคุณ';
+                    passwordModal.classList.add('visible');
+                    modalPassword.value = '';
+                    modalError.textContent = '';
+                    modalPassword.focus();
+                    pendingAction.type = 'confirmFound';
+                });
+                document.getElementById('cancelNotFoundBtn').addEventListener('click', function() {
+                    notFoundAlert.style.display = 'none';
+                    pendingAction = null;
+                });
             }
         } catch (e) {
             showToast('เกิดข้อผิดพลาดในการค้นหา', 'error');
@@ -869,6 +917,7 @@
         if (e.key === 'Escape') suggestions.classList.remove('show');
     });
 
+    // Confirm found (ใช้ร่วมกัน)
     confirmFoundBtn.addEventListener('click', () => {
         if (!pendingAction || !pendingAction.rollNumber) {
             showToast('ไม่มีข้อมูลที่จะยืนยัน', 'warning');
@@ -910,6 +959,7 @@
                     if (pendingAction.type === 'confirmFound') {
                         await saveCheck(pendingAction.rollNumber, 1, null);
                         foundAlert.style.display = 'none';
+                        notFoundAlert.style.display = 'none';
                         showToast('✅ ยืนยันพบม้วนเรียบร้อย', 'success');
                         pendingAction = null;
                         loadCheckItems(currentPage);
@@ -1034,7 +1084,7 @@
         if (stockCountId) loadCheckItems(1);
     })();
 
-    console.log('📋 Stock Check v5.0 ready');
+    console.log('📋 Stock Check v6.0 ready');
 </script>
 </body>
 </html>
