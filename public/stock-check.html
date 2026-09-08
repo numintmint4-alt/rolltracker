@@ -7,17 +7,17 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: #f4f7fc;
-            padding: 20px;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f0f2f5;
+            padding: 16px;
         }
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background: #fff;
-            border-radius: 28px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.08);
-            padding: 24px 28px 32px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            padding: 20px 24px 28px;
         }
 
         /* ===== HEADER ===== */
@@ -27,33 +27,50 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid #e9edf4;
-            padding-bottom: 16px;
-            margin-bottom: 20px;
+            padding-bottom: 14px;
+            margin-bottom: 18px;
         }
-        .header h1 { font-size: 24px; color: #0b2b44; }
-        .header .meta { font-size: 15px; color: #5a6a7e; }
-        .header .user-info { background: #eaf4ff; padding: 6px 18px; border-radius: 30px; font-weight: 600; color: #1a4b6d; }
+        .header h1 {
+            font-size: 22px;
+            color: #0b2b44;
+            font-weight: 700;
+        }
+        .header .meta {
+            font-size: 15px;
+            color: #4a5a6e;
+            font-weight: 500;
+        }
+        .header .user-info {
+            background: #eaf4ff;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a4b6d;
+        }
 
         /* ===== CONTROLS ===== */
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 16px;
             align-items: center;
         }
         .controls select, .controls input {
-            padding: 10px 16px;
+            padding: 8px 14px;
             border: 2px solid #dce2ec;
-            border-radius: 12px;
-            font-size: 15px;
+            border-radius: 10px;
+            font-size: 14px;
             background: #fff;
+            font-weight: 500;
         }
         .controls .btn {
-            padding: 10px 24px;
+            padding: 8px 20px;
             border-radius: 30px;
             border: none;
             font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
             transition: 0.2s;
         }
@@ -65,23 +82,22 @@
         .btn-secondary:hover { background: #5a6268; }
         .btn-warning { background: #ffc107; color: #1a2a3a; }
         .btn-warning:hover { background: #e0a800; }
-        .btn-danger { background: #dc3545; color: #fff; }
-        .btn-danger:hover { background: #c82333; }
 
         /* ===== FILTER ===== */
         .filter-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
             margin-bottom: 12px;
         }
         .filter-group .group-btn {
-            padding: 6px 16px;
+            padding: 5px 14px;
             border-radius: 30px;
             border: 2px solid #dce2ec;
             background: #fff;
             cursor: pointer;
             font-weight: 600;
+            font-size: 13px;
             color: #5a6a7e;
             transition: 0.2s;
         }
@@ -95,67 +111,30 @@
         /* ===== SUMMARY ===== */
         .summary {
             background: #f8faff;
-            padding: 12px 20px;
+            padding: 10px 18px;
             border-radius: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             display: flex;
             flex-wrap: wrap;
-            gap: 24px;
-            font-size: 15px;
-        }
-        .summary span { font-weight: 600; color: #0b2b44; }
-        .summary .found-count { color: #28a745; }
-        .summary .notfound-count { color: #dc3545; }
-
-        /* ===== TABLE ===== */
-        .table-wrap {
-            overflow-x: auto;
-            border: 1px solid #e9edf4;
-            border-radius: 16px;
-            margin-top: 12px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
+            gap: 20px;
             font-size: 14px;
+            font-weight: 500;
         }
-        table th {
-            background: #f0f4fa;
-            text-align: left;
-            padding: 12px 16px;
-            font-weight: 600;
-            color: #1a2a3a;
-            border-bottom: 2px solid #dce2ec;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            white-space: nowrap;
-        }
-        table td {
-            padding: 10px 16px;
-            border-bottom: 1px solid #eef2f7;
-            vertical-align: middle;
-        }
-        table tr:hover td { background: #f8faff; }
-        .found-checkbox {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: #28a745;
-        }
-        .roll-number { font-weight: 600; color: #0b2b44; }
+        .summary span { color: #0b2b44; }
+        .summary .found-count { color: #28a745; font-weight: 700; }
+        .summary .notfound-count { color: #dc3545; font-weight: 700; }
 
         /* ===== SIZE SUMMARY ===== */
         .size-summary {
-            margin: 16px 0;
+            margin: 10px 0 14px 0;
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
         }
         .size-summary .size-tag {
             background: #e9edf4;
-            padding: 4px 14px;
-            border-radius: 20px;
+            padding: 4px 12px;
+            border-radius: 16px;
             font-size: 13px;
             font-weight: 600;
             color: #1a2a3a;
@@ -166,38 +145,86 @@
             padding: 0 8px;
             border-radius: 12px;
             margin-left: 4px;
+            font-size: 12px;
+        }
+
+        /* ===== TABLE ===== */
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid #e2e6ed;
+            border-radius: 14px;
+            margin-top: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+        table th {
+            background: #f0f4fa;
+            text-align: left;
+            padding: 12px 14px;
+            font-weight: 700;
+            font-size: 14px;
+            color: #0b2b44;
+            border-bottom: 2px solid #dce2ec;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #eef2f7;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+        table tr:hover td { background: #f8faff; }
+        .found-checkbox {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #28a745;
+            transform: scale(1.1);
+        }
+        .roll-number {
+            font-weight: 600;
+            color: #0b2b44;
+            font-size: 14px;
+            letter-spacing: 0.3px;
         }
 
         /* ===== SIGNATURE (for print) ===== */
         .signature-area {
-            margin-top: 30px;
+            margin-top: 28px;
             border-top: 2px dashed #dce2ec;
             padding-top: 20px;
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 20px;
         }
         .signature-area .sign-block {
             flex: 1;
-            min-width: 200px;
+            min-width: 180px;
         }
         .signature-area .sign-block label {
             font-weight: 600;
             display: block;
             margin-bottom: 4px;
             color: #1a2a3a;
+            font-size: 14px;
         }
         .signature-area .sign-block .line {
             border-bottom: 2px solid #1a2a3a;
-            height: 30px;
+            height: 32px;
             width: 100%;
-            max-width: 300px;
+            max-width: 280px;
         }
-        .signature-area .sign-block .date-line {
+        .signature-area .sign-block .line-sm {
             border-bottom: 2px solid #1a2a3a;
-            height: 30px;
-            width: 180px;
+            height: 32px;
+            width: 160px;
         }
 
         /* ===== PRINT MODE ===== */
@@ -205,14 +232,20 @@
         @media print {
             .print-hide { display: none !important; }
             body { background: #fff; padding: 0; }
-            .container { box-shadow: none; border-radius: 0; padding: 16px; }
+            .container { box-shadow: none; border-radius: 0; padding: 12px 16px; }
             .table-wrap { border: 1px solid #000; }
             table th { background: #e9edf4 !important; }
             .signature-area { border-top: 2px solid #000; }
             .signature-area .sign-block .line { border-bottom: 2px solid #000; }
-            .signature-area .sign-block .date-line { border-bottom: 2px solid #000; }
+            .signature-area .sign-block .line-sm { border-bottom: 2px solid #000; }
             .size-summary .size-tag .count { background: #1a4b6d; color: #fff; }
             .summary { background: #f0f4fa; }
+            table { font-size: 13px; }
+            table th { font-size: 13px; padding: 8px 10px; }
+            table td { padding: 7px 10px; font-size: 13px; }
+            .header h1 { font-size: 18px; }
+            .header .meta { font-size: 13px; }
+            .signature-area .sign-block label { font-size: 13px; }
         }
 
         /* ===== TOAST ===== */
@@ -251,14 +284,14 @@
         .modal-overlay.visible { display: flex; }
         .modal-box {
             background: #fff;
-            padding: 32px 36px;
+            padding: 30px 34px;
             border-radius: 24px;
             max-width: 400px;
             width: 100%;
             box-shadow: 0 30px 60px rgba(0,0,0,0.3);
             animation: fadeUp 0.3s ease;
         }
-        .modal-box h3 { color: #0b2b44; margin-bottom: 8px; }
+        .modal-box h3 { color: #0b2b44; margin-bottom: 6px; font-size: 20px; }
         .modal-box p { color: #5a6a7e; margin-bottom: 16px; font-size: 14px; }
         .modal-box input {
             width: 100%;
@@ -288,6 +321,8 @@
         .modal-box .modal-actions .btn-cancel { background: #6c757d; color: #fff; }
         .modal-box .modal-actions .btn-cancel:hover { background: #5a6268; }
         .modal-box .error-msg { color: #dc3545; font-size: 13px; margin-top: 8px; }
+
+        .text-muted { color: #7a8a9e; }
     </style>
 </head>
 <body>
@@ -337,30 +372,31 @@
                         <th>สถานะ</th>
                         <th>Size</th>
                         <th>grade</th>
+                        <th>เบอร์ม้วน</th>
                         <th>พบ/ไม่พบ</th>
                         <th>dimeter</th>
                         <th>kgs</th>
                     </tr>
                 </thead>
                 <tbody id="checkTableBody">
-                    <tr><td colspan="7" class="text-muted" style="text-align:center;">กรุณาคลิก "โหลดข้อมูล"</td></tr>
+                    <tr><td colspan="8" class="text-muted" style="text-align:center;">กรุณาคลิก "โหลดข้อมูล"</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- SIGNATURE -->
+        <!-- SIGNATURE (สำหรับพรีวิว/ปริ้น) -->
         <div class="signature-area" id="signatureArea">
             <div class="sign-block">
-                <label>ผู้ตรวจนับ</label>
-                <div class="line" id="signLine"></div>
+                <label>พนักงานบัญชี</label>
+                <div class="line" id="signLine1"></div>
+            </div>
+            <div class="sign-block">
+                <label>พนักงานคลัง</label>
+                <div class="line" id="signLine2"></div>
             </div>
             <div class="sign-block">
                 <label>วันที่ตรวจ</label>
-                <div class="date-line" id="dateLine"></div>
-            </div>
-            <div class="sign-block">
-                <label>หมายเหตุ</label>
-                <div class="line" style="max-width:200px;"></div>
+                <div class="line-sm" id="dateLine"></div>
             </div>
         </div>
     </div>
@@ -369,7 +405,7 @@
     <div class="modal-overlay" id="passwordModal">
         <div class="modal-box">
             <h3>🔐 ยืนยันตัวตน</h3>
-            <p>กรุณากรอกรหัสผ่านของคุณเพื่อเปลี่ยนสถานะการตรวจ</p>
+            <p>กรุณากรอกรหัสผ่านเพื่อเปลี่ยนสถานะจาก "พบ" เป็น "ไม่พบ"</p>
             <input type="password" id="modalPassword" placeholder="รหัสผ่าน" />
             <div class="error-msg" id="modalError"></div>
             <div class="modal-actions">
@@ -389,7 +425,7 @@
         let stockCountId = null;
         let currentStatusFilter = 'all';
         let currentGroup = 'all';
-        let pendingRoll = null; // เก็บ roll ที่กำลังจะเปลี่ยนสถานะ
+        let pendingRoll = null;
 
         const $ = id => document.getElementById(id);
         const stockMeta = $('stockMeta');
@@ -406,7 +442,6 @@
         const totalCount = $('totalCount');
         const sizeSummary = $('sizeSummary');
 
-        // Modal
         const passwordModal = $('passwordModal');
         const modalPassword = $('modalPassword');
         const modalError = $('modalError');
@@ -446,11 +481,11 @@
             try {
                 const res = await fetch('/api/stock/latest', { headers: getAuthHeaders() });
                 const data = await res.json();
-                if (res.ok) {
+                if (res.ok && data.count_number) {
                     stockMeta.textContent = `📅 ครั้งที่ ${data.count_number} | วันที่ ${data.stock_date} เวลา ${data.stock_time}`;
                     stockCountId = data.id;
                 } else {
-                    stockMeta.textContent = '⚠️ ยังไม่มีการตั้งค่า Stock กรุณาให้ Admin ตั้งค่าก่อน';
+                    stockMeta.textContent = '⚠️ ยังไม่มีการตั้งค่า Stock';
                 }
             } catch (e) {
                 stockMeta.textContent = '⚠️ ไม่สามารถโหลดข้อมูล Stock';
@@ -460,7 +495,7 @@
         // ---------- Load check items ----------
         async function loadCheckItems() {
             if (!stockCountId) {
-                showToast('ยังไม่มีการตั้งค่า Stock กรุณาให้ Admin ตั้งค่า', 'warning');
+                showToast('ยังไม่มีการตั้งค่า Stock', 'warning');
                 return;
             }
             try {
@@ -487,7 +522,6 @@
             groups.forEach(g => {
                 groupFilter.innerHTML += `<option value="${g}">${g}</option>`;
             });
-            // Buttons
             groupFilterButtons.innerHTML = '';
             const allBtn = document.createElement('button');
             allBtn.className = 'group-btn active';
@@ -516,23 +550,15 @@
             renderSizeSummary();
         }
 
-        // ---------- Render table (ตามลำดับที่ต้องการ) ----------
+        // ---------- Render table ----------
         function renderTable() {
-            let filtered = allRolls;
+            let filtered = allRolls.filter(r => {
+                if (currentGroup !== 'all' && (r.group_name || 'ไม่มีกลุ่ม') !== currentGroup) return false;
+                if (currentStatusFilter !== 'all' && r.status !== currentStatusFilter) return false;
+                return true;
+            });
 
-            // กรองตามกลุ่ม
-            if (currentGroup !== 'all') {
-                filtered = filtered.filter(r => (r.group_name || 'ไม่มีกลุ่ม') === currentGroup);
-            }
-
-            // กรองตามสถานะ
-            if (currentStatusFilter !== 'all') {
-                filtered = filtered.filter(r => r.status === currentStatusFilter);
-            }
-
-            // เรียงลำดับตาม: Location → status → width → grade
             filtered.sort((a, b) => {
-                // Location (LOC1 มาก่อน LOCF)
                 const locA = a.loc || '';
                 const locB = b.loc || '';
                 if (locA !== locB) {
@@ -540,21 +566,18 @@
                     if (locB === 'LOC1') return 1;
                     return locA.localeCompare(locB);
                 }
-                // status
                 const statusOrder = { 'เต็ม': 0, 'เศษ': 1, 'รอกรอ': 2 };
                 const sA = statusOrder[a.status] ?? 99;
                 const sB = statusOrder[b.status] ?? 99;
                 if (sA !== sB) return sA - sB;
-                // width (แปลงเป็นตัวเลข)
                 const wA = parseFloat(a.width) || 0;
                 const wB = parseFloat(b.width) || 0;
                 if (wA !== wB) return wA - wB;
-                // grade
                 return (a.grade || '').localeCompare(b.grade || '');
             });
 
             if (!filtered.length) {
-                checkTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#7a8a9e;">ไม่มีม้วนที่ตรงกับเงื่อนไข</td></tr>';
+                checkTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#7a8a9e;">ไม่มีม้วนที่ตรงกับเงื่อนไข</td></tr>';
                 return;
             }
 
@@ -567,6 +590,7 @@
                         <td>${roll.status || '—'}</td>
                         <td>${roll.width ? roll.width + '"' : '—'}</td>
                         <td>${roll.grade || '—'}</td>
+                        <td class="roll-number">${roll.roll_number || '—'}</td>
                         <td>
                             <input type="checkbox" class="found-checkbox" data-roll="${roll.roll_number}" ${found ? 'checked' : ''} />
                         </td>
@@ -577,27 +601,31 @@
             });
             checkTableBody.innerHTML = html;
 
-            // Attach change events (พร้อมเรียก Password Modal)
             checkTableBody.querySelectorAll('.found-checkbox').forEach(cb => {
                 cb.addEventListener('change', function(e) {
                     e.preventDefault();
                     const rollNumber = this.dataset.roll;
                     const currentChecked = this.checked;
-                    // ถ้ากำลังจะติ๊กออก (เปลี่ยนจากพบ → ไม่พบ) ต้องใส่รหัสผ่าน
+
+                    // ถ้ากำลังจะเปลี่ยนจาก พบ → ไม่พบ
                     if (!currentChecked) {
-                        // ต้องการเปลี่ยนจาก พบ → ไม่พบ
+                        // Admin มีสิทธิ์แก้ไขทันที
+                        if (currentUser.role === 'admin') {
+                            pendingRoll = { rollNumber, newFound: 0 };
+                            saveCheck(pendingRoll.rollNumber, 0, this);
+                            return;
+                        }
+                        // User ทั่วไป ต้องใส่รหัสผ่าน
                         pendingRoll = { rollNumber, newFound: 0 };
                         passwordModal.classList.add('visible');
                         modalPassword.value = '';
                         modalError.textContent = '';
                         modalPassword.focus();
-                        // ยังไม่เปลี่ยนสถานะ checkbox
                         this.checked = true;
                         return;
                     } else {
-                        // กำลังจะติ๊กเข้า (ไม่พบ → พบ) ตรงนี้ไม่ต้องใช้รหัสผ่าน
+                        // เปลี่ยนจาก ไม่พบ → พบ (ทุกคนทำได้)
                         pendingRoll = { rollNumber, newFound: 1 };
-                        // บันทึกทันที
                         saveCheck(pendingRoll.rollNumber, 1, this);
                     }
                 });
@@ -617,17 +645,12 @@
                     })
                 });
                 if (res.ok) {
-                    // update local found status
                     const roll = allRolls.find(r => r.roll_number === rollNumber);
                     if (roll) roll.found = found;
                     if (checkboxEl) checkboxEl.checked = found === 1;
                     updateSummary();
                     renderSizeSummary();
-                    if (found === 1) {
-                        showToast('✅ บันทึก: พบม้วนนี้แล้ว', 'success');
-                    } else {
-                        showToast('❌ บันทึก: ไม่พบม้วนนี้', 'warning');
-                    }
+                    showToast(found === 1 ? '✅ พบม้วนนี้แล้ว' : '❌ ไม่พบม้วนนี้', found === 1 ? 'success' : 'warning');
                 } else {
                     showToast('บันทึกไม่สำเร็จ', 'error');
                     if (checkboxEl) checkboxEl.checked = found !== 1;
@@ -640,30 +663,25 @@
 
         // ---------- Update summary ----------
         function updateSummary() {
-            let filtered = allRolls;
-            if (currentGroup !== 'all') {
-                filtered = filtered.filter(r => (r.group_name || 'ไม่มีกลุ่ม') === currentGroup);
-            }
-            if (currentStatusFilter !== 'all') {
-                filtered = filtered.filter(r => r.status === currentStatusFilter);
-            }
+            let filtered = allRolls.filter(r => {
+                if (currentGroup !== 'all' && (r.group_name || 'ไม่มีกลุ่ม') !== currentGroup) return false;
+                if (currentStatusFilter !== 'all' && r.status !== currentStatusFilter) return false;
+                return true;
+            });
             const total = filtered.length;
             const found = filtered.filter(r => r.found === 1).length;
-            const notFound = total - found;
             foundCount.textContent = found;
-            notFoundCount.textContent = notFound;
+            notFoundCount.textContent = total - found;
             totalCount.textContent = total;
         }
 
         // ---------- Render size summary ----------
         function renderSizeSummary() {
-            let filtered = allRolls;
-            if (currentGroup !== 'all') {
-                filtered = filtered.filter(r => (r.group_name || 'ไม่มีกลุ่ม') === currentGroup);
-            }
-            if (currentStatusFilter !== 'all') {
-                filtered = filtered.filter(r => r.status === currentStatusFilter);
-            }
+            let filtered = allRolls.filter(r => {
+                if (currentGroup !== 'all' && (r.group_name || 'ไม่มีกลุ่ม') !== currentGroup) return false;
+                if (currentStatusFilter !== 'all' && r.status !== currentStatusFilter) return false;
+                return true;
+            });
             const sizeMap = {};
             filtered.forEach(r => {
                 const size = r.width || '0';
@@ -671,10 +689,7 @@
                 sizeMap[size]++;
             });
             const sortedSizes = Object.keys(sizeMap).sort((a, b) => parseFloat(a) - parseFloat(b));
-            if (!sortedSizes.length) {
-                sizeSummary.innerHTML = '';
-                return;
-            }
+            if (!sortedSizes.length) { sizeSummary.innerHTML = ''; return; }
             sizeSummary.innerHTML = sortedSizes.map(s => `
                 <span class="size-tag">Size ${s}" <span class="count">${sizeMap[s]}</span></span>
             `).join('');
@@ -684,17 +699,12 @@
         modalCancel.addEventListener('click', () => {
             passwordModal.classList.remove('visible');
             pendingRoll = null;
-            // รีเซ็ต checkbox กลับไปสถานะเดิม
             renderTable();
         });
 
         modalConfirm.addEventListener('click', async () => {
             const password = modalPassword.value.trim();
-            if (!password) {
-                modalError.textContent = 'กรุณากรอกรหัสผ่าน';
-                return;
-            }
-            // ตรวจสอบรหัสผ่าน โดยเรียก API login
+            if (!password) { modalError.textContent = 'กรุณากรอกรหัสผ่าน'; return; }
             try {
                 const res = await fetch('/api/auth/login', {
                     method: 'POST',
@@ -703,22 +713,20 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.token) {
-                    // รหัสผ่านถูกต้อง
                     modalError.textContent = '';
                     passwordModal.classList.remove('visible');
-                    // บันทึกการเปลี่ยนแปลง
                     if (pendingRoll) {
                         const cb = document.querySelector(`.found-checkbox[data-roll="${pendingRoll.rollNumber}"]`);
                         await saveCheck(pendingRoll.rollNumber, 0, cb);
                         pendingRoll = null;
                     }
                 } else {
-                    modalError.textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาลองอีกครั้ง';
+                    modalError.textContent = 'รหัสผ่านไม่ถูกต้อง';
                     modalPassword.value = '';
                     modalPassword.focus();
                 }
             } catch (e) {
-                modalError.textContent = 'เกิดข้อผิดพลาดในการตรวจสอบ';
+                modalError.textContent = 'เกิดข้อผิดพลาด';
             }
         });
 
@@ -728,9 +736,7 @@
         });
 
         // ---------- Export PDF ----------
-        function exportPDF() {
-            window.print();
-        }
+        function exportPDF() { window.print(); }
 
         // ---------- Event listeners ----------
         loadBtn.addEventListener('click', loadCheckItems);
@@ -752,19 +758,16 @@
         (async function init() {
             await loadUser();
             await loadStockSettings();
-            if (stockCountId) {
-                await loadCheckItems();
-            }
+            if (stockCountId) await loadCheckItems();
         })();
 
         // Set signature date
         (function setSignatureDate() {
             const now = new Date();
-            const dateStr = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-            $('dateLine').textContent = dateStr;
+            $('dateLine').textContent = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
         })();
 
-        console.log('📋 Stock Check page v2.0 ready');
+        console.log('📋 Stock Check v2.1 ready');
     </script>
 </body>
 </html>
