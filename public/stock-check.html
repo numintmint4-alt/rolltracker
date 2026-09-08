@@ -278,6 +278,12 @@
         }
         .notfound-alert .info { font-weight: 700; color: #721c24; font-size: 20px; }
         .notfound-alert .detail { color: #721c24; font-size: 14px; margin-top: 4px; }
+        .notfound-alert .btn-group {
+            margin-top: 8px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
 
         /* ===== MODAL ===== */
         .modal-overlay {
@@ -459,7 +465,7 @@
         <span style="margin-left:12px;font-size:14px;color:#5a6a7e;" id="pageSizeInfo">แสดง 50 รายการ</span>
     </div>
 
-    <!-- SEARCH BOX (สวยงาม) -->
+    <!-- SEARCH BOX (ใหม่) -->
     <div class="search-box print-hide" id="searchBox">
         <label>🔎 ค้นหาเลขม้วน (ทุกกลุ่ม):</label>
         <div class="search-input-wrapper">
@@ -478,8 +484,10 @@
     <div class="notfound-alert" id="notFoundAlert">
         <div class="info">❌ ไม่พบเลขม้วนดังกล่าว</div>
         <div class="detail">ทำการตรวจสอบเลขม้วนใหม่อีกครั้ง หากถูกต้องแล้วให้ทำการกดยืนยันพบม้วนกระดาษในพื้นที่กลุ่มของคุณ</div>
-        <button class="btn btn-sm btn-success" id="confirmNotFoundBtn" style="margin-top:8px;">✅ ยืนยันพบม้วนกระดาษในพื้นที่กลุ่มของคุณ</button>
-        <button class="btn btn-sm btn-secondary" id="cancelNotFoundBtn" style="margin-top:8px;">ยกเลิก</button>
+        <div class="btn-group">
+            <button class="btn btn-sm btn-success" id="confirmNotFoundBtn">✅ ยืนยันพบม้วนกระดาษในพื้นที่กลุ่มของคุณ</button>
+            <button class="btn btn-sm btn-secondary" id="cancelNotFoundBtn">ยกเลิก</button>
+        </div>
     </div>
 
     <!-- TABLE -->
