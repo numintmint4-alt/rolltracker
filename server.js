@@ -8,7 +8,6 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
 
-// สร้างโฟลเดอร์ uploads (ป้องกัน error)
 if (!fs.existsSync('./uploads')) {
     fs.mkdirSync('./uploads');
 }
@@ -21,14 +20,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// ---------- Database ----------
 const db = new sqlite3.Database('./rolls.db', (err) => {
     if (err) console.error('Database error:', err.message);
     else console.log('Connected to SQLite database.');
 });
 
 db.serialize(() => {
-    // Users
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
@@ -37,8 +34,6 @@ db.serialize(() => {
         is_active INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-
-    // Rolls
     db.run(`CREATE TABLE IF NOT EXISTS rolls (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         roll_number TEXT UNIQUE,
@@ -62,8 +57,6 @@ db.serialize(() => {
         group_name TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-
-    // Import history
     db.run(`CREATE TABLE IF NOT EXISTS import_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         filename TEXT,
@@ -71,8 +64,6 @@ db.serialize(() => {
         rows_imported INTEGER,
         import_date DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-
-    // Stock count settings
     db.run(`CREATE TABLE IF NOT EXISTS stock_counts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         count_number TEXT,
@@ -81,8 +72,6 @@ db.serialize(() => {
         created_by TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-
-    // Stock check items
     db.run(`CREATE TABLE IF NOT EXISTS stock_check_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         stock_count_id INTEGER,
@@ -91,8 +80,15 @@ db.serialize(() => {
         found INTEGER DEFAULT 0,
         checked_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+    // เพิ่มตารางแจ้งเตือนสำหรับ Admin (rolls_not_found_in_stock)
+    db.run(`CREATE TABLE IF NOT EXISTS stock_alerts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        roll_number TEXT,
+        checked_by TEXT,
+        alert_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        resolved INTEGER DEFAULT 0
+    )`);
 
-    // Default users
     const adminUser = 'admin';
     const adminPass = bcrypt.hashSync('admin123', 10);
     db.get(`SELECT id FROM users WHERE username = ?`, [adminUser], (err, row) => {
@@ -111,7 +107,6 @@ db.serialize(() => {
     });
 });
 
-// ---------- Middleware ----------
 function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ message: 'No token' });
@@ -130,16 +125,13 @@ function adminMiddleware(req, res, next) {
     next();
 }
 
-// ---------- Helper: แปลงวันที่จาก Excel ----------
 function convertExcelDate(value) {
     if (!value) return '';
-    // ถ้าเป็นตัวเลข (Excel Serial Date)
     if (typeof value === 'number') {
         const epoch = new Date(1899, 11, 30);
         const d = new Date(epoch.getTime() + value * 86400000);
         return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'numeric', day: 'numeric' });
     }
-    // ถ้าเป็น string แล้ว ให้ตัดทิ้งเวลา (ถ้ามี)
     if (typeof value === 'string') {
         const parts = value.split('T');
         return parts[0].split(' ')[0];
@@ -207,7 +199,6 @@ app.get('/api/rolls/search', authMiddleware, (req, res) => {
     db.get(`SELECT * FROM rolls WHERE roll_number = ?`, [q], (err, roll) => {
         if (err) return res.status(500).json({ message: 'DB error' });
         if (!roll) return res.status(404).json({ message: 'Not found' });
-        // แปลง buy_date ก่อนส่งกลับ
         if (roll.buy_date) roll.buy_date = convertExcelDate(roll.buy_date);
         res.json({ roll });
     });
@@ -274,8 +265,9 @@ app.get('/api/stock/check-items', authMiddleware, (req, res) => {
         }
         const stockCountId = row.id;
         db.all(`SELECT r.*, 
-                       (SELECT found FROM stock_check_items WHERE stock_count_id = ? AND roll_number = r.roll_number AND checked_by = ?) as found
-                FROM rolls r ORDER BY r.group_name, r.width`, [stockCountId, req.user.username], (err, rolls) => {
+                       (SELECT found FROM stock_check_items WHERE stock_count_id = ? AND roll_number = r.roll_number AND checked_by = ?) as found,
+                       (SELECT checked_by FROM stock_check_items WHERE stock_count_id = ? AND roll_number = r.roll_number AND found = 1) as checked_by
+                FROM rolls r ORDER BY r.group_name, r.width`, [stockCountId, req.user.username, stockCountId], (err, rolls) => {
             if (err) return res.status(500).json({ message: 'DB error' });
             res.json({ stock_count_id: stockCountId, rolls });
         });
@@ -285,23 +277,47 @@ app.get('/api/stock/check-items', authMiddleware, (req, res) => {
 app.post('/api/stock/check', authMiddleware, (req, res) => {
     const { stock_count_id, roll_number, found } = req.body;
     if (!stock_count_id || !roll_number) return res.status(400).json({ message: 'Missing fields' });
-    db.get(`SELECT id FROM stock_check_items WHERE stock_count_id = ? AND roll_number = ? AND checked_by = ?`,
-        [stock_count_id, roll_number, req.user.username], (err, row) => {
-            if (err) return res.status(500).json({ message: 'DB error' });
-            if (row) {
-                db.run(`UPDATE stock_check_items SET found = ?, checked_at = CURRENT_TIMESTAMP WHERE id = ?`,
-                    [found ? 1 : 0, row.id], (err) => {
-                        if (err) return res.status(500).json({ message: 'Update failed' });
-                        res.json({ ok: true });
-                    });
-            } else {
-                db.run(`INSERT INTO stock_check_items (stock_count_id, roll_number, checked_by, found) VALUES (?, ?, ?, ?)`,
-                    [stock_count_id, roll_number, req.user.username, found ? 1 : 0], (err) => {
-                        if (err) return res.status(500).json({ message: 'Insert failed' });
-                        res.json({ ok: true });
-                    });
-            }
-        });
+    // ตรวจสอบว่า roll_number มีในระบบหรือไม่
+    db.get(`SELECT roll_number FROM rolls WHERE roll_number = ?`, [roll_number], (err, rollRow) => {
+        if (err) return res.status(500).json({ message: 'DB error' });
+        if (!rollRow && found === 1) {
+            // พบม้วนที่ไม่มีใน Stock => แจ้งเตือน Admin
+            db.run(`INSERT INTO stock_alerts (roll_number, checked_by) VALUES (?, ?)`, [roll_number, req.user.username]);
+        }
+        // บันทึกการตรวจ
+        db.get(`SELECT id FROM stock_check_items WHERE stock_count_id = ? AND roll_number = ? AND checked_by = ?`,
+            [stock_count_id, roll_number, req.user.username], (err, row) => {
+                if (err) return res.status(500).json({ message: 'DB error' });
+                if (row) {
+                    db.run(`UPDATE stock_check_items SET found = ?, checked_at = CURRENT_TIMESTAMP WHERE id = ?`,
+                        [found ? 1 : 0, row.id], (err) => {
+                            if (err) return res.status(500).json({ message: 'Update failed' });
+                            res.json({ ok: true });
+                        });
+                } else {
+                    db.run(`INSERT INTO stock_check_items (stock_count_id, roll_number, checked_by, found) VALUES (?, ?, ?, ?)`,
+                        [stock_count_id, roll_number, req.user.username, found ? 1 : 0], (err) => {
+                            if (err) return res.status(500).json({ message: 'Insert failed' });
+                            res.json({ ok: true });
+                        });
+                }
+            });
+    });
+});
+
+// ---------- Admin Alerts ----------
+app.get('/api/alerts', authMiddleware, adminMiddleware, (req, res) => {
+    db.all(`SELECT * FROM stock_alerts WHERE resolved = 0 ORDER BY alert_date DESC`, (err, rows) => {
+        if (err) return res.status(500).json({ message: 'DB error' });
+        res.json({ alerts: rows });
+    });
+});
+
+app.put('/api/alerts/:id/resolve', authMiddleware, adminMiddleware, (req, res) => {
+    db.run(`UPDATE stock_alerts SET resolved = 1 WHERE id = ?`, [req.params.id], function(err) {
+        if (err) return res.status(500).json({ message: 'Update failed' });
+        res.json({ ok: true });
+    });
 });
 
 // ---------- Import Excel ----------
@@ -329,8 +345,6 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
             data.forEach(row => {
                 const rollNumber = row['เบอร์ม้วน'] || row['roll_number'] || '';
                 if (!rollNumber) return;
-                
-                // แปลงวันที่ buy_date ถ้าเป็นตัวเลข
                 let buyDate = row['buy_date'] || '';
                 if (buyDate && typeof buyDate === 'number') {
                     const epoch = new Date(1899, 11, 30);
@@ -339,7 +353,6 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
                 } else if (buyDate && typeof buyDate === 'string') {
                     buyDate = buyDate.split('T')[0];
                 }
-
                 stmt.run(
                     rollNumber,
                     row['grade'] || '',
@@ -395,6 +408,7 @@ app.delete('/api/data/clear', authMiddleware, adminMiddleware, (req, res) => {
         if (err) return res.status(500).json({ message: 'Clear failed' });
         db.run(`DELETE FROM import_history`);
         db.run(`DELETE FROM stock_check_items`);
+        db.run(`DELETE FROM stock_alerts`);
         res.json({ ok: true });
     });
 });
@@ -404,6 +418,7 @@ app.delete('/api/data/clear-all', authMiddleware, adminMiddleware, (req, res) =>
         db.run(`DELETE FROM rolls`);
         db.run(`DELETE FROM import_history`);
         db.run(`DELETE FROM stock_check_items`);
+        db.run(`DELETE FROM stock_alerts`);
         db.run(`DELETE FROM stock_counts`);
         db.run(`DELETE FROM users WHERE role != 'admin'`);
         res.json({ ok: true });
