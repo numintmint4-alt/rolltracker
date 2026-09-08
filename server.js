@@ -335,22 +335,28 @@ app.get('/api/stock/check-items', authMiddleware, (req, res) => {
     });
 });
 
+// ---------- Stock Check (UPDATE) - แก้ไขให้รองรับ checked_by ----------
 app.post('/api/stock/check', authMiddleware, (req, res) => {
-    const { roll_number, found } = req.body;
+    const { roll_number, found, checked_by } = req.body;
     if (!roll_number) return res.status(400).json({ message: 'Missing roll number' });
     
+    // ใช้ checked_by ที่ส่งมาจาก frontend ถ้ามี ถ้าไม่ให้ใช้ req.user.username
+    const checker = checked_by || req.user.username;
+
     db.get(`SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1`, (err, stockRow) => {
         if (err || !stockRow) {
             return res.status(400).json({ message: 'No stock count settings' });
         }
         const stockCountId = stockRow.id;
 
+        // ตรวจสอบว่า roll_number มีในระบบหรือไม่ (ถ้าไม่พบและ found=1 ให้แจ้งเตือน)
         db.get(`SELECT roll_number FROM rolls WHERE roll_number = ?`, [roll_number], (err, rollRow) => {
             if (!rollRow && found === 1) {
-                db.run(`INSERT INTO stock_alerts (roll_number, checked_by) VALUES (?, ?)`, [roll_number, req.user.username]);
+                db.run(`INSERT INTO stock_alerts (roll_number, checked_by) VALUES (?, ?)`, [roll_number, checker]);
             }
+            // บันทึกการตรวจ (ใช้ checker ที่ได้)
             db.get(`SELECT id FROM stock_check_items WHERE stock_count_id = ? AND roll_number = ? AND checked_by = ?`,
-                [stockCountId, roll_number, req.user.username], (err, row) => {
+                [stockCountId, roll_number, checker], (err, row) => {
                     if (err) return res.status(500).json({ message: 'DB error' });
                     if (row) {
                         db.run(`UPDATE stock_check_items SET found = ?, checked_at = CURRENT_TIMESTAMP WHERE id = ?`,
@@ -360,7 +366,7 @@ app.post('/api/stock/check', authMiddleware, (req, res) => {
                             });
                     } else {
                         db.run(`INSERT INTO stock_check_items (stock_count_id, roll_number, checked_by, found) VALUES (?, ?, ?, ?)`,
-                            [stockCountId, roll_number, req.user.username, found ? 1 : 0], (err) => {
+                            [stockCountId, roll_number, checker, found ? 1 : 0], (err) => {
                                 if (err) return res.status(500).json({ message: 'Insert failed' });
                                 res.json({ ok: true });
                             });
