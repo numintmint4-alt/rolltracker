@@ -20,12 +20,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// ---------- Database ----------
 const db = new sqlite3.Database('./rolls.db', (err) => {
     if (err) console.error('Database error:', err.message);
     else console.log('Connected to SQLite database.');
 });
 
 db.serialize(() => {
+    // Users
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
@@ -34,6 +36,8 @@ db.serialize(() => {
         is_active INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Rolls
     db.run(`CREATE TABLE IF NOT EXISTS rolls (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         roll_number TEXT UNIQUE,
@@ -57,6 +61,14 @@ db.serialize(() => {
         group_name TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Indexes for faster queries
+    db.run(`CREATE INDEX IF NOT EXISTS idx_rolls_roll_number ON rolls(roll_number)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_rolls_group_name ON rolls(group_name)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_rolls_width ON rolls(width)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_rolls_status ON rolls(status)`);
+
+    // Import history
     db.run(`CREATE TABLE IF NOT EXISTS import_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         filename TEXT,
@@ -64,6 +76,8 @@ db.serialize(() => {
         rows_imported INTEGER,
         import_date DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Stock count settings
     db.run(`CREATE TABLE IF NOT EXISTS stock_counts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         count_number TEXT,
@@ -72,6 +86,8 @@ db.serialize(() => {
         created_by TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Stock check items
     db.run(`CREATE TABLE IF NOT EXISTS stock_check_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         stock_count_id INTEGER,
@@ -80,7 +96,8 @@ db.serialize(() => {
         found INTEGER DEFAULT 0,
         checked_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-    // เพิ่มตารางแจ้งเตือนสำหรับ Admin (rolls_not_found_in_stock)
+
+    // Stock alerts
     db.run(`CREATE TABLE IF NOT EXISTS stock_alerts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         roll_number TEXT,
@@ -89,6 +106,7 @@ db.serialize(() => {
         resolved INTEGER DEFAULT 0
     )`);
 
+    // Default users
     const adminUser = 'admin';
     const adminPass = bcrypt.hashSync('admin123', 10);
     db.get(`SELECT id FROM users WHERE username = ?`, [adminUser], (err, row) => {
@@ -107,6 +125,7 @@ db.serialize(() => {
     });
 });
 
+// ---------- Middleware ----------
 function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ message: 'No token' });
@@ -257,51 +276,95 @@ app.get('/api/stock/latest', authMiddleware, (req, res) => {
     });
 });
 
-// ---------- Stock Check ----------
+// ---------- Stock Check (PAGINATED) ----------
 app.get('/api/stock/check-items', authMiddleware, (req, res) => {
-    db.get(`SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1`, (err, row) => {
-        if (err || !row) {
-            return res.status(404).json({ message: 'No stock count settings' });
-        }
-        const stockCountId = row.id;
-        db.all(`SELECT r.*, 
-                       (SELECT found FROM stock_check_items WHERE stock_count_id = ? AND roll_number = r.roll_number AND checked_by = ?) as found,
-                       (SELECT checked_by FROM stock_check_items WHERE stock_count_id = ? AND roll_number = r.roll_number AND found = 1) as checked_by
-                FROM rolls r ORDER BY r.group_name, r.width`, [stockCountId, req.user.username, stockCountId], (err, rolls) => {
+    const group = req.query.group || 'all';
+    const status = req.query.status || 'all';
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+
+    // Build WHERE clause
+    let whereClause = '1=1';
+    const params = [];
+    if (group !== 'all') {
+        whereClause += ' AND group_name = ?';
+        params.push(group);
+    }
+    if (status !== 'all') {
+        whereClause += ' AND status = ?';
+        params.push(status);
+    }
+
+    // Get total count
+    db.get(`SELECT COUNT(*) as total FROM rolls WHERE ${whereClause}`, params, (err, countRow) => {
+        if (err) return res.status(500).json({ message: 'DB error' });
+        const total = countRow.total;
+
+        // Get paginated rolls
+        const query = `
+            SELECT r.*,
+                   (SELECT found FROM stock_check_items WHERE stock_count_id = (SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1) AND roll_number = r.roll_number AND checked_by = ?) as found,
+                   (SELECT checked_by FROM stock_check_items WHERE stock_count_id = (SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1) AND roll_number = r.roll_number AND found = 1) as checked_by
+            FROM rolls r
+            WHERE ${whereClause}
+            ORDER BY r.loc ASC, 
+                     CASE r.status WHEN 'เต็ม' THEN 0 WHEN 'เศษ' THEN 1 WHEN 'รอกรอ' THEN 2 ELSE 3 END,
+                     CAST(r.width AS INTEGER) ASC,
+                     r.grade ASC
+            LIMIT ? OFFSET ?
+        `;
+        const queryParams = [req.user.username, ...params, limit, offset];
+        db.all(query, queryParams, (err, rolls) => {
             if (err) return res.status(500).json({ message: 'DB error' });
-            res.json({ stock_count_id: stockCountId, rolls });
+            res.json({
+                stock_count_id: null, // not needed for frontend, but keep
+                rolls,
+                total,
+                page,
+                totalPages: Math.ceil(total / limit),
+                limit
+            });
         });
     });
 });
 
 app.post('/api/stock/check', authMiddleware, (req, res) => {
-    const { stock_count_id, roll_number, found } = req.body;
-    if (!stock_count_id || !roll_number) return res.status(400).json({ message: 'Missing fields' });
-    // ตรวจสอบว่า roll_number มีในระบบหรือไม่
-    db.get(`SELECT roll_number FROM rolls WHERE roll_number = ?`, [roll_number], (err, rollRow) => {
-        if (err) return res.status(500).json({ message: 'DB error' });
-        if (!rollRow && found === 1) {
-            // พบม้วนที่ไม่มีใน Stock => แจ้งเตือน Admin
-            db.run(`INSERT INTO stock_alerts (roll_number, checked_by) VALUES (?, ?)`, [roll_number, req.user.username]);
+    const { roll_number, found } = req.body;
+    if (!roll_number) return res.status(400).json({ message: 'Missing roll number' });
+    
+    // Get latest stock count id
+    db.get(`SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1`, (err, stockRow) => {
+        if (err || !stockRow) {
+            return res.status(400).json({ message: 'No stock count settings' });
         }
-        // บันทึกการตรวจ
-        db.get(`SELECT id FROM stock_check_items WHERE stock_count_id = ? AND roll_number = ? AND checked_by = ?`,
-            [stock_count_id, roll_number, req.user.username], (err, row) => {
-                if (err) return res.status(500).json({ message: 'DB error' });
-                if (row) {
-                    db.run(`UPDATE stock_check_items SET found = ?, checked_at = CURRENT_TIMESTAMP WHERE id = ?`,
-                        [found ? 1 : 0, row.id], (err) => {
-                            if (err) return res.status(500).json({ message: 'Update failed' });
-                            res.json({ ok: true });
-                        });
-                } else {
-                    db.run(`INSERT INTO stock_check_items (stock_count_id, roll_number, checked_by, found) VALUES (?, ?, ?, ?)`,
-                        [stock_count_id, roll_number, req.user.username, found ? 1 : 0], (err) => {
-                            if (err) return res.status(500).json({ message: 'Insert failed' });
-                            res.json({ ok: true });
-                        });
-                }
-            });
+        const stockCountId = stockRow.id;
+
+        // Check if roll exists in stock
+        db.get(`SELECT roll_number FROM rolls WHERE roll_number = ?`, [roll_number], (err, rollRow) => {
+            if (!rollRow && found === 1) {
+                // Alert admin
+                db.run(`INSERT INTO stock_alerts (roll_number, checked_by) VALUES (?, ?)`, [roll_number, req.user.username]);
+            }
+            // Save check
+            db.get(`SELECT id FROM stock_check_items WHERE stock_count_id = ? AND roll_number = ? AND checked_by = ?`,
+                [stockCountId, roll_number, req.user.username], (err, row) => {
+                    if (err) return res.status(500).json({ message: 'DB error' });
+                    if (row) {
+                        db.run(`UPDATE stock_check_items SET found = ?, checked_at = CURRENT_TIMESTAMP WHERE id = ?`,
+                            [found ? 1 : 0, row.id], (err) => {
+                                if (err) return res.status(500).json({ message: 'Update failed' });
+                                res.json({ ok: true });
+                            });
+                    } else {
+                        db.run(`INSERT INTO stock_check_items (stock_count_id, roll_number, checked_by, found) VALUES (?, ?, ?, ?)`,
+                            [stockCountId, roll_number, req.user.username, found ? 1 : 0], (err) => {
+                                if (err) return res.status(500).json({ message: 'Insert failed' });
+                                res.json({ ok: true });
+                            });
+                    }
+                });
+        });
     });
 });
 
