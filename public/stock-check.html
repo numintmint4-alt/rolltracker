@@ -353,8 +353,6 @@
             table td { font-size: 17px; padding: 5px 8px; border: 1px solid #000; }
             .roll-number { font-weight: 700; font-size: 17px; }
             .checked-by { display: none; }
-            .header h1 { font-size: 24px; }
-            .header .meta { font-size: 20px; }
             .found-checkbox {
                 appearance: none;
                 -webkit-appearance: none;
@@ -1047,7 +1045,6 @@
                 stockTime = data.stock_time;
             }
         } catch (e) {
-            // fallback
             const metaText = stockMeta.textContent || '';
             const match = metaText.match(/ครั้งที่\s*(.+?)\s*\|\s*วันที่\s*(.+?)\s*เวลา\s*(.+)/);
             if (match) {
@@ -1058,7 +1055,6 @@
         }
 
         const groupText = groupFilter.value !== 'all' ? groupFilter.value : 'ทั้งหมด';
-        // นับจำนวนม้วนทั้งหมดในกลุ่มที่เลือก
         let totalRolls = 0;
         let totalFound = 0;
         let totalNotFound = 0;
@@ -1070,7 +1066,7 @@
 
         // สร้าง HTML สำหรับแต่ละ Size
         let allSectionsHtml = '';
-        sizeGroups.forEach((g, idx) => {
+        sizeGroups.forEach((g) => {
             const rolls = g.rolls;
             const found = rolls.filter(r => r.found === 1).length;
             const notFound = rolls.length - found;
@@ -1124,7 +1120,6 @@
             `;
         });
 
-        // นับจำนวนหน้าทั้งหมด (โดยประมาณ 1 หน้า = 1 Size)
         const totalPages = sizeGroups.length || 1;
 
         const printHtml = `
@@ -1142,38 +1137,41 @@
                     font-size: 16px;
                 }
                 .header-main {
-                    font-size: 22px;
+                    font-size: 26px;
                     font-weight: 700;
-                    margin-bottom: 8px;
+                    margin-bottom: 10px;
                 }
                 .header-sub {
                     display: flex;
-                    justify-content: space-between;
+                    justify-content: flex-end;
                     align-items: flex-start;
                     flex-wrap: wrap;
                     margin-bottom: 6px;
                 }
-                .header-sub .group-info {
-                    font-size: 18px;
-                    font-weight: 600;
-                }
-                .header-sub .signature {
+                .header-sub .right-section {
                     text-align: right;
-                    font-size: 16px;
+                }
+                .header-sub .right-section .group-info {
+                    font-size: 22px;
+                    font-weight: 600;
+                    margin-bottom: 2px;
+                }
+                .header-sub .right-section .signature {
+                    font-size: 18px;
                     font-weight: 500;
                 }
-                .header-sub .signature .line {
+                .header-sub .right-section .signature .line {
                     border-bottom: 2px solid #1a2a3a;
                     width: 220px;
                     display: inline-block;
                     margin-left: 8px;
-                    height: 24px;
+                    height: 26px;
                 }
-                .header-sub .signature .sign-row {
+                .header-sub .right-section .signature .sign-row {
                     margin-bottom: 2px;
                 }
                 .note {
-                    font-size: 15px;
+                    font-size: 16px;
                     color: #333;
                     margin: 6px 0 12px 0;
                     padding: 6px 10px;
@@ -1214,29 +1212,31 @@
                 }
                 @media print {
                     body { padding: 8px 12px; }
-                    .header-main { font-size: 20px; }
-                    .header-sub .group-info { font-size: 16px; }
-                    .header-sub .signature { font-size: 14px; }
-                    .header-sub .signature .line { width: 160px; height: 20px; }
+                    .header-main { font-size: 24px; }
+                    .header-sub .right-section .group-info { font-size: 20px; }
+                    .header-sub .right-section .signature { font-size: 16px; }
+                    .header-sub .right-section .signature .line { width: 160px; height: 22px; }
                     table { font-size: 14px; }
                     table th, table td { font-size: 14px; padding: 4px 6px; }
                     .roll-number { font-weight: 600; }
-                    .note { font-size: 13px; }
+                    .note { font-size: 14px; }
                 }
             </style>
         </head>
         <body>
-            <!-- HEADER: ตรวจนับSTOCK... -->
+            <!-- HEADER: ตรวจนับ STOCK :... -->
             <div class="header-main">
-                ตรวจนับSTOCK : ครั้งที่ ${stockCount} | วันที่ ${stockDate} เวลา ${stockTime}
+                ตรวจนับ STOCK : ครั้งที่ ${stockCount} | วันที่ ${stockDate} เวลา ${stockTime}
             </div>
 
-            <!-- กลุ่ม (ซ้าย) + ผู้ตรวจนับ (ขวา) -->
+            <!-- กลุ่ม (ขวา) + ผู้ตรวจนับ (ขวา) -->
             <div class="header-sub">
-                <div class="group-info">กลุ่ม ${groupText} : จำนวน ${totalRolls} ม้วน</div>
-                <div class="signature">
-                    <div class="sign-row">ผู้ตรวจนับแผนกคลังลูกกระดาษ <span class="line"></span></div>
-                    <div class="sign-row">ผู้ตรวจนับแผนกบัญชี <span class="line"></span></div>
+                <div class="right-section">
+                    <div class="group-info">กลุ่ม ${groupText} : จำนวน ${totalRolls} ม้วน</div>
+                    <div class="signature">
+                        <div class="sign-row">ผู้ตรวจนับแผนกคลังลูกกระดาษ <span class="line"></span></div>
+                        <div class="sign-row">ผู้ตรวจนับแผนกบัญชี <span class="line"></span></div>
+                    </div>
                 </div>
             </div>
 
@@ -1275,7 +1275,7 @@
         searchRollInput.value = '';
     })();
 
-    console.log('📋 Stock Check v10.0 (PDF ตามคอนเซป) ready');
+    console.log('📋 Stock Check v10.1 (PDF ตามคอนเซป) ready');
 </script>
 </body>
 </html>
