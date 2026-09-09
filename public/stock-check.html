@@ -349,38 +349,14 @@
             .found-alert, .notfound-alert { display: none !important; }
             .table-wrap { border: 1px solid #666; margin-top: 0; border-radius: 0; overflow: visible; }
             table { font-size: 18px; border-collapse: collapse; width: 100%; }
-            table th { background: #e9edf4 !important; font-size: 18px; padding: 4px 8px; border: 1px solid #666; font-weight: 600; }
+            table th { background: #e9edf4 !important; font-size: 18px; padding: 4px 8px; border: 1px solid #666; font-weight: 600; white-space: nowrap; }
             table td { font-size: 18px; padding: 4px 8px; border: 1px solid #666; font-weight: 500; }
             .roll-number { font-weight: 700; font-size: 18px; }
             .checked-by { display: none; }
-            .found-checkbox {
-                appearance: none;
-                -webkit-appearance: none;
-                width: 24px;
-                height: 24px;
-                border: 2px solid #d0d0d0;
-                border-radius: 6px;
-                display: inline-block;
-                position: relative;
-                background: #f8f8f8;
-                margin: 0;
-                padding: 0;
-                cursor: default;
-                box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-            }
-            .found-checkbox:checked::after {
-                content: "✓";
-                font-size: 18px;
-                font-weight: 700;
-                color: #1a4b6d;
-                position: absolute;
-                top: -1px;
-                left: 2px;
-            }
             table th:nth-child(6), table td:nth-child(6) {
-                min-width: 50px;
-                max-width: 50px;
-                width: 50px;
+                min-width: 80px;
+                max-width: 80px;
+                width: 80px;
                 text-align: center;
             }
             .summary { display: none !important; }
@@ -1078,7 +1054,6 @@
 
             let rowsHtml = '';
             rolls.forEach(roll => {
-                const foundStatus = roll.found === 1;
                 rowsHtml += `
                     <tr>
                         <td>${roll.loc || '—'}</td>
@@ -1086,9 +1061,7 @@
                         <td>${roll.width ? roll.width + '"' : '—'}</td>
                         <td>${roll.grade || '—'}</td>
                         <td class="roll-number">${roll.roll_number || '—'}</td>
-                        <td style="text-align:center;">
-                            <span class="checkbox-print">${foundStatus ? '✓' : '□'}</span>
-                        </td>
+                        <td style="text-align:center;"></td>
                         <td>${roll.dimeter || '—'}</td>
                         <td>${roll.kgs || '—'}</td>
                     </tr>
@@ -1108,12 +1081,12 @@
                     <table style="width:100%;border-collapse:collapse;font-size:18px;margin-bottom:2px;">
                         <thead>
                             <tr>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">LOC.</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">LOC.</th>
                                 <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">สถานะ</th>
                                 <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">Size</th>
                                 <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">Grade</th>
                                 <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">เบอร์ม้วน</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:center;min-width:50px;max-width:50px;width:50px;">ตรวจพบ</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:center;min-width:80px;max-width:80px;width:80px;white-space:nowrap;">ตรวจพบ</th>
                                 <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">Dia.</th>
                                 <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">Kg.</th>
                             </tr>
@@ -1203,6 +1176,7 @@
                     border: 1px solid #666;
                     text-align: left;
                     font-size: 18px;
+                    white-space: nowrap;
                 }
                 table td {
                     padding: 4px 8px;
@@ -1213,20 +1187,6 @@
                 .roll-number {
                     font-weight: 700;
                     font-size: 18px;
-                }
-                .checkbox-print {
-                    display: inline-block;
-                    width: 24px;
-                    height: 24px;
-                    border: 2px solid #d0d0d0;
-                    border-radius: 6px;
-                    background: #f8f8f8;
-                    text-align: center;
-                    line-height: 24px;
-                    font-size: 18px;
-                    font-weight: 700;
-                    color: #1a4b6d;
-                    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
                 }
                 .footer {
                     margin-top: 16px;
@@ -1244,15 +1204,14 @@
                     .header-sub .right-section .signature { font-size: 16px; line-height: 2.2; }
                     .header-sub .right-section .signature .line { width: 160px; height: 24px; border-bottom: 1px solid #000; }
                     table { font-size: 16px; }
-                    table th { font-size: 16px; padding: 4px 8px; border: 1px solid #666; }
+                    table th { font-size: 16px; padding: 4px 8px; border: 1px solid #666; white-space: nowrap; }
                     table td { font-size: 16px; padding: 4px 8px; border: 1px solid #666; }
                     .roll-number { font-weight: 700; font-size: 16px; }
-                    .checkbox-print { width: 20px; height: 20px; line-height: 20px; font-size: 16px; border-radius: 4px; }
                     .note { font-size: 14px; margin: 2px 0 4px 0; }
                     table th:nth-child(6), table td:nth-child(6) {
-                        min-width: 45px;
-                        max-width: 45px;
-                        width: 45px;
+                        min-width: 70px;
+                        max-width: 70px;
+                        width: 70px;
                         text-align: center;
                     }
                 }
@@ -1310,7 +1269,7 @@
         searchRollInput.value = '';
     })();
 
-    console.log('📋 Stock Check v10.5 (checkbox 24px) ready');
+    console.log('📋 Stock Check v10.6 (ตรวจพบว่าง) ready');
 </script>
 </body>
 </html>
