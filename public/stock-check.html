@@ -178,7 +178,7 @@
             font-weight: 500;
         }
 
-        /* ===== SEARCH BOX - ใหม่ อยู่มุมขวา ===== */
+        /* ===== SEARCH BOX ===== */
         .search-wrapper {
             display: flex;
             justify-content: flex-end;
@@ -325,14 +325,6 @@
             margin-top: 16px;
             justify-content: flex-end;
         }
-        .modal-box .modal-actions button {
-            padding: 10px 24px;
-            border-radius: 12px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
         .modal-box .modal-actions .btn-confirm { background: #28a745; color: #fff; }
         .modal-box .modal-actions .btn-confirm:hover { background: #218838; }
         .modal-box .modal-actions .btn-cancel { background: #6c757d; color: #fff; }
@@ -459,15 +451,15 @@
         <span id="groupSummary" style="margin-left:auto;font-weight:400;">กลุ่ม: —</span>
     </div>
 
-    <!-- PAGINATION -->
+    <!-- PAGE CONTROLS (แสดง Size แทนเลขหน้า) -->
     <div class="page-controls print-hide" id="pageControls">
         <button class="page-btn" id="prevPage">◀</button>
-        <span class="page-info" id="pageInfo">หน้า 1 / 1</span>
+        <span class="page-info" id="pageInfo">Size 38"</span>
         <button class="page-btn" id="nextPage">▶</button>
         <span style="margin-left:12px;font-size:14px;color:#5a6a7e;" id="pageSizeInfo">แสดง 50 รายการ</span>
     </div>
 
-    <!-- ===== SEARCH BOX - อยู่มุมขวา ===== -->
+    <!-- SEARCH BOX -->
     <div class="search-wrapper print-hide" id="searchWrapper">
         <div class="search-box" id="searchBox">
             <div class="search-input-wrapper">
@@ -554,11 +546,9 @@
     let stockCountId = null;
     let currentStatusFilter = 'all';
     let currentGroup = 'all';
-    let currentPage = 1;
-    let totalPages = 1;
+    let currentPage = 0; // ใช้ index ของ sizeGroup
+    let sizeGroups = [];
     let totalItems = 0;
-    const limit = 50;
-    let pendingAction = null;
 
     const $ = id => document.getElementById(id);
     const stockMeta = $('stockMeta');
@@ -665,24 +655,48 @@
     }
 
     // ---------- LOAD CHECK ITEMS ----------
-    async function loadCheckItems(page = 1) {
+    async function loadCheckItems() {
         const group = groupFilter.value;
         const status = statusFilter.value;
-        const url = `/api/stock/check-items?group=${encodeURIComponent(group)}&status=${encodeURIComponent(status)}&page=${page}&limit=${limit}`;
+        // ดึงข้อมูลทั้งหมดของกลุ่มนั้น (ไม่แบ่งหน้า) แล้วให้ JS จัดกลุ่มตาม Size
+        const url = `/api/stock/check-items?group=${encodeURIComponent(group)}&status=${encodeURIComponent(status)}&page=1&limit=9999`;
         try {
             loadBtn.disabled = true;
             loadBtn.textContent = '⏳ กำลังโหลด...';
             const res = await fetch(url, { headers: getAuthHeaders() });
             const data = await res.json();
             if (res.ok) {
-                allRolls = data.rolls || [];
+                const rolls = data.rolls || [];
                 totalItems = data.total || 0;
-                totalPages = data.totalPages || 1;
-                currentPage = data.page || 1;
-                renderTable();
+
+                // จัดกลุ่มตาม Size
+                const sizeMap = {};
+                rolls.forEach(r => {
+                    const size = r.width || '0';
+                    if (!sizeMap[size]) sizeMap[size] = [];
+                    sizeMap[size].push(r);
+                });
+                // เรียง Size จากน้อยไปมาก
+                const sortedSizes = Object.keys(sizeMap).sort((a, b) => parseFloat(a) - parseFloat(b));
+                sizeGroups = sortedSizes.map(size => {
+                    const rollsInSize = sizeMap[size];
+                    const found = rollsInSize.filter(r => r.found === 1).length;
+                    const notFound = rollsInSize.length - found;
+                    return { size, rolls: rollsInSize, found, notFound };
+                });
+
+                if (sizeGroups.length === 0) {
+                    checkTableBody.innerHTML = '<tr><td colspan="9" class="text-muted" style="text-align:center;">ไม่มีข้อมูล</td></tr>';
+                    pageControls.style.display = 'none';
+                    return;
+                }
+
+                // ตั้งค่าหน้าเริ่มต้น
+                currentPage = 0;
+                renderPage();
                 updateSummary();
                 updatePagination();
-                window._allRollsForPrint = data.rolls || [];
+                window._allRollsForPrint = rolls;
             } else {
                 showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
             }
@@ -694,13 +708,29 @@
         }
     }
 
-    // ---------- RENDER TABLE ----------
-    function renderTable() {
-        const rolls = allRolls;
-        if (!rolls || !rolls.length) {
-            checkTableBody.innerHTML = '<tr><td colspan="9" class="text-muted" style="text-align:center;">ไม่มีม้วนที่ตรงกับเงื่อนไข</td></tr>';
-            return;
-        }
+    // ---------- RENDER PAGE (ตาม Size) ----------
+    function renderPage() {
+        if (!sizeGroups.length) return;
+        const groupData = sizeGroups[currentPage];
+        if (!groupData) return;
+
+        const rolls = groupData.rolls;
+        // เรียงลำดับภายใน Size
+        rolls.sort((a, b) => {
+            const locA = a.loc || '';
+            const locB = b.loc || '';
+            if (locA !== locB) {
+                if (locA === 'LOC1') return -1;
+                if (locB === 'LOC1') return 1;
+                return locA.localeCompare(locB);
+            }
+            const statusOrder = { 'เต็ม': 0, 'เศษ': 1, 'รอกรอ': 2 };
+            const sA = statusOrder[a.status] ?? 99;
+            const sB = statusOrder[b.status] ?? 99;
+            if (sA !== sB) return sA - sB;
+            return (a.grade || '').localeCompare(b.grade || '');
+        });
+
         let html = '';
         rolls.forEach(roll => {
             const found = roll.found === 1;
@@ -723,6 +753,7 @@
         });
         checkTableBody.innerHTML = html;
 
+        // Attach checkbox events
         checkTableBody.querySelectorAll('.found-checkbox').forEach(cb => {
             cb.addEventListener('change', function(e) {
                 e.preventDefault();
@@ -746,24 +777,30 @@
                 }
             });
         });
+
+        // อัปเดต summary เฉพาะหน้านี้
+        foundCount.textContent = groupData.found;
+        notFoundCount.textContent = groupData.notFound;
+        totalCount.textContent = rolls.length;
+        groupSummary.textContent = `กลุ่ม: ${groupFilter.value !== 'all' ? groupFilter.value : 'ทั้งหมด'} | Size: ${groupData.size}"`;
+    }
+
+    // ---------- UPDATE PAGINATION (แสดง Size) ----------
+    function updatePagination() {
+        if (!sizeGroups.length) {
+            pageControls.style.display = 'none';
+            return;
+        }
+        pageControls.style.display = 'flex';
+        const currentSize = sizeGroups[currentPage]?.size || '—';
+        pageInfo.textContent = `Size ${currentSize}"`;
+        pageSizeInfo.textContent = `แสดง ${sizeGroups[currentPage]?.rolls?.length || 0} รายการ (ทั้งหมด ${totalItems} รายการ)`;
+        prevPage.disabled = currentPage <= 0;
+        nextPage.disabled = currentPage >= sizeGroups.length - 1;
     }
 
     function updateSummary() {
-        const rolls = allRolls || [];
-        const total = rolls.length;
-        const found = rolls.filter(r => r.found === 1).length;
-        const notFound = total - found;
-        foundCount.textContent = found;
-        notFoundCount.textContent = notFound;
-        totalCount.textContent = total;
-        groupSummary.textContent = `กลุ่ม: ${groupFilter.value !== 'all' ? groupFilter.value : 'ทั้งหมด'} | สถานะ: ${statusFilter.value !== 'all' ? statusFilter.value : 'ทั้งหมด'}`;
-    }
-
-    function updatePagination() {
-        pageInfo.textContent = `หน้า ${currentPage} / ${totalPages}`;
-        pageSizeInfo.textContent = `แสดง ${allRolls.length} รายการ (ทั้งหมด ${totalItems} รายการ)`;
-        prevPage.disabled = currentPage <= 1;
-        nextPage.disabled = currentPage >= totalPages;
+        // summary อัปเดตใน renderPage แล้ว
     }
 
     // ---------- SAVE CHECK ----------
@@ -780,15 +817,22 @@
                 body: JSON.stringify(payload)
             });
             if (res.ok) {
-                const roll = allRolls.find(r => r.roll_number === rollNumber);
-                if (roll) {
-                    roll.found = found;
-                    roll.checked_by = found === 1 ? currentUser.username : null;
+                // อัปเดตข้อมูลใน sizeGroups
+                for (const g of sizeGroups) {
+                    const roll = g.rolls.find(r => r.roll_number === rollNumber);
+                    if (roll) {
+                        roll.found = found;
+                        roll.checked_by = found === 1 ? currentUser.username : null;
+                        // อัปเดต found/notFound count
+                        g.found = g.rolls.filter(r => r.found === 1).length;
+                        g.notFound = g.rolls.length - g.found;
+                        break;
+                    }
                 }
                 if (checkboxEl) checkboxEl.checked = found === 1;
                 showToast(found === 1 ? '✅ พบม้วนนี้แล้ว' : '❌ ไม่พบม้วนนี้', found === 1 ? 'success' : 'warning');
-                updateSummary();
-                loadCheckItems(currentPage);
+                renderPage();
+                updatePagination();
             } else {
                 showToast('บันทึกไม่สำเร็จ', 'error');
                 if (checkboxEl) checkboxEl.checked = found !== 1;
@@ -801,14 +845,22 @@
 
     // ---------- PAGE NAVIGATION ----------
     prevPage.addEventListener('click', () => {
-        if (currentPage > 1) loadCheckItems(currentPage - 1);
+        if (currentPage > 0) {
+            currentPage--;
+            renderPage();
+            updatePagination();
+        }
     });
     nextPage.addEventListener('click', () => {
-        if (currentPage < totalPages) loadCheckItems(currentPage + 1);
+        if (currentPage < sizeGroups.length - 1) {
+            currentPage++;
+            renderPage();
+            updatePagination();
+        }
     });
 
-    statusFilter.addEventListener('change', () => loadCheckItems(1));
-    groupFilter.addEventListener('change', () => loadCheckItems(1));
+    statusFilter.addEventListener('change', () => loadCheckItems());
+    groupFilter.addEventListener('change', () => loadCheckItems());
 
     // ---------- SHOW ALERTS (Admin) ----------
     showAlertsBtn.addEventListener('click', async () => {
@@ -973,7 +1025,7 @@
                         notFoundAlert.style.display = 'none';
                         showToast('✅ ยืนยันพบม้วนเรียบร้อย', 'success');
                         pendingAction = null;
-                        loadCheckItems(currentPage);
+                        loadCheckItems();
                     } else if (pendingAction.rollNumber && pendingAction.found === 0 && pendingAction.checkbox) {
                         await saveCheck(pendingAction.rollNumber, 0, pendingAction.checkbox);
                         pendingAction = null;
@@ -1001,13 +1053,17 @@
             showToast('กรุณาอนุญาต pop-up เพื่อพิมพ์', 'warning');
             return;
         }
-        const rolls = allRolls || [];
+        // รวมทุก Size ในกลุ่มปัจจุบัน
+        let allRows = [];
+        sizeGroups.forEach(g => {
+            allRows = allRows.concat(g.rolls);
+        });
         const groupText = groupFilter.value !== 'all' ? groupFilter.value : 'ทั้งหมด';
         const statusText = statusFilter.value !== 'all' ? statusFilter.value : 'ทั้งหมด';
         const stockMetaText = stockMeta.textContent;
 
         let rowsHtml = '';
-        rolls.forEach(roll => {
+        allRows.forEach(roll => {
             const found = roll.found === 1;
             rowsHtml += `
                 <tr>
@@ -1083,7 +1139,7 @@
     }
 
     // ---------- EVENT LISTENERS ----------
-    loadBtn.addEventListener('click', () => loadCheckItems(1));
+    loadBtn.addEventListener('click', () => loadCheckItems());
     exportPdfBtn.addEventListener('click', exportPDF);
     backBtn.addEventListener('click', () => { window.location.href = '/'; });
 
@@ -1092,10 +1148,10 @@
         await loadUser();
         await loadStockSettings();
         await loadGroups();
-        if (stockCountId) loadCheckItems(1);
+        if (stockCountId) loadCheckItems();
     })();
 
-    console.log('📋 Stock Check v6.0 ready');
+    console.log('📋 Stock Check v7.0 (Size Pagination) ready');
 </script>
 </body>
 </html>
