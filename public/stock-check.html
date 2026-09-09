@@ -280,53 +280,105 @@
             flex-wrap: wrap;
         }
 
-        /* ===== MODAL ===== */
+        /* ===== MODAL (ปรับให้ทันสมัย) ===== */
         .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            animation: fadeIn 0.25s ease;
         }
         .modal-overlay.visible { display: flex; }
-        .modal-box {
-            background: #fff;
-            padding: 30px 34px;
-            border-radius: 24px;
-            max-width: 520px;
-            width: 100%;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
-            animation: fadeUp 0.3s ease;
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
         }
-        .modal-box h3 { color: #0b2b44; margin-bottom: 6px; font-size: 20px; }
-        .modal-box p { color: #5a6a7e; margin-bottom: 16px; font-size: 14px; }
+        @keyframes scaleUp {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal-box {
+            background: #ffffff;
+            padding: 32px 36px;
+            border-radius: 24px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            animation: scaleUp 0.25s ease;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .modal-box h3 {
+            color: #0b2b44;
+            margin-bottom: 6px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .modal-box p {
+            color: #4a5a6e;
+            margin-bottom: 18px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
         .modal-box input {
             width: 100%;
             padding: 12px 16px;
             border: 2px solid #dce2ec;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 16px;
             outline: none;
+            transition: border-color 0.2s;
+            background: #f8faff;
         }
-        .modal-box input:focus { border-color: #1a4b6d; }
+        .modal-box input:focus {
+            border-color: #1a4b6d;
+            box-shadow: 0 0 0 3px rgba(26, 75, 109, 0.1);
+        }
         .modal-box .modal-actions {
             display: flex;
             gap: 12px;
-            margin-top: 16px;
+            margin-top: 18px;
             justify-content: flex-end;
         }
-        .modal-box .modal-actions .btn-confirm { background: #28a745; color: #fff; }
-        .modal-box .modal-actions .btn-confirm:hover { background: #218838; }
-        .modal-box .modal-actions .btn-cancel { background: #6c757d; color: #fff; }
-        .modal-box .modal-actions .btn-cancel:hover { background: #5a6268; }
-        .modal-box .error-msg { color: #dc3545; font-size: 13px; margin-top: 8px; }
+        .modal-box .modal-actions button {
+            padding: 10px 28px;
+            border-radius: 14px;
+            border: none;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .modal-box .modal-actions .btn-confirm {
+            background: #28a745;
+            color: #fff;
+        }
+        .modal-box .modal-actions .btn-confirm:hover {
+            background: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        .modal-box .modal-actions .btn-cancel {
+            background: #f0f2f5;
+            color: #1a2a3a;
+        }
+        .modal-box .modal-actions .btn-cancel:hover {
+            background: #e2e6ed;
+        }
+        .modal-box .error-msg {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 10px;
+            min-height: 20px;
+        }
         .modal-box .alert-list {
             background: #fff3cd;
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 12px;
             margin: 12px 0;
             border-left: 4px solid #ffc107;
         }
@@ -340,7 +392,7 @@
         .print-hide { display: inline-block; }
         @media print {
             .print-hide { display: none !important; }
-            body { background: #fff; padding: 0; margin: 0; }
+            body { background: #fff; padding: 0; margin: 0; font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif; }
             .container { box-shadow: none; border-radius: 0; padding: 10px 12px; }
             .header .user-info { display: none !important; }
             .search-wrapper { display: none !important; }
@@ -349,14 +401,14 @@
             .found-alert, .notfound-alert { display: none !important; }
             .table-wrap { border: 1px solid #666; margin-top: 0; border-radius: 0; overflow: visible; }
             table { font-size: 18px; border-collapse: collapse; width: 100%; }
-            table th { background: #e9edf4 !important; font-size: 18px; padding: 4px 8px; border: 1px solid #666; font-weight: 600; white-space: nowrap; }
-            table td { font-size: 18px; padding: 4px 8px; border: 1px solid #666; font-weight: 500; }
+            table th { background: #e9edf4 !important; font-size: 18px; padding: 2px 6px; border: 1px solid #666; font-weight: 600; }
+            table td { font-size: 18px; padding: 2px 6px; border: 1px solid #666; font-weight: 500; }
             .roll-number { font-weight: 700; font-size: 18px; }
             .checked-by { display: none; }
             table th:nth-child(6), table td:nth-child(6) {
-                min-width: 80px;
-                max-width: 80px;
-                width: 80px;
+                min-width: 70px;
+                max-width: 70px;
+                width: 70px;
                 text-align: center;
             }
             .summary { display: none !important; }
@@ -375,13 +427,14 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.2);
             font-weight: 500;
             z-index: 2000;
-            animation: fadeUp 0.3s ease;
+            animation: fadeIn 0.3s ease;
+            max-width: 400px;
         }
         .toast.success { background: #28a745; }
         .toast.error { background: #dc3545; }
         .toast.warning { background: #ffc107; color: #1a2a3a; }
-        @keyframes fadeUp {
-            0% { opacity: 0; transform: translateY(16px); }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
             100% { opacity: 1; transform: translateY(0); }
         }
         .text-muted { color: #7a8a9e; }
@@ -478,7 +531,7 @@
     </div>
 </div>
 
-<!-- PASSWORD MODAL -->
+<!-- PASSWORD MODAL (ปรับใหม่) -->
 <div class="modal-overlay" id="passwordModal">
     <div class="modal-box">
         <h3>🔐 ยืนยันตัวตน</h3>
@@ -519,6 +572,7 @@
     let currentPage = 0;
     let sizeGroups = [];
     let totalItems = 0;
+    let pendingAction = null;
 
     const $ = id => document.getElementById(id);
     const stockMeta = $('stockMeta');
@@ -565,7 +619,11 @@
         c.className = `toast ${type}`;
         c.textContent = msg;
         document.getElementById('toastContainer').appendChild(c);
-        setTimeout(() => { c.style.opacity = '0'; c.style.transition = 'opacity 0.4s'; setTimeout(() => c.remove(), 500); }, 3000);
+        setTimeout(() => {
+            c.style.opacity = '0';
+            c.style.transition = 'opacity 0.4s';
+            setTimeout(() => c.remove(), 500);
+        }, 3000);
     }
 
     function getAuthHeaders() {
@@ -921,7 +979,7 @@
         if (e.key === 'Escape') suggestions.classList.remove('show');
     });
 
-    // ---------- CONFIRM BUTTONS ----------
+    // ---------- CONFIRM BUTTONS (ปรับให้อยู่หน้าเดิม) ----------
     confirmFoundBtn.addEventListener('click', () => {
         if (!pendingAction || !pendingAction.rollNumber) {
             showToast('ไม่มีข้อมูลที่จะยืนยัน', 'warning');
@@ -964,7 +1022,10 @@
 
     modalConfirm.addEventListener('click', async () => {
         const password = modalPassword.value.trim();
-        if (!password) { modalError.textContent = 'กรุณากรอกรหัสผ่าน'; return; }
+        if (!password) {
+            modalError.textContent = 'กรุณากรอกรหัสผ่าน';
+            return;
+        }
         try {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
@@ -982,7 +1043,9 @@
                         notFoundAlert.style.display = 'none';
                         showToast('✅ ยืนยันพบม้วนเรียบร้อย', 'success');
                         pendingAction = null;
-                        loadCheckItems();
+                        // ✅ ไม่ reload หน้า! แค่ render ใหม่
+                        renderPage();
+                        updatePagination();
                     } else if (pendingAction.rollNumber && pendingAction.found === 0 && pendingAction.checkbox) {
                         await saveCheck(pendingAction.rollNumber, 0, pendingAction.checkbox);
                         pendingAction = null;
@@ -1003,9 +1066,7 @@
         if (e.key === 'Escape') modalCancel.click();
     });
 
-    // ================================================================
-    //  EXPORT PDF
-    // ================================================================
+    // ---------- EXPORT PDF ----------
     async function exportPDF() {
         const printWindow = window.open('', '_blank', 'width=1100,height=850');
         if (!printWindow) {
@@ -1013,7 +1074,6 @@
             return;
         }
 
-        // ดึงข้อมูล Stock ล่าสุด
         let stockCount = '';
         let stockDate = '';
         let stockTime = '';
@@ -1045,12 +1105,17 @@
             totalNotFound += g.notFound;
         });
 
-        // สร้าง HTML สำหรับแต่ละ Size
         let allSectionsHtml = '';
         sizeGroups.forEach((g) => {
             const rolls = g.rolls;
             const found = rolls.filter(r => r.found === 1).length;
             const notFound = rolls.length - found;
+
+            const sizeHeader = `
+                <div style="font-size:18px;font-weight:700;margin-top:6px;margin-bottom:2px;text-align:left;padding-left:4px;">
+                    Size ${g.size}" จำนวน ${rolls.length} ม้วน
+                </div>
+            `;
 
             let rowsHtml = '';
             rolls.forEach(roll => {
@@ -1068,32 +1133,24 @@
                 `;
             });
 
-            const summaryRow = `
-                <tr style="font-weight:700;background:#f0f4fa;">
-                    <td colspan="8" style="text-align:right;padding:4px 8px;">
-                        Size ${g.size}" จำนวน ${rolls.length} ม้วน
-                    </td>
-                </tr>
-            `;
-
             allSectionsHtml += `
-                <div style="margin-bottom:12px;page-break-inside:avoid;">
-                    <table style="width:100%;border-collapse:collapse;font-size:18px;margin-bottom:2px;">
+                <div style="margin-bottom:0px;page-break-inside:avoid;">
+                    ${sizeHeader}
+                    <table style="width:100%;border-collapse:collapse;font-size:18px;margin:0;border:1px solid #666;">
                         <thead>
                             <tr>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">LOC.</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">สถานะ</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">Size</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">Grade</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">เบอร์ม้วน</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:center;min-width:80px;max-width:80px;width:80px;white-space:nowrap;">ตรวจพบ</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">Dia.</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;">Kg.</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;white-space:nowrap;">LOC.</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;">สถานะ</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;">Size</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;">Grade</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;">เบอร์ม้วน</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:center;min-width:70px;max-width:70px;width:70px;white-space:1nowrap;">ตรวจพบpx</th>
+                                <th style=" solidbackground:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border: #666;text-align:left;">Dia.</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;">Kg.</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${rowsHtml}
-                            ${summaryRow}
                         </tbody>
                     </table>
                 </div>
@@ -1111,119 +1168,41 @@
             <style>
                 * { box-sizing: border-box; margin: 0; padding: 0; }
                 body {
-                    font-family: 'Segoe UI', system-ui, sans-serif;
-                    padding: 12px 16px;
+                    font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif;
+                    padding: 8px 12px;
                     background: #fff;
                     font-size: 16px;
+                    line-height: 1.2;
                 }
-                .header-main {
-                    font-size: 26px;
-                    font-weight: 700;
-                    text-align: center;
-                    margin-bottom: 10px;
-                }
-                .header-sub {
-                    display: flex;
-                    justify-content: flex-end;
-                    align-items: flex-start;
-                    flex-wrap: wrap;
-                    margin-bottom: 4px;
-                }
-                .header-sub .right-section {
-                    text-align: right;
-                }
-                .header-sub .right-section .group-info {
-                    font-size: 22px;
-                    font-weight: 600;
-                    margin-bottom: 20px;
-                }
-                .header-sub .right-section .signature {
-                    font-size: 18px;
-                    font-weight: 500;
-                    line-height: 2.2;
-                }
-                .header-sub .right-section .signature .line {
-                    border-bottom: 1px solid #1a2a3a;
-                    width: 220px;
-                    display: inline-block;
-                    margin-left: 8px;
-                    height: 28px;
-                }
-                .header-sub .right-section .signature .sign-row {
-                    margin-bottom: 2px;
-                }
-                .note {
-                    font-size: 16px;
-                    font-weight: 400;
-                    color: #333;
-                    margin: 2px 0 6px 0;
-                    padding: 4px 10px;
-                    background: #f8faff;
-                    border-left: 4px solid #1a4b6d;
-                }
-                .table-wrap {
-                    margin-top: 2px;
-                }
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-size: 18px;
-                }
-                table th {
-                    background: #e9edf4;
-                    font-weight: 600;
-                    padding: 4px 8px;
-                    border: 1px solid #666;
-                    text-align: left;
-                    font-size: 18px;
-                    white-space: nowrap;
-                }
-                table td {
-                    padding: 4px 8px;
-                    border: 1px solid #666;
-                    font-size: 18px;
-                    font-weight: 500;
-                }
-                .roll-number {
-                    font-weight: 700;
-                    font-size: 18px;
-                }
-                .footer {
-                    margin-top: 16px;
-                    text-align: center;
-                    font-size: 14px;
-                    color: #555;
-                }
-                .page-break {
-                    page-break-after: always;
-                }
+                .header-main { font-size: 26px; font-weight: 700; text-align: center; margin-bottom: 8px; }
+                .header-sub { display: flex; justify-content: flex-end; align-items: flex-start; flex-wrap: wrap; margin-bottom: 2px; }
+                .header-sub .right-section { text-align: right; }
+                .header-sub .right-section .group-info { font-size: 22px; font-weight: 600; margin-bottom: 16px; }
+                .header-sub .right-section .signature { font-size: 18px; font-weight: 500; line-height: 2.2; }
+                .header-sub .right-section .signature .line { border-bottom: 1px solid #1a2a3a; width: 220px; display: inline-block; margin-left: 8px; height: 28px; }
+                .header-sub .right-section .signature .sign-row { margin-bottom: 2px; }
+                .note { font-size: 16px; font-weight: 400; color: #333; margin: 2px 0 4px 0; padding: 4px 10px; background: #f8faff; border-left: 4px solid #1a4b6d; }
+                .footer { margin-top: 12px; text-align: center; font-size: 14px; color: #555; }
                 @media print {
-                    body { padding: 8px 12px; }
+                    body { padding: 4px 8px; font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif; }
                     .header-main { font-size: 24px; }
-                    .header-sub .right-section .group-info { font-size: 20px; margin-bottom: 16px; }
-                    .header-sub .right-section .signature { font-size: 16px; line-height: 2.2; }
-                    .header-sub .right-section .signature .line { width: 160px; height: 24px; border-bottom: 1px solid #000; }
+                    .header-sub .right-section .group-info { font-size: 20px; margin-bottom: 12px; }
+                    .header-sub .right-section .signature { font-size: 16px; line-height: 2.0; }
+                    .header-sub .right-section .signature .line { width: 160px; height: 22px; }
                     table { font-size: 16px; }
-                    table th { font-size: 16px; padding: 4px 8px; border: 1px solid #666; white-space: nowrap; }
-                    table td { font-size: 16px; padding: 4px 8px; border: 1px solid #666; }
+                    table th { font-size: 16px; padding: 1px 4px; border: 1px solid #666; }
+                    table td { font-size: 16px; padding: 1px 4px; border: 1px solid #666; }
                     .roll-number { font-weight: 700; font-size: 16px; }
-                    .note { font-size: 14px; margin: 2px 0 4px 0; }
-                    table th:nth-child(6), table td:nth-child(6) {
-                        min-width: 70px;
-                        max-width: 70px;
-                        width: 70px;
-                        text-align: center;
-                    }
+                    .note { font-size: 14px; margin: 1px 0 2px 0; padding: 2px 8px; }
+                    .footer { font-size: 12px; margin-top: 8px; }
+                    table th:nth-child(6), table td:nth-child(6) { min-width: 60px; max-width: 60px; width: 60px; text-align: center; }
                 }
             </style>
         </head>
         <body>
-            <!-- HEADER: ตรวจนับ STOCK :... (กึ่งกลาง) -->
             <div class="header-main">
                 ตรวจนับ STOCK : ครั้งที่ ${stockCount} | วันที่ ${stockDate} เวลา ${stockTime}
             </div>
-
-            <!-- กลุ่ม + ผู้ตรวจนับ (ขวา) -->
             <div class="header-sub">
                 <div class="right-section">
                     <div class="group-info">${groupText} : จำนวน ${totalRolls} ม้วน</div>
@@ -1233,16 +1212,10 @@
                     </div>
                 </div>
             </div>
-
-            <!-- หมายเหตุ -->
             <div class="note">
                 หมายเหตุ : เมื่อตรวจสอบพบม้วนกระดาษให้ทำเครื่องหมาย ✓ ในช่องตรวจพบ กรณีไม่พบให้เว้นเอาไว้
             </div>
-
-            <!-- ตารางข้อมูล (แบ่งตาม Size) -->
             ${allSectionsHtml}
-
-            <!-- เลขหน้า -->
             <div class="footer">หน้า 1 / ${totalPages}</div>
         </body>
         </html>
@@ -1269,7 +1242,7 @@
         searchRollInput.value = '';
     })();
 
-    console.log('📋 Stock Check v10.6 (ตรวจพบว่าง) ready');
+    console.log('📋 Stock Check v10.8 (ยืนยันอยู่หน้าเดิม + Modal สวย) ready');
 </script>
 </body>
 </html>
