@@ -451,15 +451,15 @@
         <span id="groupSummary" style="margin-left:auto;font-weight:400;">กลุ่ม: —</span>
     </div>
 
-    <!-- PAGE CONTROLS (แสดง Size แทนเลขหน้า) -->
+    <!-- PAGE CONTROLS -->
     <div class="page-controls print-hide" id="pageControls">
         <button class="page-btn" id="prevPage">◀</button>
         <span class="page-info" id="pageInfo">Size 38"</span>
         <button class="page-btn" id="nextPage">▶</button>
-        <span style="margin-left:12px;font-size:14px;color:#5a6a7e;" id="pageSizeInfo">แสดง 50 รายการ</span>
+        <span style="margin-left:12px;font-size:14px;color:#5a6a7e;" id="pageSizeInfo">แสดง 20 รายการ</span>
     </div>
 
-    <!-- SEARCH BOX -->
+    <!-- SEARCH BOX - ไม่มีคำว่า admin -->
     <div class="search-wrapper print-hide" id="searchWrapper">
         <div class="search-box" id="searchBox">
             <div class="search-input-wrapper">
@@ -485,7 +485,7 @@
         </div>
     </div>
 
-    <!-- TABLE -->
+    <!-- TABLE - เปลี่ยนหัว "พบ/ไม่พบ" เป็น "ตรวจนับพบ" -->
     <div class="table-wrap" id="tableWrap">
         <table>
             <thead>
@@ -495,7 +495,7 @@
                     <th>Size</th>
                     <th>grade</th>
                     <th>เบอร์ม้วน</th>
-                    <th>พบ/ไม่พบ</th>
+                    <th>ตรวจนับพบ</th>
                     <th>dimeter</th>
                     <th>kgs</th>
                     <th>ผู้ตรวจ</th>
@@ -546,7 +546,7 @@
     let stockCountId = null;
     let currentStatusFilter = 'all';
     let currentGroup = 'all';
-    let currentPage = 0; // ใช้ index ของ sizeGroup
+    let currentPage = 0;
     let sizeGroups = [];
     let totalItems = 0;
 
@@ -658,7 +658,6 @@
     async function loadCheckItems() {
         const group = groupFilter.value;
         const status = statusFilter.value;
-        // ดึงข้อมูลทั้งหมดของกลุ่มนั้น (ไม่แบ่งหน้า) แล้วให้ JS จัดกลุ่มตาม Size
         const url = `/api/stock/check-items?group=${encodeURIComponent(group)}&status=${encodeURIComponent(status)}&page=1&limit=9999`;
         try {
             loadBtn.disabled = true;
@@ -669,14 +668,12 @@
                 const rolls = data.rolls || [];
                 totalItems = data.total || 0;
 
-                // จัดกลุ่มตาม Size
                 const sizeMap = {};
                 rolls.forEach(r => {
                     const size = r.width || '0';
                     if (!sizeMap[size]) sizeMap[size] = [];
                     sizeMap[size].push(r);
                 });
-                // เรียง Size จากน้อยไปมาก
                 const sortedSizes = Object.keys(sizeMap).sort((a, b) => parseFloat(a) - parseFloat(b));
                 sizeGroups = sortedSizes.map(size => {
                     const rollsInSize = sizeMap[size];
@@ -691,7 +688,6 @@
                     return;
                 }
 
-                // ตั้งค่าหน้าเริ่มต้น
                 currentPage = 0;
                 renderPage();
                 updateSummary();
@@ -708,14 +704,13 @@
         }
     }
 
-    // ---------- RENDER PAGE (ตาม Size) ----------
+    // ---------- RENDER PAGE ----------
     function renderPage() {
         if (!sizeGroups.length) return;
         const groupData = sizeGroups[currentPage];
         if (!groupData) return;
 
         const rolls = groupData.rolls;
-        // เรียงลำดับภายใน Size
         rolls.sort((a, b) => {
             const locA = a.loc || '';
             const locB = b.loc || '';
@@ -753,7 +748,6 @@
         });
         checkTableBody.innerHTML = html;
 
-        // Attach checkbox events
         checkTableBody.querySelectorAll('.found-checkbox').forEach(cb => {
             cb.addEventListener('change', function(e) {
                 e.preventDefault();
@@ -778,14 +772,13 @@
             });
         });
 
-        // อัปเดต summary เฉพาะหน้านี้
         foundCount.textContent = groupData.found;
         notFoundCount.textContent = groupData.notFound;
         totalCount.textContent = rolls.length;
         groupSummary.textContent = `กลุ่ม: ${groupFilter.value !== 'all' ? groupFilter.value : 'ทั้งหมด'} | Size: ${groupData.size}"`;
     }
 
-    // ---------- UPDATE PAGINATION (แสดง Size) ----------
+    // ---------- UPDATE PAGINATION ----------
     function updatePagination() {
         if (!sizeGroups.length) {
             pageControls.style.display = 'none';
@@ -799,9 +792,7 @@
         nextPage.disabled = currentPage >= sizeGroups.length - 1;
     }
 
-    function updateSummary() {
-        // summary อัปเดตใน renderPage แล้ว
-    }
+    function updateSummary() {}
 
     // ---------- SAVE CHECK ----------
     async function saveCheck(rollNumber, found, checkboxEl) {
@@ -817,13 +808,11 @@
                 body: JSON.stringify(payload)
             });
             if (res.ok) {
-                // อัปเดตข้อมูลใน sizeGroups
                 for (const g of sizeGroups) {
                     const roll = g.rolls.find(r => r.roll_number === rollNumber);
                     if (roll) {
                         roll.found = found;
                         roll.checked_by = found === 1 ? currentUser.username : null;
-                        // อัปเดต found/notFound count
                         g.found = g.rolls.filter(r => r.found === 1).length;
                         g.notFound = g.rolls.length - g.found;
                         break;
@@ -862,7 +851,7 @@
     statusFilter.addEventListener('change', () => loadCheckItems());
     groupFilter.addEventListener('change', () => loadCheckItems());
 
-    // ---------- SHOW ALERTS (Admin) ----------
+    // ---------- SHOW ALERTS ----------
     showAlertsBtn.addEventListener('click', async () => {
         try {
             const res = await fetch('/api/alerts', { headers: getAuthHeaders() });
@@ -1053,7 +1042,6 @@
             showToast('กรุณาอนุญาต pop-up เพื่อพิมพ์', 'warning');
             return;
         }
-        // รวมทุก Size ในกลุ่มปัจจุบัน
         let allRows = [];
         sizeGroups.forEach(g => {
             allRows = allRows.concat(g.rolls);
@@ -1116,7 +1104,7 @@
                             <th>Size</th>
                             <th>grade</th>
                             <th>เบอร์ม้วน</th>
-                            <th>พบ/ไม่พบ</th>
+                            <th>ตรวจนับพบ</th>
                             <th>dimeter</th>
                             <th>kgs</th>
                         </tr>
@@ -1151,7 +1139,7 @@
         if (stockCountId) loadCheckItems();
     })();
 
-    console.log('📋 Stock Check v7.0 (Size Pagination) ready');
+    console.log('📋 Stock Check v7.1 ready');
 </script>
 </body>
 </html>
