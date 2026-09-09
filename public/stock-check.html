@@ -341,25 +341,24 @@
             .print-hide { display: none !important; }
             body { background: #fff; padding: 0; margin: 0; }
             .container { box-shadow: none; border-radius: 0; padding: 10px 12px; }
-            .signature-area { display: none !important; }
-            .summary { display: none !important; }
+            .header .user-info { display: none !important; }
             .search-wrapper { display: none !important; }
             .page-controls { display: none !important; }
             .controls { display: none !important; }
             .found-alert, .notfound-alert { display: none !important; }
             .table-wrap { border: 1px solid #000; margin-top: 0; border-radius: 0; overflow: visible; }
-            table { font-size: 13px; border-collapse: collapse; width: 100%; }
-            table th { background: #e9edf4 !important; font-size: 13px; padding: 6px 8px; border: 1px solid #000; }
-            table td { font-size: 13px; padding: 5px 8px; border: 1px solid #000; }
-            .roll-number { font-weight: 700; font-size: 13px; }
+            table { font-size: 17px; border-collapse: collapse; width: 100%; }
+            table th { background: #e9edf4 !important; font-size: 17px; padding: 6px 8px; border: 1px solid #000; }
+            table td { font-size: 17px; padding: 5px 8px; border: 1px solid #000; }
+            .roll-number { font-weight: 700; font-size: 17px; }
             .checked-by { display: none; }
-            .header h1 { font-size: 18px; }
-            .header .meta { font-size: 14px; }
+            .header h1 { font-size: 24px; }
+            .header .meta { font-size: 20px; }
             .found-checkbox {
                 appearance: none;
                 -webkit-appearance: none;
-                width: 16px;
-                height: 16px;
+                width: 18px;
+                height: 18px;
                 border: 2px solid #000;
                 display: inline-block;
                 position: relative;
@@ -370,7 +369,7 @@
             }
             .found-checkbox:checked::after {
                 content: "✓";
-                font-size: 14px;
+                font-size: 16px;
                 font-weight: 700;
                 color: #000;
                 position: absolute;
@@ -380,6 +379,8 @@
             table th:last-child, table td:last-child {
                 display: none;
             }
+            .summary { display: none !important; }
+            .signature-area { display: none !important; }
         }
 
         /* ===== TOAST ===== */
@@ -409,7 +410,7 @@
 </head>
 <body>
 <div class="container" id="app">
-    <!-- HEADER (เอา user-info ออก) -->
+    <!-- HEADER -->
     <div class="header">
         <h1>📋 ตรวจนับสต็อกม้วนกระดาษ</h1>
         <div class="meta" id="stockMeta">กำลังโหลด...</div>
@@ -448,7 +449,7 @@
         <span style="margin-left:12px;font-size:14px;color:#5a6a7e;" id="pageSizeInfo">แสดง 20 รายการ</span>
     </div>
 
-    <!-- SEARCH BOX - ว่างเปล่า ไม่มีคำว่า admin -->
+    <!-- SEARCH BOX -->
     <div class="search-wrapper print-hide" id="searchWrapper">
         <div class="search-box" id="searchBox">
             <div class="search-input-wrapper">
@@ -474,7 +475,7 @@
         </div>
     </div>
 
-    <!-- TABLE - หัว "ตรวจนับพบ" เปลี่ยนเป็น "ตรวจพบ" -->
+    <!-- TABLE -->
     <div class="table-wrap" id="tableWrap">
         <table>
             <thead>
@@ -598,7 +599,6 @@
             const data = await res.json();
             if (data.user) {
                 currentUser = data.user;
-                // ไม่แสดง userInfo ใน header แล้ว
                 if (currentUser.role === 'admin') {
                     showAlertsBtn.style.display = 'inline-block';
                 }
@@ -1023,35 +1023,77 @@
         if (e.key === 'Escape') modalCancel.click();
     });
 
-    // ---------- EXPORT PDF ----------
+    // ---------- EXPORT PDF (ปรับปรุง) ----------
     function exportPDF() {
-        const printWindow = window.open('', '_blank', 'width=900,height=700');
+        const printWindow = window.open('', '_blank', 'width=1000,height=800');
         if (!printWindow) {
             showToast('กรุณาอนุญาต pop-up เพื่อพิมพ์', 'warning');
             return;
         }
-        let allRows = [];
-        sizeGroups.forEach(g => {
-            allRows = allRows.concat(g.rolls);
-        });
+
         const groupText = groupFilter.value !== 'all' ? groupFilter.value : 'ทั้งหมด';
         const statusText = statusFilter.value !== 'all' ? statusFilter.value : 'ทั้งหมด';
         const stockMetaText = stockMeta.textContent;
 
-        let rowsHtml = '';
-        allRows.forEach(roll => {
-            const found = roll.found === 1;
-            rowsHtml += `
-                <tr>
-                    <td>${roll.loc || '—'}</td>
-                    <td>${roll.status || '—'}</td>
-                    <td>${roll.width ? roll.width + '"' : '—'}</td>
-                    <td>${roll.grade || '—'}</td>
-                    <td class="roll-number">${roll.roll_number || '—'}</td>
-                    <td style="text-align:center;">${found ? '✓' : '□'}</td>
-                    <td>${roll.dimeter || '—'}</td>
-                    <td>${roll.kgs || '—'}</td>
+        let allSectionsHtml = '';
+        let totalFound = 0;
+        let totalNotFound = 0;
+        let totalAll = 0;
+
+        sizeGroups.forEach((g, idx) => {
+            const rolls = g.rolls;
+            const found = rolls.filter(r => r.found === 1).length;
+            const notFound = rolls.length - found;
+            totalFound += found;
+            totalNotFound += notFound;
+            totalAll += rolls.length;
+
+            let rowsHtml = '';
+            rolls.forEach(roll => {
+                const foundStatus = roll.found === 1;
+                rowsHtml += `
+                    <tr>
+                        <td>${roll.loc || '—'}</td>
+                        <td>${roll.status || '—'}</td>
+                        <td>${roll.width ? roll.width + '"' : '—'}</td>
+                        <td>${roll.grade || '—'}</td>
+                        <td class="roll-number">${roll.roll_number || '—'}</td>
+                        <td style="text-align:center;">${foundStatus ? '✓' : '□'}</td>
+                        <td>${roll.dimeter || '—'}</td>
+                        <td>${roll.kgs || '—'}</td>
+                    </tr>
+                `;
+            });
+
+            const summaryRow = `
+                <tr style="font-weight:700;background:#f0f4fa;">
+                    <td colspan="9" style="text-align:right;padding:8px 16px;">
+                        รวม Size ${g.size}" : ${rolls.length} ม้วน (พบ ${found} ม้วน, ไม่พบ ${notFound} ม้วน)
+                    </td>
                 </tr>
+            `;
+
+            allSectionsHtml += `
+                <div style="margin-bottom:20px;page-break-inside:avoid;">
+                    <table style="width:100%;border-collapse:collapse;font-size:17px;margin-bottom:4px;">
+                        <thead>
+                            <tr>
+                                <th style="background:#e9edf4;font-weight:700;font-size:17px;padding:6px 8px;border:1px solid #000;text-align:left;">Location</th>
+                                <th style="background:#e9edf4;font-weight:700;font-size:17px;padding:6px 8px;border:1px solid #000;text-align:left;">สถานะ</th>
+                                <th style="background:#e9edf4;font-weight:700;font-size:17px;padding:6px 8px;border:1px solid #000;text-align:left;">Size</th>
+                                <th style="background:#e9edf4;font-weight:700;font-size:17px;padding:6px 8px;border:1px solid #000;text-align:left;">grade</th>
+                                <th style="background:#e9edf4;font-weight:700;font-size:17px;padding:6px 8px;border:1px solid #000;text-align:left;">เบอร์ม้วน</th>
+                                <th style="background:#e9edf4;font-weight:700;font-size:17px;padding:6px 8px;border:1px solid #000;text-align:left;">ตรวจพบ</th>
+                                <th style="background:#e9edf4;font-weight:700;font-size:17px;padding:6px 8px;border:1px solid #000;text-align:left;">dimeter</th>
+                                <th style="background:#e9edf4;font-weight:700;font-size:17px;padding:6px 8px;border:1px solid #000;text-align:left;">kgs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                            ${summaryRow}
+                        </tbody>
+                    </table>
+                </div>
             `;
         });
 
@@ -1063,45 +1105,166 @@
             <title>ตรวจนับสต็อก</title>
             <style>
                 * { box-sizing: border-box; margin: 0; padding: 0; }
-                body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 10px 12px; background: #fff; font-size: 13px; }
-                .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
-                .header h1 { font-size: 18px; }
-                .header .meta { font-size: 14px; color: #333; }
-                .table-wrap { border: 1px solid #000; border-radius: 0; overflow: visible; }
-                table { width: 100%; border-collapse: collapse; font-size: 13px; }
-                table th { background: #e9edf4; font-weight: 700; font-size: 13px; padding: 6px 8px; border: 1px solid #000; text-align: left; }
-                table td { padding: 5px 8px; border: 1px solid #000; font-size: 13px; }
-                .roll-number { font-weight: 700; }
-                .footer { margin-top: 20px; font-size: 12px; color: #555; }
+                body {
+                    font-family: 'Segoe UI', system-ui, sans-serif;
+                    padding: 12px 16px;
+                    background: #fff;
+                    font-size: 17px;
+                }
+                .header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 10px;
+                    margin-bottom: 12px;
+                    flex-wrap: wrap;
+                }
+                .header-left {
+                    flex: 1;
+                }
+                .header-left h1 {
+                    font-size: 24px;
+                    font-weight: 700;
+                    margin-bottom: 4px;
+                }
+                .header-left .sub {
+                    font-size: 20px;
+                    font-weight: 600;
+                    color: #1a2a3a;
+                    margin-bottom: 2px;
+                }
+                .header-left .group-status {
+                    font-size: 18px;
+                    font-weight: 500;
+                    color: #2c3e50;
+                }
+                .header-right {
+                    text-align: right;
+                    font-size: 17px;
+                    font-weight: 500;
+                    min-width: 200px;
+                }
+                .header-right .line {
+                    border-bottom: 2px solid #1a2a3a;
+                    width: 220px;
+                    display: inline-block;
+                    margin-left: 8px;
+                    height: 24px;
+                }
+                .header-right .sign-row {
+                    margin-bottom: 4px;
+                }
+                .summary-line {
+                    font-size: 18px;
+                    font-weight: 600;
+                    margin-bottom: 8px;
+                    display: flex;
+                    gap: 24px;
+                    flex-wrap: wrap;
+                }
+                .summary-line .found { color: #28a745; }
+                .summary-line .notfound { color: #dc3545; }
+                .note {
+                    font-size: 16px;
+                    color: #333;
+                    margin-bottom: 12px;
+                    padding: 8px 12px;
+                    background: #f8faff;
+                    border-left: 4px solid #1a4b6d;
+                }
+                .signature-area {
+                    margin-top: 24px;
+                    border-top: 2px dashed #000;
+                    padding-top: 16px;
+                    display: flex;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                    gap: 20px;
+                }
+                .signature-area .sign-block {
+                    flex: 1;
+                    min-width: 180px;
+                }
+                .signature-area .sign-block label {
+                    font-weight: 600;
+                    display: block;
+                    margin-bottom: 4px;
+                    font-size: 17px;
+                    color: #1a2a3a;
+                }
+                .signature-area .sign-block .line {
+                    border-bottom: 2px solid #1a2a3a;
+                    height: 32px;
+                    width: 100%;
+                    max-width: 280px;
+                }
+                table th, table td {
+                    font-size: 17px;
+                }
+                .roll-number {
+                    font-weight: 700;
+                }
+                .footer {
+                    margin-top: 20px;
+                    font-size: 14px;
+                    color: #888;
+                    text-align: center;
+                }
+                @media print {
+                    body { padding: 8px 12px; }
+                    .header-left h1 { font-size: 22px; }
+                    .header-left .sub { font-size: 18px; }
+                    .header-left .group-status { font-size: 16px; }
+                    .header-right { font-size: 15px; }
+                    .header-right .line { width: 160px; height: 20px; }
+                    table th, table td { font-size: 15px; }
+                    .roll-number { font-weight: 700; }
+                    .summary-line { font-size: 16px; }
+                    .note { font-size: 14px; }
+                }
             </style>
         </head>
         <body>
+            <!-- HEADER: ด้านซ้าย + ด้านขวา -->
             <div class="header">
-                <h1>📋 ตรวจนับสต็อกม้วนกระดาษ</h1>
-                <div class="meta">${stockMetaText}</div>
+                <div class="header-left">
+                    <h1>📋 ตรวจนับสต็อกม้วนกระดาษ</h1>
+                    <div class="sub">${stockMetaText}</div>
+                    <div class="group-status">กลุ่ม: ${groupText} | สถานะ: ${statusText}</div>
+                </div>
+                <div class="header-right">
+                    <div class="sign-row">ผู้ตรวจนับแผนกคลังลูกกระดาษ <span class="line"></span></div>
+                    <div class="sign-row">ผู้ตรวจนับแผนกบัญชี <span class="line"></span></div>
+                </div>
             </div>
-            <div style="margin-bottom:8px;font-size:14px;font-weight:500;">
-                กลุ่ม: ${groupText} | สถานะ: ${statusText}
+
+            <!-- SUMMARY LINE (พบ/ไม่พบ) -->
+            <div class="summary-line">
+                <span>✅ พบ: <span class="found">${totalFound}</span> ม้วน</span>
+                <span>❌ ไม่พบ: <span class="notfound">${totalNotFound}</span> ม้วน</span>
             </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Location</th>
-                            <th>สถานะ</th>
-                            <th>Size</th>
-                            <th>grade</th>
-                            <th>เบอร์ม้วน</th>
-                            <th>ตรวจพบ</th>
-                            <th>dimeter</th>
-                            <th>kgs</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rowsHtml}
-                    </tbody>
-                </table>
+
+            <!-- NOTE -->
+            <div class="note">
+                📌 หมายเหตุ : เมื่อตรวจสอบพบม้วนกระดาษให้ทำเครื่องหมาย ✓ ในช่อง "ตรวจพบ" กรณีไม่พบให้เว้นเอาไว้
             </div>
+
+            <!-- TABLE SECTIONS -->
+            ${allSectionsHtml}
+
+            <!-- SIGNATURE (ด้านล่าง) -->
+            <div class="signature-area">
+                <div class="sign-block">
+                    <label>พนักงานบัญชี</label>
+                    <div class="line"></div>
+                </div>
+                <div class="sign-block">
+                    <label>พนักงานคลัง</label>
+                    <div class="line"></div>
+                </div>
+            </div>
+
             <div class="footer">พิมพ์เมื่อ ${new Date().toLocaleString('th-TH')}</div>
         </body>
         </html>
@@ -1125,11 +1288,10 @@
         await loadStockSettings();
         await loadGroups();
         if (stockCountId) loadCheckItems();
-        // clear search input value just in case
         searchRollInput.value = '';
     })();
 
-    console.log('📋 Stock Check v7.2 ready');
+    console.log('📋 Stock Check v9.0 ready');
 </script>
 </body>
 </html>
