@@ -38,14 +38,6 @@
             color: #4a5a6e;
             font-weight: 500;
         }
-        .header .user-info {
-            background: #eaf4ff;
-            padding: 6px 18px;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 15px;
-            color: #1a4b6d;
-        }
 
         .controls {
             display: flex;
@@ -351,11 +343,9 @@
             .container { box-shadow: none; border-radius: 0; padding: 10px 12px; }
             .signature-area { display: none !important; }
             .summary { display: none !important; }
-            .header .user-info { display: none !important; }
             .search-wrapper { display: none !important; }
             .page-controls { display: none !important; }
             .controls { display: none !important; }
-            .filter-group { display: none !important; }
             .found-alert, .notfound-alert { display: none !important; }
             .table-wrap { border: 1px solid #000; margin-top: 0; border-radius: 0; overflow: visible; }
             table { font-size: 13px; border-collapse: collapse; width: 100%; }
@@ -419,11 +409,10 @@
 </head>
 <body>
 <div class="container" id="app">
-    <!-- HEADER -->
+    <!-- HEADER (เอา user-info ออก) -->
     <div class="header">
         <h1>📋 ตรวจนับสต็อกม้วนกระดาษ</h1>
         <div class="meta" id="stockMeta">กำลังโหลด...</div>
-        <div class="user-info" id="userInfo">👤 ผู้ตรวจ: —</div>
     </div>
 
     <!-- CONTROLS -->
@@ -459,11 +448,11 @@
         <span style="margin-left:12px;font-size:14px;color:#5a6a7e;" id="pageSizeInfo">แสดง 20 รายการ</span>
     </div>
 
-    <!-- SEARCH BOX - ไม่มีคำว่า admin -->
+    <!-- SEARCH BOX - ว่างเปล่า ไม่มีคำว่า admin -->
     <div class="search-wrapper print-hide" id="searchWrapper">
         <div class="search-box" id="searchBox">
             <div class="search-input-wrapper">
-                <input type="text" id="searchRollInput" placeholder="ค้นหาเลขม้วน..." autocomplete="off" />
+                <input type="text" id="searchRollInput" placeholder="" autocomplete="off" />
                 <div class="suggestions" id="suggestions"></div>
             </div>
             <button class="btn-search" id="searchRollBtn">ค้นหา</button>
@@ -485,7 +474,7 @@
         </div>
     </div>
 
-    <!-- TABLE - เปลี่ยนหัว "พบ/ไม่พบ" เป็น "ตรวจนับพบ" -->
+    <!-- TABLE - หัว "ตรวจนับพบ" เปลี่ยนเป็น "ตรวจพบ" -->
     <div class="table-wrap" id="tableWrap">
         <table>
             <thead>
@@ -495,7 +484,7 @@
                     <th>Size</th>
                     <th>grade</th>
                     <th>เบอร์ม้วน</th>
-                    <th>ตรวจนับพบ</th>
+                    <th>ตรวจพบ</th>
                     <th>dimeter</th>
                     <th>kgs</th>
                     <th>ผู้ตรวจ</th>
@@ -552,7 +541,6 @@
 
     const $ = id => document.getElementById(id);
     const stockMeta = $('stockMeta');
-    const userInfo = $('userInfo');
     const statusFilter = $('statusFilter');
     const groupFilter = $('groupFilter');
     const loadBtn = $('loadBtn');
@@ -610,7 +598,7 @@
             const data = await res.json();
             if (data.user) {
                 currentUser = data.user;
-                userInfo.textContent = '👤 ผู้ตรวจ: ' + currentUser.username;
+                // ไม่แสดง userInfo ใน header แล้ว
                 if (currentUser.role === 'admin') {
                     showAlertsBtn.style.display = 'inline-block';
                 }
@@ -1104,7 +1092,7 @@
                             <th>Size</th>
                             <th>grade</th>
                             <th>เบอร์ม้วน</th>
-                            <th>ตรวจนับพบ</th>
+                            <th>ตรวจพบ</th>
                             <th>dimeter</th>
                             <th>kgs</th>
                         </tr>
@@ -1137,9 +1125,11 @@
         await loadStockSettings();
         await loadGroups();
         if (stockCountId) loadCheckItems();
+        // clear search input value just in case
+        searchRollInput.value = '';
     })();
 
-    console.log('📋 Stock Check v7.1 ready');
+    console.log('📋 Stock Check v7.2 ready');
 </script>
 </body>
 </html>
