@@ -230,7 +230,6 @@ app.get('/api/rolls/suggest', authMiddleware, async (req, res) => {
     const q = req.query.q || '';
     if (q.length < 1) return res.json([]);
     try {
-        // ⑦ escape wildcards + ใช้ ESCAPE '\'
         const result = await pool.query(
             `SELECT roll_number FROM rolls WHERE roll_number LIKE $1 ESCAPE '\\' LIMIT 20`,
             ['%' + escapeLike(q) + '%']
@@ -267,7 +266,6 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
 });
 
 // ---------- STOCK SETTINGS ----------
-// ② upsert — ไม่สร้างซ้ำถ้ามี count_number เดียวกันอยู่แล้ว
 app.post('/api/stock/settings', authMiddleware, adminMiddleware, async (req, res) => {
     const { count_number, stock_date, stock_time } = req.body;
     if (!count_number || !stock_date || !stock_time) {
@@ -307,7 +305,7 @@ app.get('/api/stock/groups', authMiddleware, async (req, res) => {
     } catch (e) { res.status(500).json({ message: 'DB error' }); }
 });
 
-// ---------- ⑧ NEW: check-sizes (โหลดขนาดก่อน) ----------
+// ---------- ⑧ check-sizes (โหลดขนาดก่อน) ----------
 app.get('/api/stock/check-sizes', authMiddleware, async (req, res) => {
     const group = req.query.group || 'all';
     const status = req.query.status || 'all';
@@ -344,7 +342,7 @@ app.get('/api/stock/check-sizes', authMiddleware, async (req, res) => {
     }
 });
 
-// ---------- ③ ④ ⑧ check-items (โหลดทีละ size + LEFT JOIN + found ต่อ user) ----------
+// ---------- ③ ④ ⑧ check-items ----------
 app.get('/api/stock/check-items', authMiddleware, async (req, res) => {
     const group = req.query.group || 'all';
     const status = req.query.status || 'all';
@@ -406,7 +404,6 @@ app.post('/api/stock/check', authMiddleware, async (req, res) => {
 
         const rollCheck = await pool.query(`SELECT roll_number FROM rolls WHERE roll_number = $1`, [roll_number]);
         if (rollCheck.rows.length === 0 && found === 1) {
-            // ⑤ alert ผูกกับ stock_count_id
             await pool.query(
                 `INSERT INTO stock_alerts (roll_number, checked_by, stock_count_id) VALUES ($1, $2, $3)`,
                 [roll_number, checker, stockId]
@@ -468,13 +465,14 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
     const client = await pool.connect();
     let inserted = 0;
     try {
-        // ⑨ ใช้ transaction
         await client.query('BEGIN');
 
         const workbook = xlsx.readFile(req.file.path);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const data = xlsx.utils.sheet_to_json(sheet, { defval: '' });
 
+        // ⭐ แปลงข้อมูลทั้งหมดก่อน (ใน memory)
+        const rows = [];
         for (const row of data) {
             const rollNumber = row['เบอร์ม้วน'] || row['roll_number'] || '';
             if (!rollNumber) continue;
@@ -486,11 +484,48 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
             } else if (buyDate && typeof buyDate === 'string') {
                 buyDate = buyDate.split('T')[0];
             }
+            rows.push([
+                rollNumber,
+                row['grade'] || '',
+                row['width'] ? String(row['width']) : '',
+                row['supplier'] || '',
+                row['supplier_grade'] || '',
+                row['supplier_sn'] || '',
+                row['dimeter'] ? String(row['dimeter']) : '',
+                row['kgs'] ? String(row['kgs']) : '',
+                row['meter'] ? String(row['meter']) : '',
+                row['supplier_doc_no'] || '',
+                buyDate,
+                row['ageing'] ? String(row['ageing']) : '',
+                row['qlt'] || '',
+                row['customer'] || '',
+                row['comp_no'] ? String(row['comp_no']) : '',
+                row['loc'] || '',
+                row['สถานะ'] || '',
+                row['note'] || '',
+                row['กลุ่ม'] || ''
+            ]);
+        }
+
+        // ⭐ BATCH INSERT — ทีละ 500 แถว
+        const BATCH_SIZE = 500;
+        const COLS = 19;
+        for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+            const batch = rows.slice(i, i + BATCH_SIZE);
+
+            const values = [];
+            const placeholders = batch.map((rowVals, rowIdx) => {
+                const base = rowIdx * COLS;
+                const ph = Array.from({ length: COLS }, (_, k) => '$' + (base + k + 1));
+                values.push(...rowVals);
+                return '(' + ph.join(',') + ')';
+            }).join(',');
+
             await client.query(`
                 INSERT INTO rolls (
                     roll_number, grade, width, supplier, supplier_grade, supplier_sn, dimeter, kgs, meter,
                     supplier_doc_no, buy_date, ageing, qlt, customer, comp_no, loc, status, note, group_name
-                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+                ) VALUES ${placeholders}
                 ON CONFLICT (roll_number) DO UPDATE SET
                     grade=EXCLUDED.grade, width=EXCLUDED.width, supplier=EXCLUDED.supplier,
                     supplier_grade=EXCLUDED.supplier_grade, supplier_sn=EXCLUDED.supplier_sn,
@@ -499,23 +534,11 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
                     ageing=EXCLUDED.ageing, qlt=EXCLUDED.qlt, customer=EXCLUDED.customer,
                     comp_no=EXCLUDED.comp_no, loc=EXCLUDED.loc, status=EXCLUDED.status,
                     note=EXCLUDED.note, group_name=EXCLUDED.group_name
-            `, [
-                rollNumber, row['grade'] || '',
-                row['width'] ? String(row['width']) : '',
-                row['supplier'] || '', row['supplier_grade'] || '', row['supplier_sn'] || '',
-                row['dimeter'] ? String(row['dimeter']) : '',
-                row['kgs'] ? String(row['kgs']) : '',
-                row['meter'] ? String(row['meter']) : '',
-                row['supplier_doc_no'] || '', buyDate,
-                row['ageing'] ? String(row['ageing']) : '',
-                row['qlt'] || '', row['customer'] || '',
-                row['comp_no'] ? String(row['comp_no']) : '',
-                row['loc'] || '', row['สถานะ'] || '', row['note'] || '', row['กลุ่ม'] || ''
-            ]);
-            inserted++;
+            `, values);
+            inserted += batch.length;
         }
 
-        // ② upsert stock_counts — ไม่สร้างซ้ำ
+        // upsert stock_counts
         const existing = await client.query(`SELECT id FROM stock_counts WHERE count_number = $1`, [count_number]);
         if (existing.rows.length > 0) {
             await client.query(
@@ -542,7 +565,6 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
         res.status(500).json({ message: 'Import failed: ' + e.message });
     } finally {
         client.release();
-        // ⑥ ลบไฟล์เสมอ แม้ error
         try { fs.unlinkSync(req.file.path); } catch (e) {}
     }
 });
