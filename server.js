@@ -310,6 +310,7 @@ app.get('/api/stock/groups', authMiddleware, async (req, res) => {
     }
 });
 
+// ✅ FIX: จัดการ CAST ที่ปลอดภัยกับทุกค่า width
 app.get('/api/stock/check-items', authMiddleware, async (req, res) => {
     const group = req.query.group || 'all';
     const status = req.query.status || 'all';
@@ -337,15 +338,16 @@ app.get('/api/stock/check-items', authMiddleware, async (req, res) => {
         const total = parseInt(countResult.rows[0].total);
 
         const queryParams = [req.user.username, ...params];
-        let query = `
+        // ✅ FIX: ใช้ CASE WHEN เพื่อ CAST อย่างปลอดภัย (ถ้าไม่ใช่ตัวเลขให้เป็น 99999)
+        const query = `
             SELECT r.*,
                    (SELECT found FROM stock_check_items WHERE stock_count_id = (SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1) AND roll_number = r.roll_number AND checked_by = $1) as found,
                    (SELECT checked_by FROM stock_check_items WHERE stock_count_id = (SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1) AND roll_number = r.roll_number AND found = 1) as checked_by
             FROM rolls r
             WHERE ${whereClause}
-            ORDER BY r.loc ASC, 
+            ORDER BY r.loc ASC NULLS LAST,
                      CASE r.status WHEN 'เต็ม' THEN 0 WHEN 'เศษ' THEN 1 WHEN 'รอกรอ' THEN 2 ELSE 3 END,
-                     CAST(r.width AS INTEGER) ASC,
+                     CASE WHEN r.width ~ '^[0-9]+$' THEN CAST(r.width AS INTEGER) ELSE 99999 END,
                      r.grade ASC
             LIMIT $${params.length + 2} OFFSET $${params.length + 3}
         `;
@@ -361,8 +363,8 @@ app.get('/api/stock/check-items', authMiddleware, async (req, res) => {
             limit
         });
     } catch (e) {
-        console.error(e);
-        res.status(500).json({ message: 'DB error' });
+        console.error('check-items error:', e);
+        res.status(500).json({ message: 'DB error: ' + e.message });
     }
 });
 
