@@ -908,9 +908,14 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
         th { background: #e9edf4; font-weight: 600; }
         .roll-number { font-weight: 700; }
 
-        @media print {
-            body { padding: 0; font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif; }
-            .header-main { font-size: 24px; margin-bottom: 18px; }
+       @media print {
+    body {
+        padding: 0;
+        font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .header-main { font-size: 24px; margin-bottom: 18px; }
             .header-sub .right-section .group-info { font-size: 20px; margin-bottom: 18px; }
             .header-sub .right-section .signature { font-size: 16px; line-height: 2.0; }
             .header-sub .right-section .signature .line { width: 160px; height: 22px; }
