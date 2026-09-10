@@ -838,10 +838,19 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* ⭐ กำหนด margin กระดาษเอง — ป้องกัน browser default ไม่เท่ากัน */
+        @page {
+            size: A4 portrait;
+            margin: 11mm 8mm 10mm 8mm;
+        }
+        @page :first {
+            margin-top: 15mm;
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif;
-            padding: 8px 12px;
+            padding: 0;
             background: #fff;
             font-size: 16px;
             line-height: 1.2;
@@ -900,7 +909,7 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
         .roll-number { font-weight: 700; }
 
         @media print {
-            body { padding: 4px 8px; font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif; }
+            body { padding: 0; font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif; }
             .header-main { font-size: 24px; margin-bottom: 18px; }
             .header-sub .right-section .group-info { font-size: 20px; margin-bottom: 18px; }
             .header-sub .right-section .signature { font-size: 16px; line-height: 2.0; }
@@ -946,7 +955,7 @@ backBtn.addEventListener('click', () => { window.location.href = '/'; });
     searchRollInput.value = '';
 })();
 
-console.log('📋 Stock Check v17.0 ready');
+console.log('📋 Stock Check v18.0 ready');
 </script>
 </body>
 </html>
