@@ -90,6 +90,37 @@ table tr:hover td { background: #f8faff; }
 .pdf-option { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-top: 14px; color: #1a2a3a; }
 .pdf-option input { width: 18px; height: 18px; accent-color: #1a4b6d; cursor: pointer; }
 
+/* PDF Preview Overlay (แทน popup) */
+.pdf-preview-overlay {
+    position: fixed; inset: 0; background: #444;
+    z-index: 1500; display: none; flex-direction: column;
+}
+.pdf-preview-overlay.visible { display: flex; }
+.pdf-preview-header {
+    background: #1a4b6d; color: #fff;
+    padding: 12px 20px; display: flex;
+    justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 10px;
+}
+.pdf-preview-header h3 { font-size: 18px; font-weight: 700; color: #fff; }
+.pdf-preview-header .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.pdf-preview-header button {
+    padding: 8px 20px; border-radius: 30px; border: none;
+    font-weight: 600; font-size: 14px; cursor: pointer;
+}
+.btn-prev-back { background: #6c757d; color: #fff; }
+.btn-prev-back:hover { background: #5a6268; }
+.btn-prev-print { background: #28a745; color: #fff; }
+.btn-prev-print:hover { background: #218838; }
+.btn-prev-close { background: #dc3545; color: #fff; }
+.btn-prev-close:hover { background: #c82333; }
+.pdf-preview-body { flex: 1; overflow: hidden; padding: 12px; background: #555; }
+.pdf-preview-frame {
+    width: 100%; height: 100%; border: 0;
+    background: #fff; border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
 .toast { position: fixed; bottom: 24px; right: 24px; background: #1a2a3a; color: #fff; padding: 14px 24px; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); font-weight: 500; z-index: 2000; max-width: 400px; }
 .toast.success { background: #28a745; } .toast.error { background: #dc3545; } .toast.warning { background: #ffc107; color: #1a2a3a; }
 @keyframes fadeIn { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
@@ -206,7 +237,7 @@ table tr:hover td { background: #f8faff; }
     </div>
 </div>
 
-<!-- PDF Modal (C: เลือก Size ก่อนพิมพ์) -->
+<!-- PDF Modal (เลือก Size) -->
 <div class="modal-overlay" id="pdfModal">
     <div class="modal-box" style="max-width: 580px;">
         <h3>📄 ตั้งค่าการพิมพ์ PDF</h3>
@@ -223,8 +254,23 @@ table tr:hover td { background: #f8faff; }
         <div class="error-msg" id="pdfError"></div>
         <div class="modal-actions">
             <button class="btn-cancel" id="pdfCancel">ยกเลิก</button>
-            <button class="btn-confirm" id="pdfPrint">🖨️ พิมพ์</button>
+            <button class="btn-confirm" id="pdfPrint">👁️ พรีวิว</button>
         </div>
+    </div>
+</div>
+
+<!-- PDF Preview Overlay (แทน popup) -->
+<div class="pdf-preview-overlay" id="pdfPreviewOverlay">
+    <div class="pdf-preview-header">
+        <h3>📄 พรีวิวการพิมพ์</h3>
+        <div class="actions">
+            <button class="btn-prev-back" id="previewBackBtn">← กลับไปเลือก Size</button>
+            <button class="btn-prev-print" id="previewPrintBtn">🖨️ พิมพ์</button>
+            <button class="btn-prev-close" id="previewCloseBtn">✕ ปิด</button>
+        </div>
+    </div>
+    <div class="pdf-preview-body">
+        <iframe class="pdf-preview-frame" id="pdfPreviewFrame"></iframe>
     </div>
 </div>
 
@@ -233,9 +279,9 @@ table tr:hover td { background: #f8faff; }
 <script>
 let token = localStorage.getItem('rolltracker_token') || '';
 let currentUser = null;
-let sizeGroups = [];          // [{width, total, found}]
+let sizeGroups = [];
 let currentPage = 0;
-let currentRolls = [];        // rolls ของ size ปัจจุบัน
+let currentRolls = [];
 let totalItems = 0;
 let pendingAction = null;
 
@@ -288,6 +334,12 @@ const pdfCancel = $('pdfCancel');
 const pdfPrint = $('pdfPrint');
 const pdfError = $('pdfError');
 
+const pdfPreviewOverlay = $('pdfPreviewOverlay');
+const pdfPreviewFrame = $('pdfPreviewFrame');
+const previewBackBtn = $('previewBackBtn');
+const previewPrintBtn = $('previewPrintBtn');
+const previewCloseBtn = $('previewCloseBtn');
+
 function showToast(msg, type = 'info') {
     const c = document.createElement('div');
     c.className = `toast ${type}`;
@@ -334,7 +386,6 @@ async function loadGroups() {
     } catch (e) {}
 }
 
-// ⑧ โหลดเฉพาะ sizes ก่อน
 async function loadSizes() {
     const group = groupFilter.value;
     const status = statusFilter.value;
@@ -361,7 +412,6 @@ async function loadSizes() {
         }
         await renderCurrentSize();
         updatePagination();
-        updateSummary();
     } catch (e) {
         showToast('โหลดข้อมูลไม่สำเร็จ: ' + e.message, 'error');
     } finally {
@@ -385,7 +435,6 @@ async function renderCurrentSize() {
         if (!res.ok) throw new Error(data.message || 'โหลดไม่สำเร็จ');
         currentRolls = data.rolls || [];
 
-        // sort ฝั่ง client
         currentRolls.sort((a, b) => {
             const locA = a.loc || '', locB = b.loc || '';
             if (locA !== locB) {
@@ -444,7 +493,6 @@ async function renderCurrentSize() {
             });
         });
 
-        const found = currentRolls.filter(r => r.found_by_me === 1 || r.found_any).length;
         foundCount.textContent = g.found;
         notFoundCount.textContent = g.total - g.found;
         totalCount.textContent = g.total;
@@ -463,7 +511,6 @@ function updatePagination() {
     prevPage.disabled = currentPage <= 0;
     nextPage.disabled = currentPage >= sizeGroups.length - 1;
 }
-function updateSummary() {}
 
 async function saveCheck(rollNumber, found, checkboxEl) {
     try {
@@ -474,7 +521,6 @@ async function saveCheck(rollNumber, found, checkboxEl) {
         });
         if (!res.ok) throw new Error('บันทึกไม่สำเร็จ');
 
-        // อัปเดต local
         const roll = currentRolls.find(r => r.roll_number === rollNumber);
         if (roll) {
             roll.found_by_me = found;
@@ -487,7 +533,6 @@ async function saveCheck(rollNumber, found, checkboxEl) {
             }
         }
         const g = sizeGroups[currentPage];
-        // recalc found จาก currentRolls (นับ found_any)
         const foundCountInSize = currentRolls.filter(r => r.found_any).length;
         if (g) { g.found = foundCountInSize; }
         foundCount.textContent = g ? g.found : 0;
@@ -496,7 +541,6 @@ async function saveCheck(rollNumber, found, checkboxEl) {
         if (checkboxEl) checkboxEl.checked = found === 1;
         showToast(found === 1 ? '✅ พบม้วนนี้แล้ว' : '❌ ไม่พบม้วนนี้', found === 1 ? 'success' : 'warning');
 
-        // อัปเดต "ผู้ตรวจ" column แบบไม่ต้อง reload ทั้งหน้า
         if (checkboxEl) {
             const row = checkboxEl.closest('tr');
             const cbCell = row.querySelector('.checked-by');
@@ -647,8 +691,7 @@ modalPassword.addEventListener('keydown', (e) => {
 });
 
 // ================================================================
-//  PDF: Modal เลือก size + print
-//  C + PDF fix 1, 2, 4, 5, 7, 9
+//  PDF: Modal เลือก size → Preview (ในหน้าเดิม) → Print
 // ================================================================
 exportPdfBtn.addEventListener('click', () => {
     if (!sizeGroups.length) return showToast('กรุณาโหลดข้อมูลก่อนพิมพ์', 'warning');
@@ -680,13 +723,34 @@ pdfPrint.addEventListener('click', async () => {
     pdfPrint.textContent = '⏳ กำลังเตรียม...';
     try {
         const html = await generatePrintHtml(selected, pdfShowCheckmarks.checked);
+        pdfPreviewFrame.srcdoc = html;
         pdfModal.classList.remove('visible');
-        openPrintWindow(html);
+        pdfPreviewOverlay.classList.add('visible');
     } catch (e) {
         pdfError.textContent = 'เกิดข้อผิดพลาด: ' + e.message;
     } finally {
         pdfPrint.disabled = false;
-        pdfPrint.textContent = '🖨️ พิมพ์';
+        pdfPrint.textContent = '👁️ พรีวิว';
+    }
+});
+
+previewBackBtn.addEventListener('click', () => {
+    pdfPreviewOverlay.classList.remove('visible');
+    pdfPreviewFrame.srcdoc = '';
+    pdfModal.classList.add('visible');
+});
+previewCloseBtn.addEventListener('click', () => {
+    pdfPreviewOverlay.classList.remove('visible');
+    pdfPreviewFrame.srcdoc = '';
+});
+previewPrintBtn.addEventListener('click', () => {
+    try {
+        const w = pdfPreviewFrame.contentWindow;
+        if (!w) return showToast('ไม่สามารถพิมพ์ได้', 'error');
+        w.focus();
+        w.print();
+    } catch (e) {
+        showToast('เกิดข้อผิดพลาดในการพิมพ์', 'error');
     }
 });
 
@@ -712,7 +776,6 @@ async function fetchRollsForSize(size) {
 }
 
 async function generatePrintHtml(selectedSizes, showCheckmarks) {
-    // ดึง Stock meta
     let stockCount = '', stockDate = '', stockTime = '';
     try {
         const res = await fetch('/api/stock/latest', { headers: getAuthHeaders() });
@@ -781,7 +844,7 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    @page { size: A4 portrait; margin: 10mm 8mm; }  /* ⑤ */
+    @page { size: A4 portrait; margin: 10mm 8mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif; background: #fff; color: #111; font-size: 13px; }
     .doc { padding: 4px; }
@@ -790,26 +853,21 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
     .header-sub .left { line-height: 1.5; }
     .header-sub .right { text-align: right; line-height: 1.5; }
     .note { font-size: 12px; padding: 4px 10px; background: #f4f7fc; border-left: 3px solid #1a4b6d; margin-bottom: 8px; }
-
-    .size-section { page-break-before: always; }  /* 5 */
+    .size-section { page-break-before: always; }
     .size-section:first-of-type { page-break-before: auto; }
     .size-header { font-size: 14px; font-weight: 700; margin: 4px 0; padding-left: 2px; }
-
-    table { width: 100%; border-collapse: collapse; table-layout: fixed; }  /* ④ */
-    thead { display: table-header-group; }  /* ⑦ หัวตารางซ้ำทุกหน้า */
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    thead { display: table-header-group; }
     tr { page-break-inside: avoid; }
     th, td { border: 1px solid #555; padding: 3px 6px; font-size: 12px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     th { background: #e9edf4; font-weight: 700; text-align: center; }
     .roll-number { font-weight: 700; }
     .check-cell { text-align: center; font-size: 16px; font-weight: 700; color: #28a745; }
-
     .signature-area { margin-top: 24px; display: flex; justify-content: space-around; page-break-inside: avoid; }
     .signature-area .sig-block { text-align: center; width: 40%; }
     .signature-area .sig-line { border-bottom: 1px solid #333; height: 40px; margin-bottom: 4px; }
     .signature-area .sig-label { font-size: 13px; }
-
     .footer { margin-top: 16px; text-align: center; font-size: 11px; color: #666; }
-
     @media print {
         body { padding: 0; }
         .no-print { display: none !important; }
@@ -830,9 +888,7 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
             </div>
         </div>
         <div class="note">หมายเหตุ : เมื่อตรวจสอบพบม้วนกระดาษให้ทำเครื่องหมาย ✓ ในช่องตรวจพบ กรณีไม่พบให้เว้นเอาไว้</div>
-
         ${sectionsHtml.join('')}
-
         <div class="signature-area">
             <div class="sig-block">
                 <div class="sig-line"></div>
@@ -843,27 +899,10 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
                 <div class="sig-label">ผู้ตรวจนับแผนกบัญชี</div>
             </div>
         </div>
-
         <div class="footer">เอกสารนี้พิมพ์จากระบบ RollTracker</div>
     </div>
 </body>
 </html>`;
-}
-
-// ② onafterprint → ปิดเองหลัง print dialog ถูกปิด
-// ⑨ ไม่ใช้ print/close ทันที — ให้ user เห็น dialog ก่อน
-function openPrintWindow(html) {
-    const w = window.open('', '_blank', 'width=1100,height=850');
-    if (!w) return showToast('กรุณาอนุญาต pop-up', 'warning');
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-    // รอ render เสร็จก่อน print
-    w.onload = () => {
-        setTimeout(() => { try { w.focus(); w.print(); } catch (e) {} }, 400);
-    };
-    // ปิดหน้าต่างอัตโนมัติหลังพิมพ์เสร็จ (ผู้ใช้กด Cancel ก็ปิด)
-    w.onafterprint = () => { try { w.close(); } catch (e) {} };
 }
 
 loadBtn.addEventListener('click', () => loadSizes());
@@ -877,7 +916,7 @@ backBtn.addEventListener('click', () => { window.location.href = '/'; });
     searchRollInput.value = '';
 })();
 
-console.log('📋 Stock Check v12.0 ready');
+console.log('📋 Stock Check v13.0 ready');
 </script>
 </body>
 </html>
