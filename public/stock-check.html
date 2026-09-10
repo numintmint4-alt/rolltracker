@@ -224,7 +224,7 @@ table tr:hover td { background: #f8faff; }
         <div class="pdf-size-list" id="pdfSizeList"></div>
         <label class="pdf-option">
             <input type="checkbox" id="pdfShowCheckmarks" />
-            แสดงเครื่องหมาย ✓ ในช่อง "พบ(P)" ของม้วนที่พบแล้ว
+            แสดงเครื่องหมาย ✓ ในช่อง "พบ(✓)" ของม้วนที่พบแล้ว
         </label>
         <div class="error-msg" id="pdfError"></div>
         <div class="modal-actions">
@@ -771,7 +771,7 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
         totalRolls += rolls.length;
 
         const sizeHeader = `
-            <div style="font-size:18px;font-weight:700;margin-top:8px;margin-bottom:2px;text-align:left;padding-left:4px;">
+            <div class="size-header">
                 Size ${escHtml(size)}" จำนวน ${rolls.length} ม้วน
             </div>
         `;
@@ -798,12 +798,12 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
                 ${sizeHeader}
                 <table>
                     <colgroup>
-                        <col style="width:8%">
+                        <col style="width:7%">
                         <col style="width:10%">
                         <col style="width:7%">
                         <col style="width:9%">
                         <col style="width:26%">
-                        <col style="width:7%">
+                        <col style="width:8%">
                         <col style="width:16.5%">
                         <col style="width:16.5%">
                     </colgroup>
@@ -814,7 +814,7 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
                             <th>Size</th>
                             <th>Grade</th>
                             <th>เบอร์ม้วน</th>
-                            <th style="text-align:center;">พบ(P)</th>
+                            <th style="text-align:center;">พบ(✓)</th>
                             <th>Dia.</th>
                             <th>Kg.</th>
                         </tr>
@@ -856,7 +856,16 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
         .note { font-size: 16px; font-weight: 400; color: #333; margin: 2px 0 4px 0; padding: 4px 10px; background: #f8faff; border-left: 4px solid #1a4b6d; }
         .footer { margin-top: 12px; text-align: center; font-size: 14px; color: #555; }
 
-        .size-section { page-break-inside: avoid; }
+        .size-header {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 8px;
+            margin-bottom: 2px;
+            padding-left: 4px;
+            text-align: left;
+            break-after: avoid;
+            page-break-after: avoid;
+        }
 
         table {
             width: 100%;
@@ -866,8 +875,19 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
             border: 1px solid #666;
             table-layout: fixed;
         }
-        thead { display: table-header-group; }
-        tr { page-break-inside: avoid; }
+        thead {
+            display: table-header-group;
+            break-after: avoid;
+            page-break-after: avoid;
+        }
+        tr { page-break-inside: avoid; break-inside: avoid; }
+
+        /* 3 บรรทัดแรกของแต่ละตาราง: ห้ามตัดหลัง เพื่อให้อยู่ด้วยกัน */
+        tbody tr:nth-child(-n+2) {
+            break-after: avoid;
+            page-break-after: avoid;
+        }
+
         th, td {
             white-space: nowrap;
             overflow: hidden;
@@ -908,7 +928,7 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
         </div>
     </div>
     <div class="note">
-        หมายเหตุ : เมื่อตรวจสอบพบม้วนกระดาษให้ทำเครื่องหมาย ✓ ในช่องพบ(P) กรณีไม่พบให้เว้นเอาไว้
+        หมายเหตุ : เมื่อตรวจสอบพบม้วนกระดาษให้ทำเครื่องหมาย ✓ ในช่องพบ(✓) กรณีไม่พบให้เว้นเอาไว้
     </div>
     ${allSectionsHtml.join('')}
     <div class="footer">หน้า 1 / ${totalPages}</div>
@@ -927,7 +947,7 @@ backBtn.addEventListener('click', () => { window.location.href = '/'; });
     searchRollInput.value = '';
 })();
 
-console.log('📋 Stock Check v15.0 ready');
+console.log('📋 Stock Check v16.0 ready');
 </script>
 </body>
 </html>
