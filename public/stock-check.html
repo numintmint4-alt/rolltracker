@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📋 ตรวจนับสต็อกม้วนกระดาษ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* ===== RESET & BASE ===== */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -170,6 +174,7 @@
             font-weight: 500;
         }
 
+        /* ===== SEARCH BOX ===== */
         .search-wrapper {
             display: flex;
             justify-content: flex-end;
@@ -272,7 +277,7 @@
             flex-wrap: wrap;
         }
 
-        /* ===== MODAL (ทันสมัย) ===== */
+        /* ===== MODAL ===== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -380,7 +385,7 @@
             font-size: 14px;
         }
 
-        /* ===== PRINT (Sarabun) ===== */
+        /* ===== PRINT ===== */
         .print-hide { display: inline-block; }
         @media print {
             .print-hide { display: none !important; }
@@ -397,12 +402,6 @@
             table td { font-size: 18px; padding: 2px 6px; border: 1px solid #666; font-weight: 500; }
             .roll-number { font-weight: 700; font-size: 18px; }
             .checked-by { display: none; }
-            table th:nth-child(6), table td:nth-child(6) {
-                min-width: 70px;
-                max-width: 70px;
-                width: 70px;
-                text-align: center;
-            }
             .summary { display: none !important; }
             .signature-area { display: none !important; }
         }
@@ -837,7 +836,6 @@
         }
     }
 
-    // ---------- PAGE NAVIGATION ----------
     prevPage.addEventListener('click', () => {
         if (currentPage > 0) {
             currentPage--;
@@ -856,7 +854,6 @@
     statusFilter.addEventListener('change', () => loadCheckItems());
     groupFilter.addEventListener('change', () => loadCheckItems());
 
-    // ---------- SHOW ALERTS ----------
     showAlertsBtn.addEventListener('click', async () => {
         try {
             const res = await fetch('/api/alerts', { headers: getAuthHeaders() });
@@ -915,7 +912,6 @@
         }
     });
 
-    // ---------- SEARCH ROLL ----------
     async function performSearch(q) {
         if (!q) {
             foundAlert.style.display = 'none';
@@ -955,7 +951,6 @@
         if (e.key === 'Escape') suggestions.classList.remove('show');
     });
 
-    // ---------- CONFIRM BUTTONS ----------
     confirmFoundBtn.addEventListener('click', () => {
         if (!pendingAction || !pendingAction.rollNumber) {
             showToast('ไม่มีข้อมูลที่จะยืนยัน', 'warning');
@@ -990,7 +985,6 @@
         pendingAction = null;
     });
 
-    // ---------- MODAL HANDLERS ----------
     modalCancel.addEventListener('click', () => {
         passwordModal.classList.remove('visible');
         pendingAction = null;
@@ -1038,7 +1032,9 @@
         if (e.key === 'Escape') modalCancel.click();
     });
 
-    // ---------- EXPORT PDF ----------
+    // ================================================================
+    //  EXPORT PDF (ปรับตามที่ขอ)
+    // ================================================================
     async function exportPDF() {
         const printWindow = window.open('', '_blank', 'width=1100,height=850');
         if (!printWindow) {
@@ -1046,6 +1042,7 @@
             return;
         }
 
+        // ดึงข้อมูล Stock ล่าสุด
         let stockCount = '';
         let stockDate = '';
         let stockTime = '';
@@ -1067,6 +1064,7 @@
             }
         }
 
+        // ✅ ใช้กลุ่มที่เลือก (ตามข้อ 4)
         const groupText = groupFilter.value !== 'all' ? groupFilter.value : 'ทั้งหมด';
         let totalRolls = 0;
         let totalFound = 0;
@@ -1077,14 +1075,16 @@
             totalNotFound += g.notFound;
         });
 
+        // สร้าง HTML สำหรับแต่ละ Size (✅ เอาหัว Size มาต่อกัน ตามข้อ 5)
         let allSectionsHtml = '';
         sizeGroups.forEach((g) => {
             const rolls = g.rolls;
             const found = rolls.filter(r => r.found === 1).length;
             const notFound = rolls.length - found;
 
+            // หัว Size
             const sizeHeader = `
-                <div style="font-size:18px;font-weight:700;margin-top:6px;margin-bottom:2px;text-align:left;padding-left:4px;">
+                <div style="font-size:18px;font-weight:700;margin-top:8px;margin-bottom:2px;text-align:left;padding-left:4px;">
                     Size ${g.size}" จำนวน ${rolls.length} ม้วน
                 </div>
             `;
@@ -1106,19 +1106,19 @@
             });
 
             allSectionsHtml += `
-                <div style="margin-bottom:0px;page-break-inside:avoid;">
+                <div style="page-break-inside: auto;">
                     ${sizeHeader}
                     <table style="width:100%;border-collapse:collapse;font-size:18px;margin:0;border:1px solid #666;">
                         <thead>
                             <tr>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;white-space:nowrap;">LOC.</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;">สถานะ</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;">Size</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;">Grade</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;">เบอร์ม้วน</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:center;min-width:70px;max-width:70px;width:70px;white-space:nowrap;">ตรวจพบ</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;">Dia.</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 6px;border:1px solid #666;text-align:left;">Kg.</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 16px;border:1px solid #666;text-align:left;white-space:nowrap;">LOC.</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 16px;border:1px solid #666;text-align:left;">สถานะ</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 16px;border:1px solid #666;text-align:left;">Size</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 16px;border:1px solid #666;text-align:left;">Grade</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 16px;border:1px solid #666;text-align:left;">เบอร์ม้วน</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 16px;border:1px solid #666;text-align:center;min-width:80px;max-width:80px;width:80px;white-space:nowrap;">ตรวจพบ</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 16px;border:1px solid #666;text-align:left;">Dia.</th>
+                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:2px 16px;border:1px solid #666;text-align:left;">Kg.</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1137,6 +1137,9 @@
         <head>
             <meta charset="UTF-8">
             <title>ตรวจนับสต็อก</title>
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
             <style>
                 * { box-sizing: border-box; margin: 0; padding: 0; }
                 body {
@@ -1162,12 +1165,12 @@
                     .header-sub .right-section .signature { font-size: 16px; line-height: 2.0; }
                     .header-sub .right-section .signature .line { width: 160px; height: 22px; }
                     table { font-size: 16px; }
-                    table th { font-size: 16px; padding: 1px 4px; border: 1px solid #666; }
-                    table td { font-size: 16px; padding: 1px 4px; border: 1px solid #666; }
+                    table th { font-size: 16px; padding: 1px 10px; border: 1px solid #666; }
+                    table td { font-size: 16px; padding: 1px 10px; border: 1px solid #666; }
                     .roll-number { font-weight: 700; font-size: 16px; }
                     .note { font-size: 14px; margin: 1px 0 2px 0; padding: 2px 8px; }
                     .footer { font-size: 12px; margin-top: 8px; }
-                    table th:nth-child(6), table td:nth-child(6) { min-width: 60px; max-width: 60px; width: 60px; text-align: center; }
+                    table th:nth-child(6), table td:nth-child(6) { min-width: 70px; max-width: 70px; width: 70px; text-align: center; }
                 }
             </style>
         </head>
@@ -1200,12 +1203,10 @@
         printWindow.close();
     }
 
-    // ---------- EVENT LISTENERS ----------
     loadBtn.addEventListener('click', () => loadCheckItems());
     exportPdfBtn.addEventListener('click', exportPDF);
     backBtn.addEventListener('click', () => { window.location.href = '/'; });
 
-    // ---------- INIT ----------
     (async function init() {
         await loadUser();
         await loadStockSettings();
@@ -1214,7 +1215,7 @@
         searchRollInput.value = '';
     })();
 
-    console.log('📋 Stock Check v10.8 ready');
+    console.log('📋 Stock Check v10.9 ready');
 </script>
 </body>
 </html>
