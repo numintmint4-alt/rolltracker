@@ -798,14 +798,14 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
                 ${sizeHeader}
                 <table>
                     <colgroup>
-                        <col style="width:7%">
-                        <col style="width:10%">
-                        <col style="width:7%">
-                        <col style="width:9%">
-                        <col style="width:26%">
-                        <col style="width:8%">
-                        <col style="width:16.5%">
-                        <col style="width:16.5%">
+                        <col style="width:20mm">
+                        <col style="width:20mm">
+                        <col style="width:18mm">
+                        <col style="width:20mm">
+                        <col style="width:48mm">
+                        <col style="width:20mm">
+                        <col style="width:24mm">
+                        <col style="width:24mm">
                     </colgroup>
                     <thead>
                         <tr>
@@ -882,7 +882,6 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
         }
         tr { page-break-inside: avoid; break-inside: avoid; }
 
-        /* 3 บรรทัดแรกของแต่ละตาราง: ห้ามตัดหลัง เพื่อให้อยู่ด้วยกัน */
         tbody tr:nth-child(-n+2) {
             break-after: avoid;
             page-break-after: avoid;
@@ -947,7 +946,7 @@ backBtn.addEventListener('click', () => { window.location.href = '/'; });
     searchRollInput.value = '';
 })();
 
-console.log('📋 Stock Check v16.0 ready');
+console.log('📋 Stock Check v17.0 ready');
 </script>
 </body>
 </html>
