@@ -20,13 +20,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// ---------- PostgreSQL Connection ----------
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
-// ---------- Initialize Database Tables ----------
 const initDb = async () => {
     try {
         await pool.query(`
@@ -103,13 +101,11 @@ const initDb = async () => {
             )
         `);
 
-        // Create indexes
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_rolls_roll_number ON rolls(roll_number)`);
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_rolls_group_name ON rolls(group_name)`);
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_rolls_width ON rolls(width)`);
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_rolls_status ON rolls(status)`);
 
-        // Create default admin & user
         const adminPass = bcrypt.hashSync('admin123', 10);
         const userPass = bcrypt.hashSync('user123', 10);
 
@@ -131,7 +127,6 @@ const initDb = async () => {
 
 initDb();
 
-// ---------- Middleware ----------
 function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ message: 'No token' });
@@ -164,7 +159,6 @@ function convertExcelDate(value) {
     return String(value);
 }
 
-// ---------- Auth Routes ----------
 app.post('/api/auth/login', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ message: 'Missing credentials' });
@@ -203,7 +197,6 @@ app.post('/api/auth/register', authMiddleware, adminMiddleware, async (req, res)
     }
 });
 
-// ---------- User Management ----------
 app.get('/api/users', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const result = await pool.query(`SELECT id, username, role, is_active, created_at FROM users`);
@@ -233,7 +226,6 @@ app.delete('/api/users/:id', authMiddleware, adminMiddleware, async (req, res) =
     }
 });
 
-// ---------- Rolls ----------
 app.get('/api/rolls/search', authMiddleware, async (req, res) => {
     const q = req.query.q || '';
     try {
@@ -275,7 +267,6 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
         const full = await pool.query(`SELECT COUNT(*) as count FROM rolls WHERE status = 'เต็ม'`);
         const scrap = await pool.query(`SELECT COUNT(*) as count FROM rolls WHERE status = 'เศษ'`);
         const wait = await pool.query(`SELECT COUNT(*) as count FROM rolls WHERE status = 'รอกรอ'`);
-
         res.json({
             total: parseInt(total.rows[0].count),
             by_loc: { LOC1: parseInt(loc1.rows[0].count), LOCF: parseInt(locf.rows[0].count) },
@@ -286,7 +277,6 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
     }
 });
 
-// ---------- Stock Settings ----------
 app.post('/api/stock/settings', authMiddleware, adminMiddleware, async (req, res) => {
     const { count_number, stock_date, stock_time } = req.body;
     if (!count_number || !stock_date || !stock_time) {
@@ -311,7 +301,6 @@ app.get('/api/stock/latest', authMiddleware, async (req, res) => {
     }
 });
 
-// ---------- Get all groups ----------
 app.get('/api/stock/groups', authMiddleware, async (req, res) => {
     try {
         const result = await pool.query(`SELECT DISTINCT group_name FROM rolls WHERE group_name IS NOT NULL AND group_name != '' ORDER BY group_name`);
@@ -321,7 +310,6 @@ app.get('/api/stock/groups', authMiddleware, async (req, res) => {
     }
 });
 
-// ---------- Stock Check ----------
 app.get('/api/stock/check-items', authMiddleware, async (req, res) => {
     const group = req.query.group || 'all';
     const status = req.query.status || 'all';
@@ -381,7 +369,6 @@ app.get('/api/stock/check-items', authMiddleware, async (req, res) => {
 app.post('/api/stock/check', authMiddleware, async (req, res) => {
     const { roll_number, found, checked_by } = req.body;
     if (!roll_number) return res.status(400).json({ message: 'Missing roll number' });
-    
     const checker = checked_by || req.user.username;
 
     try {
@@ -412,7 +399,6 @@ app.post('/api/stock/check', authMiddleware, async (req, res) => {
     }
 });
 
-// ---------- Admin Alerts ----------
 app.get('/api/alerts', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const result = await pool.query(`SELECT * FROM stock_alerts WHERE resolved = 0 ORDER BY alert_date DESC`);
@@ -431,7 +417,6 @@ app.put('/api/alerts/:id/resolve', authMiddleware, adminMiddleware, async (req, 
     }
 });
 
-// ---------- Import Excel ----------
 const upload = multer({ dest: 'uploads/' });
 
 app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), async (req, res) => {
@@ -517,7 +502,6 @@ app.get('/api/import/history', authMiddleware, adminMiddleware, async (req, res)
     }
 });
 
-// ---------- Clear Data ----------
 app.delete('/api/data/clear', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         await pool.query(`DELETE FROM rolls`);
@@ -544,7 +528,6 @@ app.delete('/api/data/clear-all', authMiddleware, adminMiddleware, async (req, r
     }
 });
 
-// ---------- Serve Frontend ----------
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
