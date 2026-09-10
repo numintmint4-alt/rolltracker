@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
 const multer = require('multer');
@@ -5,106 +6,90 @@ const xlsx = require('xlsx');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
-if (!fs.existsSync('./uploads')) {
-    fs.mkdirSync('./uploads');
-}
+if (!fs.existsSync('./uploads')) fs.mkdirSync('./uploads');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SECRET_KEY = 'your-secret-key-change-me';
+
+// ① SECRET_KEY จาก env (fallback: random เฉพาะ dev)
+let SECRET_KEY = process.env.JWT_SECRET;
+if (!SECRET_KEY || SECRET_KEY === 'your-secret-key-change-me') {
+    if (process.env.NODE_ENV === 'production') {
+        console.error('❌ JWT_SECRET ต้องถูกตั้งใน .env ก่อนรัน production');
+        process.exit(1);
+    }
+    SECRET_KEY = crypto.randomBytes(32).toString('hex');
+    console.warn('⚠️  ใช้ JWT_SECRET แบบสุ่มชั่วคราว (dev) — token จะหมดอายุเมื่อรีสตาร์ท');
+}
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 app.use(express.static('public'));
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost')
+        ? { rejectUnauthorized: false }
+        : false
 });
 
+// ⑩ Rate limit สำหรับ login
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'พยายาม login หลายครั้งเกินไป กรุณารอสักครู่' }
+});
+
+// ---------- INIT DB ----------
 const initDb = async () => {
     try {
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username TEXT UNIQUE,
-                password TEXT,
-                role TEXT DEFAULT 'user',
-                is_active INTEGER DEFAULT 1,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS rolls (
-                id SERIAL PRIMARY KEY,
-                roll_number TEXT UNIQUE,
-                grade TEXT,
-                width TEXT,
-                supplier TEXT,
-                supplier_grade TEXT,
-                supplier_sn TEXT,
-                dimeter TEXT,
-                kgs TEXT,
-                meter TEXT,
-                supplier_doc_no TEXT,
-                buy_date TEXT,
-                ageing TEXT,
-                qlt TEXT,
-                customer TEXT,
-                comp_no TEXT,
-                loc TEXT,
-                status TEXT,
-                note TEXT,
-                group_name TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS import_history (
-                id SERIAL PRIMARY KEY,
-                filename TEXT,
-                imported_by TEXT,
-                rows_imported INTEGER,
-                import_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS stock_counts (
-                id SERIAL PRIMARY KEY,
-                count_number TEXT,
-                stock_date TEXT,
-                stock_time TEXT,
-                created_by TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS stock_check_items (
-                id SERIAL PRIMARY KEY,
-                stock_count_id INTEGER,
-                roll_number TEXT,
-                checked_by TEXT,
-                found INTEGER DEFAULT 0,
-                checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS stock_alerts (
-                id SERIAL PRIMARY KEY,
-                roll_number TEXT,
-                checked_by TEXT,
-                alert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                resolved INTEGER DEFAULT 0
-            )
-        `);
+        await pool.query(`CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY, username TEXT UNIQUE, password TEXT,
+            role TEXT DEFAULT 'user', is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
+
+        await pool.query(`CREATE TABLE IF NOT EXISTS rolls (
+            id SERIAL PRIMARY KEY, roll_number TEXT UNIQUE, grade TEXT, width TEXT,
+            supplier TEXT, supplier_grade TEXT, supplier_sn TEXT, dimeter TEXT,
+            kgs TEXT, meter TEXT, supplier_doc_no TEXT, buy_date TEXT, ageing TEXT,
+            qlt TEXT, customer TEXT, comp_no TEXT, loc TEXT, status TEXT, note TEXT,
+            group_name TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
+
+        await pool.query(`CREATE TABLE IF NOT EXISTS import_history (
+            id SERIAL PRIMARY KEY, filename TEXT, imported_by TEXT,
+            rows_imported INTEGER, import_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
+
+        await pool.query(`CREATE TABLE IF NOT EXISTS stock_counts (
+            id SERIAL PRIMARY KEY, count_number TEXT, stock_date TEXT, stock_time TEXT,
+            created_by TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
+
+        await pool.query(`CREATE TABLE IF NOT EXISTS stock_check_items (
+            id SERIAL PRIMARY KEY, stock_count_id INTEGER, roll_number TEXT,
+            checked_by TEXT, found INTEGER DEFAULT 0,
+            checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
+
+        // ⑤ stock_alerts + stock_count_id
+        await pool.query(`CREATE TABLE IF NOT EXISTS stock_alerts (
+            id SERIAL PRIMARY KEY, roll_number TEXT, checked_by TEXT,
+            stock_count_id INTEGER,
+            alert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            resolved INTEGER DEFAULT 0)`);
+        // migration: เผื่อตารางเก่าไม่มีคอลัมน์
+        await pool.query(`ALTER TABLE stock_alerts ADD COLUMN IF NOT EXISTS stock_count_id INTEGER`);
 
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_rolls_roll_number ON rolls(roll_number)`);
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_rolls_group_name ON rolls(group_name)`);
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_rolls_width ON rolls(width)`);
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_rolls_status ON rolls(status)`);
+        await pool.query(`CREATE INDEX IF NOT EXISTS idx_check_items_stock ON stock_check_items(stock_count_id, roll_number)`);
+        await pool.query(`CREATE INDEX IF NOT EXISTS idx_check_items_user ON stock_check_items(stock_count_id, checked_by, roll_number)`);
 
         const adminPass = bcrypt.hashSync('admin123', 10);
         const userPass = bcrypt.hashSync('user123', 10);
@@ -124,25 +109,34 @@ const initDb = async () => {
         console.error('Database init error:', err);
     }
 };
-
 initDb();
 
+// ---------- MIDDLEWARE ----------
 function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ message: 'No token' });
     const token = authHeader.split(' ')[1];
     try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        req.user = decoded;
+        req.user = jwt.verify(token, SECRET_KEY);
         next();
     } catch (e) {
         res.status(401).json({ message: 'Invalid token' });
     }
 }
-
 function adminMiddleware(req, res, next) {
     if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin only' });
     next();
+}
+
+// ⑦ escape LIKE wildcards (%, _, \)
+function escapeLike(s) {
+    return String(s).replace(/[\\%_]/g, c => '\\' + c);
+}
+
+// ④ helper: stock_count ล่าสุด
+async function getLatestStockCountId() {
+    const r = await pool.query(`SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1`);
+    return r.rows[0]?.id || null;
 }
 
 function convertExcelDate(value) {
@@ -152,15 +146,12 @@ function convertExcelDate(value) {
         const d = new Date(epoch.getTime() + value * 86400000);
         return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'numeric', day: 'numeric' });
     }
-    if (typeof value === 'string') {
-        const parts = value.split('T');
-        return parts[0].split(' ')[0];
-    }
+    if (typeof value === 'string') return value.split('T')[0].split(' ')[0];
     return String(value);
 }
 
 // ---------- AUTH ----------
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authLimiter, async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ message: 'Missing credentials' });
     try {
@@ -191,21 +182,20 @@ app.post('/api/auth/register', authMiddleware, adminMiddleware, async (req, res)
     if (!username || !password) return res.status(400).json({ message: 'Missing fields' });
     const hashed = bcrypt.hashSync(password, 10);
     try {
-        await pool.query(`INSERT INTO users (username, password, role) VALUES ($1, $2, $3)`, [username, hashed, role || 'user']);
+        await pool.query(`INSERT INTO users (username, password, role) VALUES ($1, $2, $3)`,
+            [username, hashed, role || 'user']);
         res.json({ ok: true });
     } catch (e) {
         res.status(400).json({ message: 'Username already exists' });
     }
 });
 
-// ---------- USER MANAGEMENT ----------
+// ---------- USERS ----------
 app.get('/api/users', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const result = await pool.query(`SELECT id, username, role, is_active, created_at FROM users`);
         res.json({ users: result.rows });
-    } catch (e) {
-        res.status(500).json({ message: 'DB error' });
-    }
+    } catch (e) { res.status(500).json({ message: 'DB error' }); }
 });
 
 app.put('/api/users/:id/toggle', authMiddleware, adminMiddleware, async (req, res) => {
@@ -213,9 +203,7 @@ app.put('/api/users/:id/toggle', authMiddleware, adminMiddleware, async (req, re
     try {
         await pool.query(`UPDATE users SET is_active = $1 WHERE id = $2`, [is_active ? 1 : 0, req.params.id]);
         res.json({ ok: true });
-    } catch (e) {
-        res.status(500).json({ message: 'Update failed' });
-    }
+    } catch (e) { res.status(500).json({ message: 'Update failed' }); }
 });
 
 app.delete('/api/users/:id', authMiddleware, adminMiddleware, async (req, res) => {
@@ -223,9 +211,7 @@ app.delete('/api/users/:id', authMiddleware, adminMiddleware, async (req, res) =
         const result = await pool.query(`DELETE FROM users WHERE id = $1 AND role != 'admin'`, [req.params.id]);
         if (result.rowCount === 0) return res.status(400).json({ message: 'Cannot delete admin or user not found' });
         res.json({ ok: true });
-    } catch (e) {
-        res.status(500).json({ message: 'DB error' });
-    }
+    } catch (e) { res.status(500).json({ message: 'DB error' }); }
 });
 
 // ---------- ROLLS ----------
@@ -237,29 +223,27 @@ app.get('/api/rolls/search', authMiddleware, async (req, res) => {
         const roll = result.rows[0];
         if (roll.buy_date) roll.buy_date = convertExcelDate(roll.buy_date);
         res.json({ roll });
-    } catch (e) {
-        res.status(500).json({ message: 'DB error' });
-    }
+    } catch (e) { res.status(500).json({ message: 'DB error' }); }
 });
 
 app.get('/api/rolls/suggest', authMiddleware, async (req, res) => {
     const q = req.query.q || '';
     if (q.length < 1) return res.json([]);
     try {
-        const result = await pool.query(`SELECT roll_number FROM rolls WHERE roll_number LIKE $1 LIMIT 20`, [`%${q.replace(/%/g,'\\%')}%`]);
+        // ⑦ escape wildcards + ใช้ ESCAPE '\'
+        const result = await pool.query(
+            `SELECT roll_number FROM rolls WHERE roll_number LIKE $1 ESCAPE '\\' LIMIT 20`,
+            ['%' + escapeLike(q) + '%']
+        );
         res.json(result.rows.map(r => r.roll_number));
-    } catch (e) {
-        res.status(500).json([]);
-    }
+    } catch (e) { res.status(500).json([]); }
 });
 
 app.get('/api/rolls/count', authMiddleware, async (req, res) => {
     try {
         const result = await pool.query(`SELECT COUNT(*) as count FROM rolls`);
         res.json({ count: parseInt(result.rows[0].count) });
-    } catch (e) {
-        res.status(500).json({ message: 'DB error' });
-    }
+    } catch (e) { res.status(500).json({ message: 'DB error' }); }
 });
 
 app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
@@ -273,26 +257,37 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
         res.json({
             total: parseInt(total.rows[0].count),
             by_loc: { LOC1: parseInt(loc1.rows[0].count), LOCF: parseInt(locf.rows[0].count) },
-            by_status: { 'เต็ม': parseInt(full.rows[0].count), 'เศษ': parseInt(scrap.rows[0].count), 'รอกรอ': parseInt(wait.rows[0].count) }
+            by_status: {
+                'เต็ม': parseInt(full.rows[0].count),
+                'เศษ': parseInt(scrap.rows[0].count),
+                'รอกรอ': parseInt(wait.rows[0].count)
+            }
         });
-    } catch (e) {
-        res.status(500).json({ message: 'DB error' });
-    }
+    } catch (e) { res.status(500).json({ message: 'DB error' }); }
 });
 
 // ---------- STOCK SETTINGS ----------
+// ② upsert — ไม่สร้างซ้ำถ้ามี count_number เดียวกันอยู่แล้ว
 app.post('/api/stock/settings', authMiddleware, adminMiddleware, async (req, res) => {
     const { count_number, stock_date, stock_time } = req.body;
     if (!count_number || !stock_date || !stock_time) {
         return res.status(400).json({ message: 'Missing fields' });
     }
     try {
-        await pool.query(`INSERT INTO stock_counts (count_number, stock_date, stock_time, created_by) VALUES ($1, $2, $3, $4)`,
-            [count_number, stock_date, stock_time, req.user.username]);
+        const existing = await pool.query(`SELECT id FROM stock_counts WHERE count_number = $1`, [count_number]);
+        if (existing.rows.length > 0) {
+            await pool.query(
+                `UPDATE stock_counts SET stock_date = $1, stock_time = $2, created_by = $3 WHERE id = $4`,
+                [stock_date, stock_time, req.user.username, existing.rows[0].id]
+            );
+        } else {
+            await pool.query(
+                `INSERT INTO stock_counts (count_number, stock_date, stock_time, created_by) VALUES ($1,$2,$3,$4)`,
+                [count_number, stock_date, stock_time, req.user.username]
+            );
+        }
         res.json({ ok: true });
-    } catch (e) {
-        res.status(500).json({ message: 'Failed to save settings' });
-    }
+    } catch (e) { res.status(500).json({ message: 'Failed to save settings' }); }
 });
 
 app.get('/api/stock/latest', authMiddleware, async (req, res) => {
@@ -300,92 +295,99 @@ app.get('/api/stock/latest', authMiddleware, async (req, res) => {
         const result = await pool.query(`SELECT * FROM stock_counts ORDER BY id DESC LIMIT 1`);
         if (result.rows.length === 0) return res.status(404).json({ message: 'No settings found' });
         res.json(result.rows[0]);
-    } catch (e) {
-        res.status(500).json({ message: 'DB error' });
-    }
+    } catch (e) { res.status(500).json({ message: 'DB error' }); }
 });
 
 app.get('/api/stock/groups', authMiddleware, async (req, res) => {
     try {
-        const result = await pool.query(`SELECT DISTINCT group_name FROM rolls WHERE group_name IS NOT NULL AND group_name != '' ORDER BY group_name`);
+        const result = await pool.query(
+            `SELECT DISTINCT group_name FROM rolls WHERE group_name IS NOT NULL AND group_name != '' ORDER BY group_name`
+        );
         res.json({ groups: result.rows.map(r => r.group_name) });
+    } catch (e) { res.status(500).json({ message: 'DB error' }); }
+});
+
+// ---------- ⑧ NEW: check-sizes (โหลดขนาดก่อน) ----------
+app.get('/api/stock/check-sizes', authMiddleware, async (req, res) => {
+    const group = req.query.group || 'all';
+    const status = req.query.status || 'all';
+
+    const params = [];
+    let where = '1=1';
+    if (group !== 'all') { params.push(group); where += ` AND r.group_name = $${params.length}`; }
+    if (status !== 'all') { params.push(status); where += ` AND r.status = $${params.length}`; }
+
+    try {
+        const stockId = await getLatestStockCountId();
+        params.push(stockId);
+        const stockIdIdx = params.length;
+
+        const q = `
+            SELECT r.width,
+                   COUNT(*)::int AS total,
+                   COUNT(*) FILTER (WHERE EXISTS (
+                       SELECT 1 FROM stock_check_items sci
+                       WHERE sci.stock_count_id = $${stockIdIdx}
+                         AND sci.roll_number = r.roll_number
+                         AND sci.found = 1
+                   ))::int AS found
+            FROM rolls r
+            WHERE ${where}
+            GROUP BY r.width
+            ORDER BY CASE WHEN r.width ~ '^[0-9]+$' THEN CAST(r.width AS INTEGER) ELSE 99999 END, r.width
+        `;
+        const result = await pool.query(q, params);
+        res.json({ sizes: result.rows });
     } catch (e) {
+        console.error('check-sizes error:', e);
         res.status(500).json({ message: 'DB error' });
     }
 });
 
-// ---------- STOCK CHECK ITEMS (FIXED) ----------
+// ---------- ③ ④ ⑧ check-items (โหลดทีละ size + LEFT JOIN + found ต่อ user) ----------
 app.get('/api/stock/check-items', authMiddleware, async (req, res) => {
     const group = req.query.group || 'all';
     const status = req.query.status || 'all';
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
-    const offset = (page - 1) * limit;
+    const size = req.query.size;
+    if (!size) return res.status(400).json({ message: 'size is required' });
 
-    // สร้าง WHERE และ params สำหรับกรอง
-    const filterParams = [];
-    let filterWhere = '1=1';
-    if (group !== 'all') {
-        filterParams.push(group);
-        filterWhere += ` AND group_name = $${filterParams.length}`;
-    }
-    if (status !== 'all') {
-        filterParams.push(status);
-        filterWhere += ` AND status = $${filterParams.length}`;
-    }
+    const username = req.user.username;
+    const params = [username, String(size)];
+    let where = 'r.width = $2';
+    if (group !== 'all') { params.push(group); where += ` AND r.group_name = $${params.length}`; }
+    if (status !== 'all') { params.push(status); where += ` AND r.status = $${params.length}`; }
 
     try {
-        // COUNT (ใช้ filterParams)
-        const countResult = await pool.query(
-            `SELECT COUNT(*) as total FROM rolls WHERE ${filterWhere}`,
-            filterParams
-        );
-        const total = parseInt(countResult.rows[0].total);
+        const stockId = await getLatestStockCountId();
+        params.push(stockId);
+        const stockIdIdx = params.length;
 
-        // MAIN QUERY: username = $1, แล้วต่อด้วย filterParams, แล้วต่อด้วย limit, offset
-        const mainParams = [req.user.username, ...filterParams];
-        const limitIdx = mainParams.length + 1;
-        const offsetIdx = mainParams.length + 2;
-        mainParams.push(limit, offset);
-
-        // ปรับ WHERE ให้ index เริ่มที่ $2 (เพราะ $1 = username)
-        let mainWhere = '1=1';
-        let idx = 2;
-        if (group !== 'all') {
-            mainWhere += ` AND group_name = $${idx}`;
-            idx++;
-        }
-        if (status !== 'all') {
-            mainWhere += ` AND status = $${idx}`;
-            idx++;
-        }
-
-        const query = `
+        const q = `
             SELECT r.*,
-                   (SELECT found FROM stock_check_items 
-                    WHERE stock_count_id = (SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1) 
-                    AND roll_number = r.roll_number AND checked_by = $1) as found,
-                   (SELECT checked_by FROM stock_check_items 
-                    WHERE stock_count_id = (SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1) 
-                    AND roll_number = r.roll_number AND found = 1) as checked_by
+                   COALESCE(my.found, 0) AS found_by_me,
+                   agg.checked_by_list AS checked_by,
+                   (agg.checked_by_list IS NOT NULL) AS found_any
             FROM rolls r
-            WHERE ${mainWhere}
+            LEFT JOIN (
+                SELECT roll_number, MAX(found) AS found
+                FROM stock_check_items
+                WHERE stock_count_id = $${stockIdIdx} AND checked_by = $1
+                GROUP BY roll_number
+            ) my ON my.roll_number = r.roll_number
+            LEFT JOIN (
+                SELECT roll_number, STRING_AGG(DISTINCT checked_by, ', ') AS checked_by_list
+                FROM stock_check_items
+                WHERE stock_count_id = $${stockIdIdx} AND found = 1
+                GROUP BY roll_number
+            ) agg ON agg.roll_number = r.roll_number
+            WHERE ${where}
             ORDER BY r.loc ASC NULLS LAST,
                      CASE r.status WHEN 'เต็ม' THEN 0 WHEN 'เศษ' THEN 1 WHEN 'รอกรอ' THEN 2 ELSE 3 END,
-                     CASE WHEN r.width ~ '^[0-9]+$' THEN CAST(r.width AS INTEGER) ELSE 99999 END,
                      r.grade ASC
-            LIMIT $${limitIdx} OFFSET $${offsetIdx}
+            LIMIT 2000
         `;
-        const result = await pool.query(query, mainParams);
-
-        res.json({
-            stock_count_id: null,
-            rolls: result.rows,
-            total,
-            page,
-            totalPages: Math.ceil(total / limit),
-            limit
-        });
+        const result = await pool.query(q, params);
+        res.json({ rolls: result.rows });
     } catch (e) {
         console.error('check-items error:', e);
         res.status(500).json({ message: 'DB error: ' + e.message });
@@ -399,25 +401,32 @@ app.post('/api/stock/check', authMiddleware, async (req, res) => {
     const checker = checked_by || req.user.username;
 
     try {
-        const stockResult = await pool.query(`SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1`);
-        if (stockResult.rows.length === 0) {
-            return res.status(400).json({ message: 'No stock count settings' });
-        }
-        const stockCountId = stockResult.rows[0].id;
+        const stockId = await getLatestStockCountId();
+        if (!stockId) return res.status(400).json({ message: 'No stock count settings' });
 
         const rollCheck = await pool.query(`SELECT roll_number FROM rolls WHERE roll_number = $1`, [roll_number]);
         if (rollCheck.rows.length === 0 && found === 1) {
-            await pool.query(`INSERT INTO stock_alerts (roll_number, checked_by) VALUES ($1, $2)`, [roll_number, checker]);
+            // ⑤ alert ผูกกับ stock_count_id
+            await pool.query(
+                `INSERT INTO stock_alerts (roll_number, checked_by, stock_count_id) VALUES ($1, $2, $3)`,
+                [roll_number, checker, stockId]
+            );
         }
 
-        const checkResult = await pool.query(`SELECT id FROM stock_check_items WHERE stock_count_id = $1 AND roll_number = $2 AND checked_by = $3`,
-            [stockCountId, roll_number, checker]);
+        const checkResult = await pool.query(
+            `SELECT id FROM stock_check_items WHERE stock_count_id = $1 AND roll_number = $2 AND checked_by = $3`,
+            [stockId, roll_number, checker]
+        );
         if (checkResult.rows.length > 0) {
-            await pool.query(`UPDATE stock_check_items SET found = $1, checked_at = CURRENT_TIMESTAMP WHERE id = $2`,
-                [found ? 1 : 0, checkResult.rows[0].id]);
+            await pool.query(
+                `UPDATE stock_check_items SET found = $1, checked_at = CURRENT_TIMESTAMP WHERE id = $2`,
+                [found ? 1 : 0, checkResult.rows[0].id]
+            );
         } else {
-            await pool.query(`INSERT INTO stock_check_items (stock_count_id, roll_number, checked_by, found) VALUES ($1, $2, $3, $4)`,
-                [stockCountId, roll_number, checker, found ? 1 : 0]);
+            await pool.query(
+                `INSERT INTO stock_check_items (stock_count_id, roll_number, checked_by, found) VALUES ($1, $2, $3, $4)`,
+                [stockId, roll_number, checker, found ? 1 : 0]
+            );
         }
         res.json({ ok: true });
     } catch (e) {
@@ -431,36 +440,41 @@ app.get('/api/alerts', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const result = await pool.query(`SELECT * FROM stock_alerts WHERE resolved = 0 ORDER BY alert_date DESC`);
         res.json({ alerts: result.rows });
-    } catch (e) {
-        res.status(500).json({ message: 'DB error' });
-    }
+    } catch (e) { res.status(500).json({ message: 'DB error' }); }
 });
 
 app.put('/api/alerts/:id/resolve', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         await pool.query(`UPDATE stock_alerts SET resolved = 1 WHERE id = $1`, [req.params.id]);
         res.json({ ok: true });
-    } catch (e) {
-        res.status(500).json({ message: 'Update failed' });
-    }
+    } catch (e) { res.status(500).json({ message: 'Update failed' }); }
 });
 
 // ---------- IMPORT EXCEL ----------
-const upload = multer({ dest: 'uploads/' });
+// ⑩ จำกัดขนาดไฟล์ 20 MB
+const upload = multer({
+    dest: 'uploads/',
+    limits: { fileSize: 20 * 1024 * 1024 }
+});
 
 app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
     const { count_number, stock_date, stock_time } = req.body;
     if (!count_number || !stock_date || !stock_time) {
+        try { fs.unlinkSync(req.file.path); } catch (e) {}
         return res.status(400).json({ message: 'กรุณากรอกครั้งที่, วันที่ และเวลา' });
     }
 
+    const client = await pool.connect();
+    let inserted = 0;
     try {
+        // ⑨ ใช้ transaction
+        await client.query('BEGIN');
+
         const workbook = xlsx.readFile(req.file.path);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const data = xlsx.utils.sheet_to_json(sheet, { defval: '' });
 
-        let inserted = 0;
         for (const row of data) {
             const rollNumber = row['เบอร์ม้วน'] || row['roll_number'] || '';
             if (!rollNumber) continue;
@@ -472,7 +486,7 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
             } else if (buyDate && typeof buyDate === 'string') {
                 buyDate = buyDate.split('T')[0];
             }
-            await pool.query(`
+            await client.query(`
                 INSERT INTO rolls (
                     roll_number, grade, width, supplier, supplier_grade, supplier_sn, dimeter, kgs, meter,
                     supplier_doc_no, buy_date, ageing, qlt, customer, comp_no, loc, status, note, group_name
@@ -486,39 +500,50 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
                     comp_no=EXCLUDED.comp_no, loc=EXCLUDED.loc, status=EXCLUDED.status,
                     note=EXCLUDED.note, group_name=EXCLUDED.group_name
             `, [
-                rollNumber,
-                row['grade'] || '',
+                rollNumber, row['grade'] || '',
                 row['width'] ? String(row['width']) : '',
-                row['supplier'] || '',
-                row['supplier_grade'] || '',
-                row['supplier_sn'] || '',
+                row['supplier'] || '', row['supplier_grade'] || '', row['supplier_sn'] || '',
                 row['dimeter'] ? String(row['dimeter']) : '',
                 row['kgs'] ? String(row['kgs']) : '',
                 row['meter'] ? String(row['meter']) : '',
-                row['supplier_doc_no'] || '',
-                buyDate,
+                row['supplier_doc_no'] || '', buyDate,
                 row['ageing'] ? String(row['ageing']) : '',
-                row['qlt'] || '',
-                row['customer'] || '',
+                row['qlt'] || '', row['customer'] || '',
                 row['comp_no'] ? String(row['comp_no']) : '',
-                row['loc'] || '',
-                row['สถานะ'] || '',
-                row['note'] || '',
-                row['กลุ่ม'] || ''
+                row['loc'] || '', row['สถานะ'] || '', row['note'] || '', row['กลุ่ม'] || ''
             ]);
             inserted++;
         }
 
-        await pool.query(`INSERT INTO stock_counts (count_number, stock_date, stock_time, created_by) VALUES ($1, $2, $3, $4)`,
-            [count_number, stock_date, stock_time, req.user.username]);
-        await pool.query(`INSERT INTO import_history (filename, imported_by, rows_imported) VALUES ($1, $2, $3)`,
-            [req.file.originalname, req.user.username, inserted]);
+        // ② upsert stock_counts — ไม่สร้างซ้ำ
+        const existing = await client.query(`SELECT id FROM stock_counts WHERE count_number = $1`, [count_number]);
+        if (existing.rows.length > 0) {
+            await client.query(
+                `UPDATE stock_counts SET stock_date = $1, stock_time = $2, created_by = $3 WHERE id = $4`,
+                [stock_date, stock_time, req.user.username, existing.rows[0].id]
+            );
+        } else {
+            await client.query(
+                `INSERT INTO stock_counts (count_number, stock_date, stock_time, created_by) VALUES ($1,$2,$3,$4)`,
+                [count_number, stock_date, stock_time, req.user.username]
+            );
+        }
 
-        fs.unlinkSync(req.file.path);
+        await client.query(
+            `INSERT INTO import_history (filename, imported_by, rows_imported) VALUES ($1, $2, $3)`,
+            [req.file.originalname, req.user.username, inserted]
+        );
+
+        await client.query('COMMIT');
         res.json({ ok: true, imported: inserted });
     } catch (e) {
+        await client.query('ROLLBACK');
         console.error(e);
         res.status(500).json({ message: 'Import failed: ' + e.message });
+    } finally {
+        client.release();
+        // ⑥ ลบไฟล์เสมอ แม้ error
+        try { fs.unlinkSync(req.file.path); } catch (e) {}
     }
 });
 
@@ -526,46 +551,47 @@ app.get('/api/import/history', authMiddleware, adminMiddleware, async (req, res)
     try {
         const result = await pool.query(`SELECT * FROM import_history ORDER BY import_date DESC`);
         res.json({ history: result.rows });
-    } catch (e) {
-        res.status(500).json({ message: 'DB error' });
-    }
+    } catch (e) { res.status(500).json({ message: 'DB error' }); }
 });
 
 // ---------- CLEAR DATA ----------
 app.delete('/api/data/clear', authMiddleware, adminMiddleware, async (req, res) => {
+    const client = await pool.connect();
     try {
-        await pool.query(`DELETE FROM rolls`);
-        await pool.query(`DELETE FROM import_history`);
-        await pool.query(`DELETE FROM stock_check_items`);
-        await pool.query(`DELETE FROM stock_alerts`);
+        await client.query('BEGIN');
+        await client.query(`DELETE FROM rolls`);
+        await client.query(`DELETE FROM import_history`);
+        await client.query(`DELETE FROM stock_check_items`);
+        await client.query(`DELETE FROM stock_alerts`);
+        await client.query('COMMIT');
         res.json({ ok: true });
     } catch (e) {
+        await client.query('ROLLBACK');
         res.status(500).json({ message: 'Clear failed' });
-    }
+    } finally { client.release(); }
 });
 
 app.delete('/api/data/clear-all', authMiddleware, adminMiddleware, async (req, res) => {
+    const client = await pool.connect();
     try {
-        await pool.query(`DELETE FROM rolls`);
-        await pool.query(`DELETE FROM import_history`);
-        await pool.query(`DELETE FROM stock_check_items`);
-        await pool.query(`DELETE FROM stock_alerts`);
-        await pool.query(`DELETE FROM stock_counts`);
-        await pool.query(`DELETE FROM users WHERE role != 'admin'`);
+        await client.query('BEGIN');
+        await client.query(`DELETE FROM rolls`);
+        await client.query(`DELETE FROM import_history`);
+        await client.query(`DELETE FROM stock_check_items`);
+        await client.query(`DELETE FROM stock_alerts`);
+        await client.query(`DELETE FROM stock_counts`);
+        await client.query(`DELETE FROM users WHERE role != 'admin'`);
+        await client.query('COMMIT');
         res.json({ ok: true });
     } catch (e) {
+        await client.query('ROLLBACK');
         res.status(500).json({ message: 'Clear failed' });
-    }
+    } finally { client.release(); }
 });
 
 // ---------- SERVE FRONTEND ----------
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/stock-check', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'stock-check.html'));
-});
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/stock-check', (req, res) => res.sendFile(path.join(__dirname, 'public', 'stock-check.html')));
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT} (PostgreSQL Ready)`);
