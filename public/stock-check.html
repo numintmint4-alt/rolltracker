@@ -1,431 +1,101 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📋 ตรวจนับสต็อกม้วนกระดาษ</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: #f0f2f5;
-            padding: 16px;
-        }
-        .container {
-            max-width: 1500px;
-            margin: 0 auto;
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            padding: 20px 24px 28px;
-        }
-        .header {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #e9edf4;
-            padding-bottom: 14px;
-            margin-bottom: 18px;
-        }
-        .header h1 {
-            font-size: 24px;
-            color: #0b2b44;
-            font-weight: 700;
-        }
-        .header .meta {
-            font-size: 16px;
-            color: #4a5a6e;
-            font-weight: 500;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📋 ตรวจนับสต็อกม้วนกระดาษ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f2f5; padding: 16px; }
+.container { max-width: 1500px; margin: 0 auto; background: #fff; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 20px 24px 28px; }
+.header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; border-bottom: 2px solid #e9edf4; padding-bottom: 14px; margin-bottom: 18px; }
+.header h1 { font-size: 24px; color: #0b2b44; font-weight: 700; }
+.header .meta { font-size: 16px; color: #4a5a6e; font-weight: 500; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; align-items: center; }
+.controls select, .controls input { padding: 8px 14px; border: 2px solid #dce2ec; border-radius: 10px; font-size: 14px; background: #fff; font-weight: 500; }
+.controls .btn { padding: 8px 20px; border-radius: 30px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; }
+.btn-primary { background: #1a4b6d; color: #fff; } .btn-primary:hover { background: #0b2b44; }
+.btn-success { background: #28a745; color: #fff; } .btn-success:hover { background: #218838; }
+.btn-secondary { background: #6c757d; color: #fff; } .btn-secondary:hover { background: #5a6268; }
+.btn-warning { background: #ffc107; color: #1a2a3a; } .btn-warning:hover { background: #e0a800; }
+.btn-danger { background: #dc3545; color: #fff; } .btn-danger:hover { background: #c82333; }
+.btn-sm { padding: 4px 14px; font-size: 13px; }
+.summary { background: #f8faff; padding: 10px 18px; border-radius: 12px; margin-bottom: 14px; display: flex; flex-wrap: wrap; gap: 20px; font-size: 15px; font-weight: 500; }
+.summary span { color: #0b2b44; }
+.summary .found-count { color: #28a745; font-weight: 700; }
+.summary .notfound-count { color: #dc3545; font-weight: 700; }
+.page-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; align-items: center; }
+.page-controls .page-btn { padding: 6px 14px; border-radius: 30px; border: 2px solid #dce2ec; background: #fff; cursor: pointer; font-weight: 600; font-size: 14px; color: #1a2a3a; }
+.page-controls .page-btn.active { background: #1a4b6d; color: #fff; border-color: #1a4b6d; }
+.page-controls .page-btn:hover:not(.active) { background: #f0f4fa; }
+.page-controls .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.page-controls .page-info { font-weight: 600; color: #0b2b44; font-size: 15px; margin: 0 8px; }
+.table-wrap { overflow-x: auto; border: 1px solid #e2e6ed; border-radius: 14px; margin-top: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+table th { background: #f0f4fa; text-align: left; padding: 12px 14px; font-weight: 700; font-size: 15px; color: #0b2b44; border-bottom: 2px solid #dce2ec; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+table td { padding: 10px 14px; border-bottom: 1px solid #eef2f7; vertical-align: middle; font-size: 15px; }
+table tr:hover td { background: #f8faff; }
+.found-checkbox { width: 22px; height: 22px; cursor: pointer; accent-color: #28a745; transform: scale(1.1); }
+.roll-number { font-weight: 700; color: #0b2b44; font-size: 15px; letter-spacing: 0.3px; }
+.checked-by { font-size: 14px; color: #1a4b6d; font-weight: 500; }
+.search-wrapper { display: flex; justify-content: flex-end; margin: 12px 0; }
+.search-box { display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 18px; background: #f8faff; border-radius: 40px; border: 1px solid #dce2ec; max-width: 500px; width: 100%; }
+.search-box:focus-within { border-color: #1a4b6d; box-shadow: 0 0 0 3px rgba(26, 75, 109, 0.1); }
+.search-box .search-input-wrapper { flex: 1; position: relative; min-width: 150px; }
+.search-box .search-input-wrapper input { width: 100%; padding: 8px 4px; border: none; outline: none; font-size: 15px; background: transparent; color: #1a2a3a; }
+.search-box .suggestions { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #fff; border: 1px solid #dce2ec; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+.search-box .suggestions.show { display: block; }
+.search-box .suggestions .suggestion-item { padding: 10px 18px; cursor: pointer; border-bottom: 1px solid #f0f3f8; font-size: 14px; }
+.search-box .suggestions .suggestion-item:hover { background: #f0f4fa; }
+.search-box .btn-search { padding: 8px 18px; border-radius: 30px; border: none; background: #1a4b6d; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.search-box .btn-search:hover { background: #0b2b44; }
+.found-alert { background: #d4edda; border-left: 6px solid #28a745; padding: 12px 20px; border-radius: 8px; margin-bottom: 12px; display: none; }
+.found-alert .info { font-weight: 600; color: #155724; }
+.notfound-alert { background: #f8d7da; border-left: 6px solid #dc3545; padding: 12px 20px; border-radius: 8px; margin-bottom: 12px; display: none; }
+.notfound-alert .info { font-weight: 700; color: #721c24; font-size: 20px; }
+.notfound-alert .detail { color: #721c24; font-size: 14px; margin-top: 4px; }
+.notfound-alert .btn-group { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
 
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 16px;
-            align-items: center;
-        }
-        .controls select, .controls input {
-            padding: 8px 14px;
-            border: 2px solid #dce2ec;
-            border-radius: 10px;
-            font-size: 14px;
-            background: #fff;
-            font-weight: 500;
-        }
-        .controls .btn {
-            padding: 8px 20px;
-            border-radius: 30px;
-            border: none;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-primary { background: #1a4b6d; color: #fff; }
-        .btn-primary:hover { background: #0b2b44; }
-        .btn-success { background: #28a745; color: #fff; }
-        .btn-success:hover { background: #218838; }
-        .btn-secondary { background: #6c757d; color: #fff; }
-        .btn-secondary:hover { background: #5a6268; }
-        .btn-warning { background: #ffc107; color: #1a2a3a; }
-        .btn-warning:hover { background: #e0a800; }
-        .btn-danger { background: #dc3545; color: #fff; }
-        .btn-danger:hover { background: #c82333; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center; }
+.modal-overlay.visible { display: flex; }
+.modal-box { background: #fff; padding: 32px 36px; border-radius: 24px; max-width: 480px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.25); animation: scaleUp 0.25s ease; }
+@keyframes scaleUp { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.modal-box h3 { color: #0b2b44; margin-bottom: 6px; font-size: 22px; font-weight: 700; }
+.modal-box p { color: #4a5a6e; margin-bottom: 18px; font-size: 15px; line-height: 1.5; }
+.modal-box input[type="password"] { width: 100%; padding: 12px 16px; border: 2px solid #dce2ec; border-radius: 14px; font-size: 16px; outline: none; background: #f8faff; }
+.modal-box input[type="password"]:focus { border-color: #1a4b6d; box-shadow: 0 0 0 3px rgba(26, 75, 109, 0.1); }
+.modal-box .modal-actions { display: flex; gap: 12px; margin-top: 18px; justify-content: flex-end; }
+.modal-box .modal-actions button { padding: 10px 28px; border-radius: 14px; border: none; font-weight: 600; font-size: 15px; cursor: pointer; }
+.modal-box .modal-actions .btn-confirm { background: #28a745; color: #fff; }
+.modal-box .modal-actions .btn-confirm:hover { background: #218838; }
+.modal-box .modal-actions .btn-cancel { background: #f0f2f5; color: #1a2a3a; }
+.modal-box .modal-actions .btn-cancel:hover { background: #e2e6ed; }
+.modal-box .error-msg { color: #dc3545; font-size: 14px; margin-top: 10px; min-height: 20px; }
+.modal-box .alert-list { background: #fff3cd; padding: 12px 16px; border-radius: 12px; margin: 12px 0; border-left: 4px solid #ffc107; }
+.modal-box .alert-list li { list-style: none; padding: 4px 0; font-size: 14px; }
 
-        .summary {
-            background: #f8faff;
-            padding: 10px 18px;
-            border-radius: 12px;
-            margin-bottom: 14px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            font-size: 15px;
-            font-weight: 500;
-        }
-        .summary span { color: #0b2b44; }
-        .summary .found-count { color: #28a745; font-weight: 700; }
-        .summary .notfound-count { color: #dc3545; font-weight: 700; }
+/* PDF modal */
+.pdf-size-list { max-height: 320px; overflow-y: auto; border: 1px solid #e9edf4; border-radius: 12px; padding: 8px 16px; margin-top: 8px; background: #fbfcff; }
+.pdf-size-list .size-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid #f0f3f8; font-size: 15px; cursor: pointer; }
+.pdf-size-list .size-row:last-child { border-bottom: none; }
+.pdf-size-list .size-row input { width: 18px; height: 18px; accent-color: #1a4b6d; cursor: pointer; }
+.pdf-size-list .size-row .count { margin-left: auto; color: #7a8a9e; font-size: 13px; }
+.pdf-size-list .size-row .found-badge { background: #d4edda; color: #155724; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.pdf-select-btns { display: flex; gap: 8px; margin: 8px 0; }
+.pdf-select-btns button { padding: 6px 14px; border-radius: 30px; border: 2px solid #dce2ec; background: #fff; cursor: pointer; font-weight: 600; font-size: 13px; color: #1a2a3a; }
+.pdf-select-btns button:hover { background: #f0f4fa; }
+.pdf-option { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-top: 14px; color: #1a2a3a; }
+.pdf-option input { width: 18px; height: 18px; accent-color: #1a4b6d; cursor: pointer; }
 
-        .page-controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 12px 0;
-            align-items: center;
-        }
-        .page-controls .page-btn {
-            padding: 6px 14px;
-            border-radius: 30px;
-            border: 2px solid #dce2ec;
-            background: #fff;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            color: #1a2a3a;
-            transition: 0.2s;
-        }
-        .page-controls .page-btn.active {
-            background: #1a4b6d;
-            color: #fff;
-            border-color: #1a4b6d;
-        }
-        .page-controls .page-btn:hover:not(.active) { background: #f0f4fa; }
-        .page-controls .page-info {
-            font-weight: 600;
-            color: #0b2b44;
-            font-size: 15px;
-            margin: 0 8px;
-        }
-
-        .table-wrap {
-            overflow-x: auto;
-            border: 1px solid #e2e6ed;
-            border-radius: 14px;
-            margin-top: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 15px;
-        }
-        table th {
-            background: #f0f4fa;
-            text-align: left;
-            padding: 12px 14px;
-            font-weight: 700;
-            font-size: 15px;
-            color: #0b2b44;
-            border-bottom: 2px solid #dce2ec;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            white-space: nowrap;
-        }
-        table td {
-            padding: 10px 14px;
-            border-bottom: 1px solid #eef2f7;
-            vertical-align: middle;
-            font-size: 15px;
-        }
-        table tr:hover td { background: #f8faff; }
-        .found-checkbox {
-            width: 22px;
-            height: 22px;
-            cursor: pointer;
-            accent-color: #28a745;
-            transform: scale(1.1);
-        }
-        .roll-number {
-            font-weight: 700;
-            color: #0b2b44;
-            font-size: 15px;
-            letter-spacing: 0.3px;
-        }
-        .checked-by {
-            font-size: 14px;
-            color: #1a4b6d;
-            font-weight: 500;
-        }
-
-        .search-wrapper {
-            display: flex;
-            justify-content: flex-end;
-            margin: 12px 0;
-        }
-        .search-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 6px 12px 6px 18px;
-            background: #f8faff;
-            border-radius: 40px;
-            border: 1px solid #dce2ec;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            max-width: 500px;
-            width: 100%;
-        }
-        .search-box:focus-within {
-            border-color: #1a4b6d;
-            box-shadow: 0 0 0 3px rgba(26, 75, 109, 0.1);
-        }
-        .search-box .search-input-wrapper {
-            flex: 1;
-            position: relative;
-            min-width: 150px;
-        }
-        .search-box .search-input-wrapper input {
-            width: 100%;
-            padding: 8px 4px;
-            border: none;
-            outline: none;
-            font-size: 15px;
-            background: transparent;
-            color: #1a2a3a;
-        }
-        .search-box .search-input-wrapper input::placeholder {
-            color: #a0b0c6;
-            font-weight: 400;
-        }
-        .search-box .search-input-wrapper .suggestions {
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 0;
-            right: 0;
-            background: #fff;
-            border: 1px solid #dce2ec;
-            border-radius: 12px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 100;
-            display: none;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        }
-        .search-box .search-input-wrapper .suggestions.show { display: block; }
-        .search-box .search-input-wrapper .suggestions .suggestion-item {
-            padding: 10px 18px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f3f8;
-            font-size: 14px;
-        }
-        .search-box .search-input-wrapper .suggestions .suggestion-item:hover { background: #f0f4fa; }
-        .search-box .btn-search {
-            padding: 8px 18px;
-            border-radius: 30px;
-            border: none;
-            background: #1a4b6d;
-            color: #fff;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: background 0.2s;
-        }
-        .search-box .btn-search:hover { background: #0b2b44; }
-
-        .found-alert {
-            background: #d4edda;
-            border-left: 6px solid #28a745;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            display: none;
-        }
-        .found-alert .info { font-weight: 600; color: #155724; }
-
-        .notfound-alert {
-            background: #f8d7da;
-            border-left: 6px solid #dc3545;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            display: none;
-        }
-        .notfound-alert .info { font-weight: 700; color: #721c24; font-size: 20px; }
-        .notfound-alert .detail { color: #721c24; font-size: 14px; margin-top: 4px; }
-        .notfound-alert .btn-group {
-            margin-top: 8px;
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            animation: fadeIn 0.25s ease;
-        }
-        .modal-overlay.visible { display: flex; }
-        @keyframes fadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-        @keyframes scaleUp {
-            0% { transform: scale(0.9); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .modal-box {
-            background: #ffffff;
-            padding: 32px 36px;
-            border-radius: 24px;
-            max-width: 480px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-            animation: scaleUp 0.25s ease;
-            border: 1px solid rgba(255,255,255,0.15);
-        }
-        .modal-box h3 {
-            color: #0b2b44;
-            margin-bottom: 6px;
-            font-size: 22px;
-            font-weight: 700;
-        }
-        .modal-box p {
-            color: #4a5a6e;
-            margin-bottom: 18px;
-            font-size: 15px;
-            line-height: 1.5;
-        }
-        .modal-box input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #dce2ec;
-            border-radius: 14px;
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.2s;
-            background: #f8faff;
-        }
-        .modal-box input:focus {
-            border-color: #1a4b6d;
-            box-shadow: 0 0 0 3px rgba(26, 75, 109, 0.1);
-        }
-        .modal-box .modal-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 18px;
-            justify-content: flex-end;
-        }
-        .modal-box .modal-actions button {
-            padding: 10px 28px;
-            border-radius: 14px;
-            border: none;
-            font-weight: 600;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .modal-box .modal-actions .btn-confirm {
-            background: #28a745;
-            color: #fff;
-        }
-        .modal-box .modal-actions .btn-confirm:hover {
-            background: #218838;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-        }
-        .modal-box .modal-actions .btn-cancel {
-            background: #f0f2f5;
-            color: #1a2a3a;
-        }
-        .modal-box .modal-actions .btn-cancel:hover {
-            background: #e2e6ed;
-        }
-        .modal-box .error-msg {
-            color: #dc3545;
-            font-size: 14px;
-            margin-top: 10px;
-            min-height: 20px;
-        }
-        .modal-box .alert-list {
-            background: #fff3cd;
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin: 12px 0;
-            border-left: 4px solid #ffc107;
-        }
-        .modal-box .alert-list li {
-            list-style: none;
-            padding: 4px 0;
-            font-size: 14px;
-        }
-
-        .print-hide { display: inline-block; }
-        @media print {
-            .print-hide { display: none !important; }
-            body { background: #fff; padding: 0; margin: 0; font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif; }
-            .container { box-shadow: none; border-radius: 0; padding: 10px 12px; }
-            .header .user-info { display: none !important; }
-            .search-wrapper { display: none !important; }
-            .page-controls { display: none !important; }
-            .controls { display: none !important; }
-            .found-alert, .notfound-alert { display: none !important; }
-            .table-wrap { border: 1px solid #666; margin-top: 0; border-radius: 0; overflow: visible; }
-            table { font-size: 18px; border-collapse: collapse; width: 100%; }
-            table th { background: #e9edf4 !important; font-size: 18px; padding: 2px 6px; border: 1px solid #666; font-weight: 600; }
-            table td { font-size: 18px; padding: 2px 6px; border: 1px solid #666; font-weight: 500; }
-            .roll-number { font-weight: 700; font-size: 18px; }
-            .checked-by { display: none; }
-            .summary { display: none !important; }
-            .signature-area { display: none !important; }
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: #1a2a3a;
-            color: #fff;
-            padding: 14px 24px;
-            border-radius: 14px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-            font-weight: 500;
-            z-index: 2000;
-            animation: fadeIn 0.3s ease;
-            max-width: 400px;
-        }
-        .toast.success { background: #28a745; }
-        .toast.error { background: #dc3545; }
-        .toast.warning { background: #ffc107; color: #1a2a3a; }
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-        .text-muted { color: #7a8a9e; }
-        .loading { opacity: 0.6; pointer-events: none; }
-    </style>
+.toast { position: fixed; bottom: 24px; right: 24px; background: #1a2a3a; color: #fff; padding: 14px 24px; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); font-weight: 500; z-index: 2000; max-width: 400px; }
+.toast.success { background: #28a745; } .toast.error { background: #dc3545; } .toast.warning { background: #ffc107; color: #1a2a3a; }
+@keyframes fadeIn { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+.text-muted { color: #7a8a9e; }
+.loading { opacity: 0.6; pointer-events: none; }
+</style>
 </head>
 <body>
 <div class="container" id="app">
@@ -445,7 +115,7 @@
             <option value="all">ทุกกลุ่ม</option>
         </select>
         <button class="btn btn-primary" id="loadBtn">🔄 โหลดข้อมูล</button>
-        <button class="btn btn-success" id="exportPdfBtn">📄 พรีวิว/PDF</button>
+        <button class="btn btn-success" id="exportPdfBtn">📄 พิมพ์ / PDF</button>
         <button class="btn btn-secondary" id="backBtn">⬅ กลับหน้าแรก</button>
         <button class="btn btn-danger" id="showAlertsBtn" style="display:none;">⚠️ ม้วนที่พบไม่มีในสต็อก</button>
     </div>
@@ -459,15 +129,15 @@
 
     <div class="page-controls print-hide" id="pageControls">
         <button class="page-btn" id="prevPage">◀</button>
-        <span class="page-info" id="pageInfo">Size 38"</span>
+        <span class="page-info" id="pageInfo">Size —</span>
         <button class="page-btn" id="nextPage">▶</button>
-        <span style="margin-left:12px;font-size:14px;color:#5a6a7e;" id="pageSizeInfo">แสดง 20 รายการ</span>
+        <span style="margin-left:12px;font-size:14px;color:#5a6a7e;" id="pageSizeInfo">—</span>
     </div>
 
     <div class="search-wrapper print-hide" id="searchWrapper">
-        <div class="search-box" id="searchBox">
+        <div class="search-box">
             <div class="search-input-wrapper">
-                <input type="text" id="searchRollInput" placeholder="" autocomplete="off" />
+                <input type="text" id="searchRollInput" placeholder="พิมพ์เลขม้วน..." autocomplete="off" />
                 <div class="suggestions" id="suggestions"></div>
             </div>
             <button class="btn-search" id="searchRollBtn">ค้นหา</button>
@@ -504,12 +174,13 @@
                 </tr>
             </thead>
             <tbody id="checkTableBody">
-                <tr><td colspan="9" class="text-muted" style="text-align:center;">เลือกกลุ่มและสถานะ แล้วกด "โหลดข้อมูล"</td></tr>
+                <tr><td colspan="9" class="text-muted" style="text-align:center;">กำลังโหลด...</td></tr>
             </tbody>
         </table>
     </div>
 </div>
 
+<!-- Password Modal -->
 <div class="modal-overlay" id="passwordModal">
     <div class="modal-box">
         <h3>🔐 ยืนยันตัวตน</h3>
@@ -523,15 +194,36 @@
     </div>
 </div>
 
+<!-- Alert Modal -->
 <div class="modal-overlay" id="alertModal">
     <div class="modal-box">
         <h3>⚠️ ม้วนที่พบไม่มีในสต็อก</h3>
         <p>รายการม้วนที่ถูกยืนยันว่าพบแต่ไม่มีข้อมูลใน Stock คงเหลือ</p>
-        <div class="alert-list" id="alertListModal">
-            <ul id="alertItems"></ul>
-        </div>
+        <div class="alert-list"><ul id="alertItems"></ul></div>
         <div class="modal-actions">
             <button class="btn-cancel" id="alertModalClose">ปิด</button>
+        </div>
+    </div>
+</div>
+
+<!-- PDF Modal (C: เลือก Size ก่อนพิมพ์) -->
+<div class="modal-overlay" id="pdfModal">
+    <div class="modal-box" style="max-width: 580px;">
+        <h3>📄 ตั้งค่าการพิมพ์ PDF</h3>
+        <p>เลือก Size ที่ต้องการพิมพ์ (แต่ละ Size จะเริ่มหน้าใหม่)</p>
+        <div class="pdf-select-btns">
+            <button id="pdfSelectAll">เลือกทั้งหมด</button>
+            <button id="pdfDeselectAll">ยกเลิกทั้งหมด</button>
+        </div>
+        <div class="pdf-size-list" id="pdfSizeList"></div>
+        <label class="pdf-option">
+            <input type="checkbox" id="pdfShowCheckmarks" />
+            แสดงเครื่องหมาย ✓ ในช่อง "ตรวจพบ" ของม้วนที่พบแล้ว
+        </label>
+        <div class="error-msg" id="pdfError"></div>
+        <div class="modal-actions">
+            <button class="btn-cancel" id="pdfCancel">ยกเลิก</button>
+            <button class="btn-confirm" id="pdfPrint">🖨️ พิมพ์</button>
         </div>
     </div>
 </div>
@@ -539,174 +231,163 @@
 <div id="toastContainer"></div>
 
 <script>
-    let token = localStorage.getItem('rolltracker_token') || '';
-    let currentUser = null;
-    let allRolls = [];
-    let stockCountId = null;
-    let currentStatusFilter = 'all';
-    let currentGroup = 'all';
-    let currentPage = 0;
-    let sizeGroups = [];
-    let totalItems = 0;
-    let pendingAction = null;
+let token = localStorage.getItem('rolltracker_token') || '';
+let currentUser = null;
+let sizeGroups = [];          // [{width, total, found}]
+let currentPage = 0;
+let currentRolls = [];        // rolls ของ size ปัจจุบัน
+let totalItems = 0;
+let pendingAction = null;
 
-    const $ = id => document.getElementById(id);
-    const stockMeta = $('stockMeta');
-    const statusFilter = $('statusFilter');
-    const groupFilter = $('groupFilter');
-    const loadBtn = $('loadBtn');
-    const exportPdfBtn = $('exportPdfBtn');
-    const backBtn = $('backBtn');
-    const showAlertsBtn = $('showAlertsBtn');
-    const checkTableBody = $('checkTableBody');
-    const foundCount = $('foundCount');
-    const notFoundCount = $('notFoundCount');
-    const totalCount = $('totalCount');
-    const groupSummary = $('groupSummary');
-    const pageControls = $('pageControls');
-    const prevPage = $('prevPage');
-    const nextPage = $('nextPage');
-    const pageInfo = $('pageInfo');
-    const pageSizeInfo = $('pageSizeInfo');
-    const searchRollInput = $('searchRollInput');
-    const searchRollBtn = $('searchRollBtn');
-    const suggestions = $('suggestions');
-    const foundAlert = $('foundAlert');
-    const notFoundAlert = $('notFoundAlert');
-    const foundAlertInfo = $('foundAlertInfo');
-    const confirmFoundBtn = $('confirmFoundBtn');
-    const cancelFoundBtn = $('cancelFoundBtn');
-    const confirmNotFoundBtn = $('confirmNotFoundBtn');
-    const cancelNotFoundBtn = $('cancelNotFoundBtn');
+const $ = id => document.getElementById(id);
+const stockMeta = $('stockMeta');
+const statusFilter = $('statusFilter');
+const groupFilter = $('groupFilter');
+const loadBtn = $('loadBtn');
+const exportPdfBtn = $('exportPdfBtn');
+const backBtn = $('backBtn');
+const showAlertsBtn = $('showAlertsBtn');
+const checkTableBody = $('checkTableBody');
+const foundCount = $('foundCount');
+const notFoundCount = $('notFoundCount');
+const totalCount = $('totalCount');
+const groupSummary = $('groupSummary');
+const pageControls = $('pageControls');
+const prevPage = $('prevPage');
+const nextPage = $('nextPage');
+const pageInfo = $('pageInfo');
+const pageSizeInfo = $('pageSizeInfo');
+const searchRollInput = $('searchRollInput');
+const searchRollBtn = $('searchRollBtn');
+const suggestions = $('suggestions');
+const foundAlert = $('foundAlert');
+const notFoundAlert = $('notFoundAlert');
+const foundAlertInfo = $('foundAlertInfo');
+const confirmFoundBtn = $('confirmFoundBtn');
+const cancelFoundBtn = $('cancelFoundBtn');
+const confirmNotFoundBtn = $('confirmNotFoundBtn');
+const cancelNotFoundBtn = $('cancelNotFoundBtn');
 
-    const passwordModal = $('passwordModal');
-    const modalPassword = $('modalPassword');
-    const modalError = $('modalError');
-    const modalConfirm = $('modalConfirm');
-    const modalCancel = $('modalCancel');
-    const modalMessage = $('modalMessage');
+const passwordModal = $('passwordModal');
+const modalPassword = $('modalPassword');
+const modalError = $('modalError');
+const modalConfirm = $('modalConfirm');
+const modalCancel = $('modalCancel');
+const modalMessage = $('modalMessage');
 
-    const alertModal = $('alertModal');
-    const alertItems = $('alertItems');
-    const alertModalClose = $('alertModalClose');
+const alertModal = $('alertModal');
+const alertItems = $('alertItems');
+const alertModalClose = $('alertModalClose');
 
-    function showToast(msg, type = 'info') {
-        const c = document.createElement('div');
-        c.className = `toast ${type}`;
-        c.textContent = msg;
-        document.getElementById('toastContainer').appendChild(c);
-        setTimeout(() => { c.style.opacity = '0'; c.style.transition = 'opacity 0.4s'; setTimeout(() => c.remove(), 500); }, 3000);
-    }
+const pdfModal = $('pdfModal');
+const pdfSizeList = $('pdfSizeList');
+const pdfSelectAll = $('pdfSelectAll');
+const pdfDeselectAll = $('pdfDeselectAll');
+const pdfShowCheckmarks = $('pdfShowCheckmarks');
+const pdfCancel = $('pdfCancel');
+const pdfPrint = $('pdfPrint');
+const pdfError = $('pdfError');
 
-    function getAuthHeaders() {
-        return { 'Authorization': 'Bearer ' + token };
-    }
+function showToast(msg, type = 'info') {
+    const c = document.createElement('div');
+    c.className = `toast ${type}`;
+    c.textContent = msg;
+    document.getElementById('toastContainer').appendChild(c);
+    setTimeout(() => { c.style.opacity = '0'; c.style.transition = 'opacity 0.4s'; setTimeout(() => c.remove(), 500); }, 3000);
+}
+function getAuthHeaders() { return { 'Authorization': 'Bearer ' + token }; }
+function escHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
 
-    async function loadUser() {
-        try {
-            const res = await fetch('/api/auth/me', { headers: getAuthHeaders() });
-            const data = await res.json();
-            if (data.user) {
-                currentUser = data.user;
-                if (currentUser.role === 'admin') {
-                    showAlertsBtn.style.display = 'inline-block';
-                }
-            } else {
-                window.location.href = '/';
-            }
-        } catch (e) {
-            window.location.href = '/';
+async function loadUser() {
+    try {
+        const res = await fetch('/api/auth/me', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (data.user) {
+            currentUser = data.user;
+            if (currentUser.role === 'admin') showAlertsBtn.style.display = 'inline-block';
+        } else { window.location.href = '/'; }
+    } catch (e) { window.location.href = '/'; }
+}
+
+async function loadStockSettings() {
+    try {
+        const res = await fetch('/api/stock/latest', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (res.ok && data.count_number) {
+            stockMeta.textContent = `📅 ครั้งที่ ${data.count_number} | วันที่ ${data.stock_date} เวลา ${data.stock_time}`;
+        } else {
+            stockMeta.textContent = '⚠️ ยังไม่มีการตั้งค่า Stock';
         }
-    }
+    } catch (e) { stockMeta.textContent = '⚠️ ไม่สามารถโหลดข้อมูล Stock'; }
+}
 
-    async function loadStockSettings() {
-        try {
-            const res = await fetch('/api/stock/latest', { headers: getAuthHeaders() });
-            const data = await res.json();
-            if (res.ok && data.count_number) {
-                stockMeta.textContent = `📅 ครั้งที่ ${data.count_number} | วันที่ ${data.stock_date} เวลา ${data.stock_time}`;
-                stockCountId = data.id;
-            } else {
-                stockMeta.textContent = '⚠️ ยังไม่มีการตั้งค่า Stock';
-            }
-        } catch (e) {
-            stockMeta.textContent = '⚠️ ไม่สามารถโหลดข้อมูล Stock';
+async function loadGroups() {
+    try {
+        const res = await fetch('/api/stock/groups', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (data.groups) {
+            groupFilter.innerHTML = '<option value="all">ทุกกลุ่ม</option>';
+            data.groups.forEach(g => groupFilter.innerHTML += `<option value="${escHtml(g)}">${escHtml(g)}</option>`);
         }
-    }
+    } catch (e) {}
+}
 
-    async function loadGroups() {
-        try {
-            const res = await fetch('/api/stock/groups', { headers: getAuthHeaders() });
-            const data = await res.json();
-            if (data.groups) {
-                groupFilter.innerHTML = '<option value="all">ทุกกลุ่ม</option>';
-                data.groups.forEach(g => {
-                    groupFilter.innerHTML += `<option value="${g}">${g}</option>`;
-                });
-            }
-        } catch (e) {
-            console.warn('Could not load groups');
+// ⑧ โหลดเฉพาะ sizes ก่อน
+async function loadSizes() {
+    const group = groupFilter.value;
+    const status = statusFilter.value;
+    loadBtn.disabled = true;
+    loadBtn.textContent = '⏳ กำลังโหลด...';
+    try {
+        const url = `/api/stock/check-sizes?group=${encodeURIComponent(group)}&status=${encodeURIComponent(status)}`;
+        const res = await fetch(url, { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'โหลดไม่สำเร็จ');
+
+        sizeGroups = data.sizes || [];
+        currentPage = 0;
+        totalItems = sizeGroups.reduce((sum, s) => sum + s.total, 0);
+
+        if (sizeGroups.length === 0) {
+            checkTableBody.innerHTML = '<tr><td colspan="9" class="text-muted" style="text-align:center;">ไม่มีข้อมูล</td></tr>';
+            pageControls.style.display = 'none';
+            foundCount.textContent = '0';
+            notFoundCount.textContent = '0';
+            totalCount.textContent = '0';
+            currentRolls = [];
+            return;
         }
+        await renderCurrentSize();
+        updatePagination();
+        updateSummary();
+    } catch (e) {
+        showToast('โหลดข้อมูลไม่สำเร็จ: ' + e.message, 'error');
+    } finally {
+        loadBtn.disabled = false;
+        loadBtn.textContent = '🔄 โหลดข้อมูล';
     }
+}
 
-    async function loadCheckItems() {
-        const group = groupFilter.value;
-        const status = statusFilter.value;
-        const url = `/api/stock/check-items?group=${encodeURIComponent(group)}&status=${encodeURIComponent(status)}&page=1&limit=9999`;
-        try {
-            loadBtn.disabled = true;
-            loadBtn.textContent = '⏳ กำลังโหลด...';
-            const res = await fetch(url, { headers: getAuthHeaders() });
-            const data = await res.json();
-            if (res.ok) {
-                const rolls = data.rolls || [];
-                totalItems = data.total || 0;
+async function renderCurrentSize() {
+    if (!sizeGroups.length) return;
+    const g = sizeGroups[currentPage];
+    if (!g) return;
 
-                const sizeMap = {};
-                rolls.forEach(r => {
-                    const size = r.width || '0';
-                    if (!sizeMap[size]) sizeMap[size] = [];
-                    sizeMap[size].push(r);
-                });
-                const sortedSizes = Object.keys(sizeMap).sort((a, b) => parseFloat(a) - parseFloat(b));
-                sizeGroups = sortedSizes.map(size => {
-                    const rollsInSize = sizeMap[size];
-                    const found = rollsInSize.filter(r => r.found === 1).length;
-                    const notFound = rollsInSize.length - found;
-                    return { size, rolls: rollsInSize, found, notFound };
-                });
+    const group = groupFilter.value;
+    const status = statusFilter.value;
+    const url = `/api/stock/check-items?group=${encodeURIComponent(group)}&status=${encodeURIComponent(status)}&size=${encodeURIComponent(g.width)}`;
 
-                if (sizeGroups.length === 0) {
-                    checkTableBody.innerHTML = '<tr><td colspan="9" class="text-muted" style="text-align:center;">ไม่มีข้อมูล</td></tr>';
-                    pageControls.style.display = 'none';
-                    return;
-                }
+    try {
+        const res = await fetch(url, { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'โหลดไม่สำเร็จ');
+        currentRolls = data.rolls || [];
 
-                currentPage = 0;
-                renderPage();
-                updateSummary();
-                updatePagination();
-                window._allRollsForPrint = rolls;
-            } else {
-                showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
-            }
-        } catch (e) {
-            showToast('เกิดข้อผิดพลาดในการโหลด', 'error');
-        } finally {
-            loadBtn.disabled = false;
-            loadBtn.textContent = '🔄 โหลดข้อมูล';
-        }
-    }
-
-    function renderPage() {
-        if (!sizeGroups.length) return;
-        const groupData = sizeGroups[currentPage];
-        if (!groupData) return;
-
-        const rolls = groupData.rolls;
-        rolls.sort((a, b) => {
-            const locA = a.loc || '';
-            const locB = b.loc || '';
+        // sort ฝั่ง client
+        currentRolls.sort((a, b) => {
+            const locA = a.loc || '', locB = b.loc || '';
             if (locA !== locB) {
                 if (locA === 'LOC1') return -1;
                 if (locB === 'LOC1') return 1;
@@ -720,22 +401,20 @@
         });
 
         let html = '';
-        rolls.forEach(roll => {
-            const found = roll.found === 1;
+        currentRolls.forEach(roll => {
+            const foundByMe = roll.found_by_me === 1;
             const checkedBy = roll.checked_by || '—';
             html += `
                 <tr>
-                    <td>${roll.loc || '—'}</td>
-                    <td>${roll.status || '—'}</td>
-                    <td>${roll.width ? roll.width + '"' : '—'}</td>
-                    <td>${roll.grade || '—'}</td>
-                    <td class="roll-number">${roll.roll_number || '—'}</td>
-                    <td>
-                        <input type="checkbox" class="found-checkbox" data-roll="${roll.roll_number}" ${found ? 'checked' : ''} />
-                    </td>
-                    <td>${roll.dimeter || '—'}</td>
-                    <td>${roll.kgs || '—'}</td>
-                    <td class="checked-by">${checkedBy}</td>
+                    <td>${escHtml(roll.loc || '—')}</td>
+                    <td>${escHtml(roll.status || '—')}</td>
+                    <td>${roll.width ? escHtml(roll.width) + '"' : '—'}</td>
+                    <td>${escHtml(roll.grade || '—')}</td>
+                    <td class="roll-number">${escHtml(roll.roll_number || '—')}</td>
+                    <td><input type="checkbox" class="found-checkbox" data-roll="${escHtml(roll.roll_number)}" ${foundByMe ? 'checked' : ''} /></td>
+                    <td>${escHtml(roll.dimeter || '—')}</td>
+                    <td>${escHtml(roll.kgs || '—')}</td>
+                    <td class="checked-by">${escHtml(checkedBy)}</td>
                 </tr>
             `;
         });
@@ -745,8 +424,8 @@
             cb.addEventListener('change', function(e) {
                 e.preventDefault();
                 const rollNumber = this.dataset.roll;
-                const currentChecked = this.checked;
-                if (!currentChecked) {
+                const isChecked = this.checked;
+                if (!isChecked) {
                     if (currentUser.role === 'admin') {
                         saveCheck(rollNumber, 0, this);
                         return;
@@ -765,442 +444,440 @@
             });
         });
 
-        foundCount.textContent = groupData.found;
-        notFoundCount.textContent = groupData.notFound;
-        totalCount.textContent = rolls.length;
-        groupSummary.textContent = `กลุ่ม: ${groupFilter.value !== 'all' ? groupFilter.value : 'ทั้งหมด'} | Size: ${groupData.size}"`;
+        const found = currentRolls.filter(r => r.found_by_me === 1 || r.found_any).length;
+        foundCount.textContent = g.found;
+        notFoundCount.textContent = g.total - g.found;
+        totalCount.textContent = g.total;
+        groupSummary.textContent = `กลุ่ม: ${groupFilter.value !== 'all' ? groupFilter.value : 'ทั้งหมด'} | Size: ${g.width}"`;
+    } catch (e) {
+        showToast('โหลดรายการไม่สำเร็จ: ' + e.message, 'error');
     }
+}
 
-    function updatePagination() {
-        if (!sizeGroups.length) {
-            pageControls.style.display = 'none';
-            return;
-        }
-        pageControls.style.display = 'flex';
-        const currentSize = sizeGroups[currentPage]?.size || '—';
-        pageInfo.textContent = `Size ${currentSize}"`;
-        pageSizeInfo.textContent = `แสดง ${sizeGroups[currentPage]?.rolls?.length || 0} รายการ (ทั้งหมด ${totalItems} รายการ)`;
-        prevPage.disabled = currentPage <= 0;
-        nextPage.disabled = currentPage >= sizeGroups.length - 1;
-    }
+function updatePagination() {
+    if (!sizeGroups.length) { pageControls.style.display = 'none'; return; }
+    pageControls.style.display = 'flex';
+    const g = sizeGroups[currentPage];
+    pageInfo.textContent = `Size ${g.width}" (${currentPage + 1}/${sizeGroups.length})`;
+    pageSizeInfo.textContent = `แสดง ${currentRolls.length} รายการ (ทั้งหมด ${totalItems} รายการ)`;
+    prevPage.disabled = currentPage <= 0;
+    nextPage.disabled = currentPage >= sizeGroups.length - 1;
+}
+function updateSummary() {}
 
-    function updateSummary() {}
+async function saveCheck(rollNumber, found, checkboxEl) {
+    try {
+        const res = await fetch('/api/stock/check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+            body: JSON.stringify({ roll_number: rollNumber, found, checked_by: currentUser.username })
+        });
+        if (!res.ok) throw new Error('บันทึกไม่สำเร็จ');
 
-    async function saveCheck(rollNumber, found, checkboxEl) {
-        try {
-            const payload = {
-                roll_number: rollNumber,
-                found: found,
-                checked_by: currentUser.username
-            };
-            const res = await fetch('/api/stock/check', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-                body: JSON.stringify(payload)
-            });
-            if (res.ok) {
-                for (const g of sizeGroups) {
-                    const roll = g.rolls.find(r => r.roll_number === rollNumber);
-                    if (roll) {
-                        roll.found = found;
-                        roll.checked_by = found === 1 ? currentUser.username : null;
-                        g.found = g.rolls.filter(r => r.found === 1).length;
-                        g.notFound = g.rolls.length - g.found;
-                        break;
-                    }
-                }
-                if (checkboxEl) checkboxEl.checked = found === 1;
-                showToast(found === 1 ? '✅ พบม้วนนี้แล้ว' : '❌ ไม่พบม้วนนี้', found === 1 ? 'success' : 'warning');
-                renderPage();
-                updatePagination();
+        // อัปเดต local
+        const roll = currentRolls.find(r => r.roll_number === rollNumber);
+        if (roll) {
+            roll.found_by_me = found;
+            if (found === 1) {
+                roll.checked_by = roll.checked_by ? roll.checked_by + ', ' + currentUser.username : currentUser.username;
+                roll.found_any = true;
             } else {
-                showToast('บันทึกไม่สำเร็จ', 'error');
-                if (checkboxEl) checkboxEl.checked = found !== 1;
+                roll.checked_by = (roll.checked_by || '').split(', ').filter(u => u !== currentUser.username).join(', ') || null;
+                roll.found_any = currentRolls.some(r => r.roll_number === rollNumber && r.checked_by);
             }
-        } catch (e) {
-            showToast('เกิดข้อผิดพลาด', 'error');
-            if (checkboxEl) checkboxEl.checked = found !== 1;
         }
+        const g = sizeGroups[currentPage];
+        // recalc found จาก currentRolls (นับ found_any)
+        const foundCountInSize = currentRolls.filter(r => r.found_any).length;
+        if (g) { g.found = foundCountInSize; }
+        foundCount.textContent = g ? g.found : 0;
+        notFoundCount.textContent = g ? g.total - g.found : 0;
+
+        if (checkboxEl) checkboxEl.checked = found === 1;
+        showToast(found === 1 ? '✅ พบม้วนนี้แล้ว' : '❌ ไม่พบม้วนนี้', found === 1 ? 'success' : 'warning');
+
+        // อัปเดต "ผู้ตรวจ" column แบบไม่ต้อง reload ทั้งหน้า
+        if (checkboxEl) {
+            const row = checkboxEl.closest('tr');
+            const cbCell = row.querySelector('.checked-by');
+            if (cbCell) cbCell.textContent = roll?.checked_by || '—';
+        }
+    } catch (e) {
+        showToast('เกิดข้อผิดพลาด', 'error');
+        if (checkboxEl) checkboxEl.checked = found !== 1;
     }
+}
 
-    prevPage.addEventListener('click', () => {
-        if (currentPage > 0) {
-            currentPage--;
-            renderPage();
-            updatePagination();
-        }
-    });
-    nextPage.addEventListener('click', () => {
-        if (currentPage < sizeGroups.length - 1) {
-            currentPage++;
-            renderPage();
-            updatePagination();
-        }
-    });
+prevPage.addEventListener('click', async () => {
+    if (currentPage > 0) {
+        currentPage--;
+        await renderCurrentSize();
+        updatePagination();
+    }
+});
+nextPage.addEventListener('click', async () => {
+    if (currentPage < sizeGroups.length - 1) {
+        currentPage++;
+        await renderCurrentSize();
+        updatePagination();
+    }
+});
 
-    statusFilter.addEventListener('change', () => loadCheckItems());
-    groupFilter.addEventListener('change', () => loadCheckItems());
+statusFilter.addEventListener('change', () => loadSizes());
+groupFilter.addEventListener('change', () => loadSizes());
 
-    showAlertsBtn.addEventListener('click', async () => {
+showAlertsBtn.addEventListener('click', async () => {
+    try {
+        const res = await fetch('/api/alerts', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (data.alerts && data.alerts.length) {
+            alertItems.innerHTML = data.alerts.map(a =>
+                `<li>📌 ม้วน <strong>${escHtml(a.roll_number)}</strong> พบโดย <strong>${escHtml(a.checked_by)}</strong> (${new Date(a.alert_date).toLocaleString('th-TH')})</li>`
+            ).join('');
+            alertModal.classList.add('visible');
+        } else showToast('ไม่มีม้วนที่พบไม่มีในสต็อก', 'info');
+    } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
+});
+alertModalClose.addEventListener('click', () => alertModal.classList.remove('visible'));
+
+let suggestTimeout;
+searchRollInput.addEventListener('input', function() {
+    const q = this.value.trim();
+    clearTimeout(suggestTimeout);
+    if (q.length < 1) { suggestions.classList.remove('show'); return; }
+    suggestTimeout = setTimeout(async () => {
         try {
-            const res = await fetch('/api/alerts', { headers: getAuthHeaders() });
+            const res = await fetch('/api/rolls/suggest?q=' + encodeURIComponent(q), { headers: getAuthHeaders() });
             const data = await res.json();
-            if (data.alerts && data.alerts.length) {
-                alertItems.innerHTML = data.alerts.map(a =>
-                    `<li>📌 ม้วน <strong>${a.roll_number}</strong> พบโดย <strong>${a.checked_by}</strong> (${new Date(a.alert_date).toLocaleString('th-TH')})</li>`
-                ).join('');
-                alertModal.classList.add('visible');
-            } else {
-                showToast('ไม่มีม้วนที่พบไม่มีในสต็อก', 'info');
-            }
-        } catch (e) {
-            showToast('เกิดข้อผิดพลาด', 'error');
-        }
-    });
-
-    alertModalClose.addEventListener('click', () => {
-        alertModal.classList.remove('visible');
-    });
-
-    let suggestTimeout;
-    searchRollInput.addEventListener('input', function() {
-        const q = this.value.trim();
-        clearTimeout(suggestTimeout);
-        if (q.length < 1) { suggestions.classList.remove('show'); return; }
-        suggestTimeout = setTimeout(async () => {
-            try {
-                const res = await fetch('/api/rolls/suggest?q=' + encodeURIComponent(q), {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                const data = await res.json();
-                if (Array.isArray(data) && data.length) {
-                    suggestions.innerHTML = data.map(s => `<div class="suggestion-item" data-value="${s}">${s}</div>`).join('');
-                    suggestions.classList.add('show');
-                    suggestions.querySelectorAll('.suggestion-item').forEach(el => {
-                        el.addEventListener('click', function() {
-                            searchRollInput.value = this.dataset.value;
-                            suggestions.classList.remove('show');
-                            searchRollBtn.click();
-                        });
+            if (Array.isArray(data) && data.length) {
+                suggestions.innerHTML = data.map(s => `<div class="suggestion-item" data-value="${escHtml(s)}">${escHtml(s)}</div>`).join('');
+                suggestions.classList.add('show');
+                suggestions.querySelectorAll('.suggestion-item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        searchRollInput.value = this.dataset.value;
+                        suggestions.classList.remove('show');
+                        searchRollBtn.click();
                     });
-                } else {
-                    suggestions.classList.remove('show');
-                }
-            } catch (e) {
-                suggestions.classList.remove('show');
-            }
-        }, 200);
-    });
+                });
+            } else suggestions.classList.remove('show');
+        } catch (e) { suggestions.classList.remove('show'); }
+    }, 200);
+});
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-input-wrapper')) suggestions.classList.remove('show');
+});
 
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.search-input-wrapper')) {
-            suggestions.classList.remove('show');
-        }
-    });
-
-    async function performSearch(q) {
-        if (!q) {
-            foundAlert.style.display = 'none';
+async function performSearch(q) {
+    if (!q) { foundAlert.style.display = 'none'; notFoundAlert.style.display = 'none'; return; }
+    try {
+        const res = await fetch('/api/rolls/search?q=' + encodeURIComponent(q), { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (res.ok && data.roll) {
+            const roll = data.roll;
+            foundAlertInfo.innerHTML = `✅ พบเลขม้วน <strong>${escHtml(q)}</strong> อยู่ในกลุ่ม <strong>${escHtml(roll.group_name || 'ไม่มีกลุ่ม')}</strong> Size <strong>${escHtml(roll.width || '0')}"</strong>`;
+            foundAlert.style.display = 'block';
             notFoundAlert.style.display = 'none';
-            return;
+            pendingAction = { rollNumber: q, found: 1, rollData: roll, type: 'confirmFound' };
+        } else {
+            foundAlert.style.display = 'none';
+            notFoundAlert.style.display = 'block';
+            pendingAction = { rollNumber: q, found: 1, rollData: null, type: 'confirmNotFound' };
         }
-        try {
-            const res = await fetch('/api/rolls/search?q=' + encodeURIComponent(q), {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const data = await res.json();
-            if (res.ok && data.roll) {
-                const roll = data.roll;
-                const groupName = roll.group_name || 'ไม่มีกลุ่ม';
-                const size = roll.width || '0';
-                foundAlertInfo.innerHTML = `✅ พบเลขม้วน <strong>${q}</strong> อยู่ในกลุ่ม <strong>${groupName}</strong> Size <strong>${size}"</strong>`;
-                foundAlert.style.display = 'block';
-                notFoundAlert.style.display = 'none';
-                pendingAction = { rollNumber: q, found: 1, checkbox: null, rollData: roll, type: 'confirmFound' };
-            } else {
-                foundAlert.style.display = 'none';
-                notFoundAlert.style.display = 'block';
-                pendingAction = { rollNumber: q, found: 1, checkbox: null, rollData: null, type: 'confirmNotFound' };
+    } catch (e) { showToast('เกิดข้อผิดพลาดในการค้นหา', 'error'); }
+}
+searchRollBtn.addEventListener('click', () => performSearch(searchRollInput.value.trim()));
+searchRollInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') searchRollBtn.click();
+    if (e.key === 'Escape') suggestions.classList.remove('show');
+});
+
+confirmFoundBtn.addEventListener('click', () => {
+    if (!pendingAction?.rollNumber) return showToast('ไม่มีข้อมูลที่จะยืนยัน', 'warning');
+    modalMessage.textContent = 'กรุณากรอกรหัสผ่านเพื่อยืนยันว่าพบม้วนกระดาษในพื้นที่กลุ่มของคุณ';
+    passwordModal.classList.add('visible');
+    modalPassword.value = ''; modalError.textContent = '';
+    modalPassword.focus();
+});
+cancelFoundBtn.addEventListener('click', () => { foundAlert.style.display = 'none'; pendingAction = null; });
+
+confirmNotFoundBtn.addEventListener('click', () => {
+    if (!pendingAction?.rollNumber) return showToast('ไม่มีข้อมูลที่จะยืนยัน', 'warning');
+    modalMessage.textContent = 'กรุณากรอกรหัสผ่านเพื่อยืนยันว่าพบม้วนกระดาษในพื้นที่กลุ่มของคุณ (ม้วนนี้ไม่มีใน Stock)';
+    passwordModal.classList.add('visible');
+    modalPassword.value = ''; modalError.textContent = '';
+    modalPassword.focus();
+});
+cancelNotFoundBtn.addEventListener('click', () => { notFoundAlert.style.display = 'none'; pendingAction = null; });
+
+modalCancel.addEventListener('click', () => { passwordModal.classList.remove('visible'); pendingAction = null; });
+modalConfirm.addEventListener('click', async () => {
+    const password = modalPassword.value.trim();
+    if (!password) { modalError.textContent = 'กรุณากรอกรหัสผ่าน'; return; }
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUser.username, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.token) {
+            modalError.textContent = '';
+            passwordModal.classList.remove('visible');
+            if (pendingAction) {
+                if (pendingAction.type === 'confirmFound' || pendingAction.type === 'confirmNotFound') {
+                    await saveCheck(pendingAction.rollNumber, 1, null);
+                    foundAlert.style.display = 'none';
+                    notFoundAlert.style.display = 'none';
+                    showToast('✅ ยืนยันพบม้วนเรียบร้อย', 'success');
+                    pendingAction = null;
+                } else if (pendingAction.rollNumber && pendingAction.found === 0 && pendingAction.checkbox) {
+                    await saveCheck(pendingAction.rollNumber, 0, pendingAction.checkbox);
+                    pendingAction = null;
+                }
             }
-        } catch (e) {
-            showToast('เกิดข้อผิดพลาดในการค้นหา', 'error');
+        } else {
+            modalError.textContent = 'รหัสผ่านไม่ถูกต้อง';
+            modalPassword.value = ''; modalPassword.focus();
         }
+    } catch (e) { modalError.textContent = 'เกิดข้อผิดพลาด'; }
+});
+modalPassword.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') modalConfirm.click();
+    if (e.key === 'Escape') modalCancel.click();
+});
+
+// ================================================================
+//  PDF: Modal เลือก size + print
+//  C + PDF fix 1, 2, 4, 5, 7, 9
+// ================================================================
+exportPdfBtn.addEventListener('click', () => {
+    if (!sizeGroups.length) return showToast('กรุณาโหลดข้อมูลก่อนพิมพ์', 'warning');
+    renderPdfSizeList();
+    pdfError.textContent = '';
+    pdfShowCheckmarks.checked = false;
+    pdfModal.classList.add('visible');
+});
+
+function renderPdfSizeList() {
+    pdfSizeList.innerHTML = sizeGroups.map(g => `
+        <label class="size-row">
+            <input type="checkbox" class="pdf-size-cb" value="${escHtml(g.width)}" checked />
+            <span>Size ${escHtml(g.width)}"</span>
+            <span class="found-badge">พบ ${g.found}/${g.total}</span>
+            <span class="count">${g.total} ม้วน</span>
+        </label>
+    `).join('');
+}
+pdfSelectAll.addEventListener('click', () => document.querySelectorAll('.pdf-size-cb').forEach(cb => cb.checked = true));
+pdfDeselectAll.addEventListener('click', () => document.querySelectorAll('.pdf-size-cb').forEach(cb => cb.checked = false));
+pdfCancel.addEventListener('click', () => pdfModal.classList.remove('visible'));
+
+pdfPrint.addEventListener('click', async () => {
+    const selected = Array.from(document.querySelectorAll('.pdf-size-cb:checked')).map(cb => cb.value);
+    if (!selected.length) { pdfError.textContent = 'กรุณาเลือกอย่างน้อย 1 Size'; return; }
+    pdfError.textContent = '';
+    pdfPrint.disabled = true;
+    pdfPrint.textContent = '⏳ กำลังเตรียม...';
+    try {
+        const html = await generatePrintHtml(selected, pdfShowCheckmarks.checked);
+        pdfModal.classList.remove('visible');
+        openPrintWindow(html);
+    } catch (e) {
+        pdfError.textContent = 'เกิดข้อผิดพลาด: ' + e.message;
+    } finally {
+        pdfPrint.disabled = false;
+        pdfPrint.textContent = '🖨️ พิมพ์';
+    }
+});
+
+async function fetchRollsForSize(size) {
+    const url = `/api/stock/check-items?group=${encodeURIComponent(groupFilter.value)}&status=${encodeURIComponent(statusFilter.value)}&size=${encodeURIComponent(size)}`;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'fetch failed');
+    const rolls = data.rolls || [];
+    rolls.sort((a, b) => {
+        const locA = a.loc || '', locB = b.loc || '';
+        if (locA !== locB) {
+            if (locA === 'LOC1') return -1;
+            if (locB === 'LOC1') return 1;
+            return locA.localeCompare(locB);
+        }
+        const order = { 'เต็ม': 0, 'เศษ': 1, 'รอกรอ': 2 };
+        const sA = order[a.status] ?? 99, sB = order[b.status] ?? 99;
+        if (sA !== sB) return sA - sB;
+        return (a.grade || '').localeCompare(b.grade || '');
+    });
+    return rolls;
+}
+
+async function generatePrintHtml(selectedSizes, showCheckmarks) {
+    // ดึง Stock meta
+    let stockCount = '', stockDate = '', stockTime = '';
+    try {
+        const res = await fetch('/api/stock/latest', { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (data.count_number) {
+            stockCount = data.count_number; stockDate = data.stock_date; stockTime = data.stock_time;
+        }
+    } catch (e) {}
+
+    const groupText = groupFilter.value !== 'all' ? groupFilter.value : 'ทั้งหมด';
+    let totalRolls = 0, totalFound = 0;
+
+    const sectionsHtml = [];
+    for (const size of selectedSizes) {
+        const rolls = await fetchRollsForSize(size);
+        const foundInSize = rolls.filter(r => r.found_any).length;
+        totalRolls += rolls.length;
+        totalFound += foundInSize;
+
+        const rowsHtml = rolls.map(roll => {
+            const mark = (showCheckmarks && roll.found_any) ? '✓' : '';
+            return `
+                <tr>
+                    <td>${escHtml(roll.loc || '—')}</td>
+                    <td>${escHtml(roll.status || '—')}</td>
+                    <td>${escHtml(roll.width ? roll.width + '"' : '—')}</td>
+                    <td>${escHtml(roll.grade || '—')}</td>
+                    <td class="roll-number">${escHtml(roll.roll_number || '—')}</td>
+                    <td class="check-cell">${mark}</td>
+                    <td>${escHtml(roll.dimeter || '—')}</td>
+                    <td>${escHtml(roll.kgs || '—')}</td>
+                </tr>
+            `;
+        }).join('');
+
+        sectionsHtml.push(`
+            <section class="size-section">
+                <div class="size-header">Size ${escHtml(size)}" — จำนวน ${rolls.length} ม้วน (พบ ${foundInSize})</div>
+                <table>
+                    <colgroup>
+                        <col style="width:7%"><col style="width:9%"><col style="width:7%">
+                        <col style="width:8%"><col style="width:22%"><col style="width:10%">
+                        <col style="width:10%"><col style="width:10%">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>LOC.</th><th>สถานะ</th><th>Size</th><th>Grade</th>
+                            <th>เบอร์ม้วน</th><th>ตรวจพบ</th><th>Dia.</th><th>Kg.</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+            </section>
+        `);
     }
 
-    searchRollBtn.addEventListener('click', async () => {
-        const q = searchRollInput.value.trim();
-        await performSearch(q);
-    });
+    const printDate = new Date().toLocaleString('th-TH');
+    const userName = currentUser?.username || '—';
 
-    searchRollInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') searchRollBtn.click();
-        if (e.key === 'Escape') suggestions.classList.remove('show');
-    });
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ตรวจนับสต็อก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    @page { size: A4 portrait; margin: 10mm 8mm; }  /* ⑤ */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif; background: #fff; color: #111; font-size: 13px; }
+    .doc { padding: 4px; }
+    .header-main { text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .header-sub { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; font-size: 13px; }
+    .header-sub .left { line-height: 1.5; }
+    .header-sub .right { text-align: right; line-height: 1.5; }
+    .note { font-size: 12px; padding: 4px 10px; background: #f4f7fc; border-left: 3px solid #1a4b6d; margin-bottom: 8px; }
 
-    confirmFoundBtn.addEventListener('click', () => {
-        if (!pendingAction || !pendingAction.rollNumber) {
-            showToast('ไม่มีข้อมูลที่จะยืนยัน', 'warning');
-            return;
-        }
-        modalMessage.textContent = 'กรุณากรอกรหัสผ่านเพื่อยืนยันว่าพบม้วนกระดาษในพื้นที่กลุ่มของคุณ';
-        passwordModal.classList.add('visible');
-        modalPassword.value = '';
-        modalError.textContent = '';
-        modalPassword.focus();
-    });
+    .size-section { page-break-before: always; }  /* 5 */
+    .size-section:first-of-type { page-break-before: auto; }
+    .size-header { font-size: 14px; font-weight: 700; margin: 4px 0; padding-left: 2px; }
 
-    cancelFoundBtn.addEventListener('click', () => {
-        foundAlert.style.display = 'none';
-        pendingAction = null;
-    });
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }  /* ④ */
+    thead { display: table-header-group; }  /* ⑦ หัวตารางซ้ำทุกหน้า */
+    tr { page-break-inside: avoid; }
+    th, td { border: 1px solid #555; padding: 3px 6px; font-size: 12px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    th { background: #e9edf4; font-weight: 700; text-align: center; }
+    .roll-number { font-weight: 700; }
+    .check-cell { text-align: center; font-size: 16px; font-weight: 700; color: #28a745; }
 
-    confirmNotFoundBtn.addEventListener('click', () => {
-        if (!pendingAction || !pendingAction.rollNumber) {
-            showToast('ไม่มีข้อมูลที่จะยืนยัน', 'warning');
-            return;
-        }
-        modalMessage.textContent = 'กรุณากรอกรหัสผ่านเพื่อยืนยันว่าพบม้วนกระดาษในพื้นที่กลุ่มของคุณ (ม้วนนี้ไม่มีใน Stock)';
-        passwordModal.classList.add('visible');
-        modalPassword.value = '';
-        modalError.textContent = '';
-        modalPassword.focus();
-    });
+    .signature-area { margin-top: 24px; display: flex; justify-content: space-around; page-break-inside: avoid; }
+    .signature-area .sig-block { text-align: center; width: 40%; }
+    .signature-area .sig-line { border-bottom: 1px solid #333; height: 40px; margin-bottom: 4px; }
+    .signature-area .sig-label { font-size: 13px; }
 
-    cancelNotFoundBtn.addEventListener('click', () => {
-        notFoundAlert.style.display = 'none';
-        pendingAction = null;
-    });
+    .footer { margin-top: 16px; text-align: center; font-size: 11px; color: #666; }
 
-    modalCancel.addEventListener('click', () => {
-        passwordModal.classList.remove('visible');
-        pendingAction = null;
-    });
-
-    modalConfirm.addEventListener('click', async () => {
-        const password = modalPassword.value.trim();
-        if (!password) { modalError.textContent = 'กรุณากรอกรหัสผ่าน'; return; }
-        try {
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser.username, password: password })
-            });
-            const data = await res.json();
-            if (res.ok && data.token) {
-                modalError.textContent = '';
-                passwordModal.classList.remove('visible');
-                if (pendingAction) {
-                    if (pendingAction.type === 'confirmFound' || pendingAction.type === 'confirmNotFound') {
-                        await saveCheck(pendingAction.rollNumber, 1, null);
-                        foundAlert.style.display = 'none';
-                        notFoundAlert.style.display = 'none';
-                        showToast('✅ ยืนยันพบม้วนเรียบร้อย', 'success');
-                        pendingAction = null;
-                        renderPage();
-                        updatePagination();
-                    } else if (pendingAction.rollNumber && pendingAction.found === 0 && pendingAction.checkbox) {
-                        await saveCheck(pendingAction.rollNumber, 0, pendingAction.checkbox);
-                        pendingAction = null;
-                    }
-                }
-            } else {
-                modalError.textContent = 'รหัสผ่านไม่ถูกต้อง';
-                modalPassword.value = '';
-                modalPassword.focus();
-            }
-        } catch (e) {
-            modalError.textContent = 'เกิดข้อผิดพลาด';
-        }
-    });
-
-    modalPassword.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') modalConfirm.click();
-        if (e.key === 'Escape') modalCancel.click();
-    });
-
-    // ================================================================
-    //  EXPORT PDF (แก้หัวตาราง "ตรวจพบ" ให้อยู่ในช่อง)
-    // ================================================================
-    async function exportPDF() {
-        const printWindow = window.open('', '_blank', 'width=1100,height=850');
-        if (!printWindow) {
-            showToast('กรุณาอนุญาต pop-up เพื่อพิมพ์', 'warning');
-            return;
-        }
-
-        let stockCount = '';
-        let stockDate = '';
-        let stockTime = '';
-        try {
-            const res = await fetch('/api/stock/latest', { headers: getAuthHeaders() });
-            const data = await res.json();
-            if (data.count_number) {
-                stockCount = data.count_number;
-                stockDate = data.stock_date;
-                stockTime = data.stock_time;
-            }
-        } catch (e) {
-            const metaText = stockMeta.textContent || '';
-            const match = metaText.match(/ครั้งที่\s*(.+?)\s*\|\s*วันที่\s*(.+?)\s*เวลา\s*(.+)/);
-            if (match) {
-                stockCount = match[1];
-                stockDate = match[2];
-                stockTime = match[3];
-            }
-        }
-
-        const groupText = groupFilter.value !== 'all' ? groupFilter.value : 'ทั้งหมด';
-        let totalRolls = 0;
-        let totalFound = 0;
-        let totalNotFound = 0;
-        sizeGroups.forEach(g => {
-            totalRolls += g.rolls.length;
-            totalFound += g.found;
-            totalNotFound += g.notFound;
-        });
-
-        // ✅ FIX: ตารางแบบใช้ table-layout: fixed เพื่อให้คอลัมน์ "ตรวจพบ" อยู่ในช่องพอดี
-        let allSectionsHtml = '';
-        sizeGroups.forEach((g) => {
-            const rolls = g.rolls;
-            const found = rolls.filter(r => r.found === 1).length;
-            const notFound = rolls.length - found;
-
-            const sizeHeader = `
-                <div style="font-size:18px;font-weight:700;margin-top:8px;margin-bottom:2px;text-align:left;padding-left:4px;">
-                    Size ${g.size}" จำนวน ${rolls.length} ม้วน
-                </div>
-            `;
-
-            let rowsHtml = '';
-            rolls.forEach(roll => {
-                rowsHtml += `
-                    <tr>
-                        <td>${roll.loc || '—'}</td>
-                        <td>${roll.status || '—'}</td>
-                        <td>${roll.width ? roll.width + '"' : '—'}</td>
-                        <td>${roll.grade || '—'}</td>
-                        <td class="roll-number">${roll.roll_number || '—'}</td>
-                        <td style="text-align:center;"></td>
-                        <td>${roll.dimeter || '—'}</td>
-                        <td>${roll.kgs || '—'}</td>
-                    </tr>
-                `;
-            });
-
-            allSectionsHtml += `
-                <div style="page-break-inside: auto;">
-                    ${sizeHeader}
-                    <table style="width:100%;border-collapse:collapse;font-size:18px;margin:0;border:1px solid #666;table-layout:auto;">
-                        <thead>
-                            <tr>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">LOC.</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">สถานะ</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">Size</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">Grade</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">เบอร์ม้วน</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 12px;border:1px solid #666;text-align:center;white-space:nowrap;">ตรวจพบ</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">Dia.</th>
-                                <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">Kg.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rowsHtml}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        });
-
-        const totalPages = sizeGroups.length || 1;
-
-        const printHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>ตรวจนับสต็อก</title>
-            <link rel="preconnect" href="https://fonts.googleapis.com">
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-            <style>
-                * { box-sizing: border-box; margin: 0; padding: 0; }
-                body {
-                    font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif;
-                    padding: 8px 12px;
-                    background: #fff;
-                    font-size: 16px;
-                    line-height: 1.2;
-                }
-                .header-main { font-size: 26px; font-weight: 700; text-align: center; margin-bottom: 8px; }
-                .header-sub { display: flex; justify-content: flex-end; align-items: flex-start; flex-wrap: wrap; margin-bottom: 2px; }
-                .header-sub .right-section { text-align: right; }
-                .header-sub .right-section .group-info { font-size: 22px; font-weight: 600; margin-bottom: 16px; }
-                .header-sub .right-section .signature { font-size: 18px; font-weight: 500; line-height: 2.2; }
-                .header-sub .right-section .signature .line { border-bottom: 1px solid #1a2a3a; width: 220px; display: inline-block; margin-left: 8px; height: 28px; }
-                .header-sub .right-section .signature .sign-row { margin-bottom: 2px; }
-                .note { font-size: 16px; font-weight: 400; color: #333; margin: 2px 0 4px 0; padding: 4px 10px; background: #f8faff; border-left: 4px solid #1a4b6d; }
-                .footer { margin-top: 12px; text-align: center; font-size: 14px; color: #555; }
-                table th, table td {
-                    white-space: nowrap;
-                }
-                @media print {
-                    body { padding: 4px 8px; font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif; }
-                    .header-main { font-size: 24px; }
-                    .header-sub .right-section .group-info { font-size: 20px; margin-bottom: 12px; }
-                    .header-sub .right-section .signature { font-size: 16px; line-height: 2.0; }
-                    .header-sub .right-section .signature .line { width: 160px; height: 22px; }
-                    table { font-size: 16px; }
-                    table th { font-size: 16px; padding: 3px 6px; border: 1px solid #666; white-space: nowrap; }
-                    table td { font-size: 16px; padding: 3px 6px; border: 1px solid #666; }
-                    .roll-number { font-weight: 700; font-size: 16px; }
-                    .note { font-size: 14px; margin: 1px 0 2px 0; padding: 2px 8px; }
-                    .footer { font-size: 12px; margin-top: 8px; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header-main">
-                ตรวจนับ STOCK : ครั้งที่ ${stockCount} | วันที่ ${stockDate} เวลา ${stockTime}
-            </div>
-            <div class="header-sub">
-                <div class="right-section">
-                    <div class="group-info">${groupText} : จำนวน ${totalRolls} ม้วน</div>
-                    <div class="signature">
-                        <div class="sign-row">ผู้ตรวจนับแผนกคลังลูกกระดาษ <span class="line"></span></div>
-                        <div class="sign-row">ผู้ตรวจนับแผนกบัญชี <span class="line"></span></div>
-                    </div>
-                </div>
-            </div>
-            <div class="note">
-                หมายเหตุ : เมื่อตรวจสอบพบม้วนกระดาษให้ทำเครื่องหมาย ✓ ในช่องตรวจพบ กรณีไม่พบให้เว้นเอาไว้
-            </div>
-            ${allSectionsHtml}
-            <div class="footer">หน้า 1 / ${totalPages}</div>
-        </body>
-        </html>
-        `;
-
-        printWindow.document.write(printHtml);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
+    @media print {
+        body { padding: 0; }
+        .no-print { display: none !important; }
     }
+</style>
+</head>
+<body>
+    <div class="doc">
+        <div class="header-main">ตรวจนับ STOCK : ครั้งที่ ${escHtml(stockCount)} | วันที่ ${escHtml(stockDate)} เวลา ${escHtml(stockTime)}</div>
+        <div class="header-sub">
+            <div class="left">
+                <div><strong>กลุ่ม:</strong> ${escHtml(groupText)}</div>
+                <div><strong>จำนวน:</strong> ${totalRolls} ม้วน (พบ ${totalFound})</div>
+            </div>
+            <div class="right">
+                <div>พิมพ์โดย: ${escHtml(userName)}</div>
+                <div>พิมพ์เมื่อ: ${escHtml(printDate)}</div>
+            </div>
+        </div>
+        <div class="note">หมายเหตุ : เมื่อตรวจสอบพบม้วนกระดาษให้ทำเครื่องหมาย ✓ ในช่องตรวจพบ กรณีไม่พบให้เว้นเอาไว้</div>
 
-    loadBtn.addEventListener('click', () => loadCheckItems());
-    exportPdfBtn.addEventListener('click', exportPDF);
-    backBtn.addEventListener('click', () => { window.location.href = '/'; });
+        ${sectionsHtml.join('')}
 
-    (async function init() {
-        await loadUser();
-        await loadStockSettings();
-        await loadGroups();
-        if (stockCountId) loadCheckItems();
-        searchRollInput.value = '';
-    })();
+        <div class="signature-area">
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-label">ผู้ตรวจนับแผนกคลังลูกกระดาษ</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-label">ผู้ตรวจนับแผนกบัญชี</div>
+            </div>
+        </div>
 
-    console.log('📋 Stock Check v11.0 ready');
+        <div class="footer">เอกสารนี้พิมพ์จากระบบ RollTracker</div>
+    </div>
+</body>
+</html>`;
+}
+
+// ② onafterprint → ปิดเองหลัง print dialog ถูกปิด
+// ⑨ ไม่ใช้ print/close ทันที — ให้ user เห็น dialog ก่อน
+function openPrintWindow(html) {
+    const w = window.open('', '_blank', 'width=1100,height=850');
+    if (!w) return showToast('กรุณาอนุญาต pop-up', 'warning');
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    // รอ render เสร็จก่อน print
+    w.onload = () => {
+        setTimeout(() => { try { w.focus(); w.print(); } catch (e) {} }, 400);
+    };
+    // ปิดหน้าต่างอัตโนมัติหลังพิมพ์เสร็จ (ผู้ใช้กด Cancel ก็ปิด)
+    w.onafterprint = () => { try { w.close(); } catch (e) {} };
+}
+
+loadBtn.addEventListener('click', () => loadSizes());
+backBtn.addEventListener('click', () => { window.location.href = '/'; });
+
+(async function init() {
+    await loadUser();
+    await loadStockSettings();
+    await loadGroups();
+    await loadSizes();
+    searchRollInput.value = '';
+})();
+
+console.log('📋 Stock Check v12.0 ready');
 </script>
 </body>
 </html>
