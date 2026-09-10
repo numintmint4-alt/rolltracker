@@ -224,7 +224,7 @@ table tr:hover td { background: #f8faff; }
         <div class="pdf-size-list" id="pdfSizeList"></div>
         <label class="pdf-option">
             <input type="checkbox" id="pdfShowCheckmarks" />
-            แสดงเครื่องหมาย ✓ ในช่อง "ตรวจพบ" ของม้วนที่พบแล้ว
+            แสดงเครื่องหมาย ✓ ในช่อง "พบ(P)" ของม้วนที่พบแล้ว
         </label>
         <div class="error-msg" id="pdfError"></div>
         <div class="modal-actions">
@@ -721,7 +721,6 @@ previewPrintBtn.addEventListener('click', async () => {
     try {
         const w = pdfPreviewFrame.contentWindow;
         if (!w) return showToast('ไม่สามารถพิมพ์ได้', 'error');
-        // รอให้ font โหลดเสร็จก่อนพิมพ์
         if (w.document.fonts && w.document.fonts.ready) {
             await w.document.fonts.ready;
         }
@@ -795,19 +794,29 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
         });
 
         allSectionsHtml.push(`
-            <div style="page-break-inside: auto;">
+            <div class="size-section">
                 ${sizeHeader}
-                <table style="width:100%;border-collapse:collapse;font-size:18px;margin:0;border:1px solid #666;table-layout:auto;">
+                <table>
+                    <colgroup>
+                        <col style="width:8%">
+                        <col style="width:10%">
+                        <col style="width:7%">
+                        <col style="width:9%">
+                        <col style="width:26%">
+                        <col style="width:7%">
+                        <col style="width:16.5%">
+                        <col style="width:16.5%">
+                    </colgroup>
                     <thead>
                         <tr>
-                            <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">LOC.</th>
-                            <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">สถานะ</th>
-                            <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">Size</th>
-                            <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">Grade</th>
-                            <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">เบอร์ม้วน</th>
-                            <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 12px;border:1px solid #666;text-align:center;white-space:nowrap;">ตรวจพบ</th>
-                            <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">Dia.</th>
-                            <th style="background:#e9edf4;font-weight:600;font-size:18px;padding:4px 8px;border:1px solid #666;text-align:left;white-space:nowrap;">Kg.</th>
+                            <th>LOC.</th>
+                            <th>สถานะ</th>
+                            <th>Size</th>
+                            <th>Grade</th>
+                            <th>เบอร์ม้วน</th>
+                            <th style="text-align:center;">พบ(P)</th>
+                            <th>Dia.</th>
+                            <th>Kg.</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -837,27 +846,48 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
             font-size: 16px;
             line-height: 1.2;
         }
-        .header-main { font-size: 26px; font-weight: 700; text-align: center; margin-bottom: 8px; }
+        .header-main { font-size: 26px; font-weight: 700; text-align: center; margin-bottom: 20px; }
         .header-sub { display: flex; justify-content: flex-end; align-items: flex-start; flex-wrap: wrap; margin-bottom: 2px; }
         .header-sub .right-section { text-align: right; }
-        .header-sub .right-section .group-info { font-size: 22px; font-weight: 600; margin-bottom: 16px; }
+        .header-sub .right-section .group-info { font-size: 22px; font-weight: 600; margin-bottom: 20px; }
         .header-sub .right-section .signature { font-size: 18px; font-weight: 500; line-height: 2.2; }
         .header-sub .right-section .signature .line { border-bottom: 1px solid #1a2a3a; width: 220px; display: inline-block; margin-left: 8px; height: 28px; }
         .header-sub .right-section .signature .sign-row { margin-bottom: 2px; }
         .note { font-size: 16px; font-weight: 400; color: #333; margin: 2px 0 4px 0; padding: 4px 10px; background: #f8faff; border-left: 4px solid #1a4b6d; }
         .footer { margin-top: 12px; text-align: center; font-size: 14px; color: #555; }
-        table th, table td {
-            white-space: nowrap;
+
+        .size-section { page-break-inside: avoid; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 18px;
+            margin: 0;
+            border: 1px solid #666;
+            table-layout: fixed;
         }
+        thead { display: table-header-group; }
+        tr { page-break-inside: avoid; }
+        th, td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 4px 8px;
+            border: 1px solid #666;
+            text-align: left;
+            font-size: 18px;
+        }
+        th { background: #e9edf4; font-weight: 600; }
+        .roll-number { font-weight: 700; }
+
         @media print {
             body { padding: 4px 8px; font-family: 'Sarabun', 'Segoe UI', system-ui, sans-serif; }
-            .header-main { font-size: 24px; }
-            .header-sub .right-section .group-info { font-size: 20px; margin-bottom: 12px; }
+            .header-main { font-size: 24px; margin-bottom: 18px; }
+            .header-sub .right-section .group-info { font-size: 20px; margin-bottom: 18px; }
             .header-sub .right-section .signature { font-size: 16px; line-height: 2.0; }
             .header-sub .right-section .signature .line { width: 160px; height: 22px; }
             table { font-size: 16px; }
-            table th { font-size: 16px; padding: 3px 6px; border: 1px solid #666; white-space: nowrap; }
-            table td { font-size: 16px; padding: 3px 6px; border: 1px solid #666; }
+            th, td { font-size: 16px; padding: 3px 6px; }
             .roll-number { font-weight: 700; font-size: 16px; }
             .note { font-size: 14px; margin: 1px 0 2px 0; padding: 2px 8px; }
             .footer { font-size: 12px; margin-top: 8px; }
@@ -878,7 +908,7 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
         </div>
     </div>
     <div class="note">
-        หมายเหตุ : เมื่อตรวจสอบพบม้วนกระดาษให้ทำเครื่องหมาย ✓ ในช่องตรวจพบ กรณีไม่พบให้เว้นเอาไว้
+        หมายเหตุ : เมื่อตรวจสอบพบม้วนกระดาษให้ทำเครื่องหมาย ✓ ในช่องพบ(P) กรณีไม่พบให้เว้นเอาไว้
     </div>
     ${allSectionsHtml.join('')}
     <div class="footer">หน้า 1 / ${totalPages}</div>
@@ -897,7 +927,7 @@ backBtn.addEventListener('click', () => { window.location.href = '/'; });
     searchRollInput.value = '';
 })();
 
-console.log('📋 Stock Check v14.0 ready');
+console.log('📋 Stock Check v15.0 ready');
 </script>
 </body>
 </html>
