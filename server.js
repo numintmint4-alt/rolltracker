@@ -159,6 +159,7 @@ function convertExcelDate(value) {
     return String(value);
 }
 
+// ---------- AUTH ----------
 app.post('/api/auth/login', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ message: 'Missing credentials' });
@@ -197,6 +198,7 @@ app.post('/api/auth/register', authMiddleware, adminMiddleware, async (req, res)
     }
 });
 
+// ---------- USER MANAGEMENT ----------
 app.get('/api/users', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const result = await pool.query(`SELECT id, username, role, is_active, created_at FROM users`);
@@ -226,6 +228,7 @@ app.delete('/api/users/:id', authMiddleware, adminMiddleware, async (req, res) =
     }
 });
 
+// ---------- ROLLS ----------
 app.get('/api/rolls/search', authMiddleware, async (req, res) => {
     const q = req.query.q || '';
     try {
@@ -277,6 +280,7 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
     }
 });
 
+// ---------- STOCK SETTINGS ----------
 app.post('/api/stock/settings', authMiddleware, adminMiddleware, async (req, res) => {
     const { count_number, stock_date, stock_time } = req.body;
     if (!count_number || !stock_date || !stock_time) {
@@ -310,7 +314,7 @@ app.get('/api/stock/groups', authMiddleware, async (req, res) => {
     }
 });
 
-// ✅ FIX: จัดการ CAST ที่ปลอดภัยกับทุกค่า width
+// ---------- STOCK CHECK ITEMS (FIXED) ----------
 app.get('/api/stock/check-items', authMiddleware, async (req, res) => {
     const group = req.query.group || 'all';
     const status = req.query.status || 'all';
@@ -318,41 +322,61 @@ app.get('/api/stock/check-items', authMiddleware, async (req, res) => {
     const limit = parseInt(req.query.limit) || 50;
     const offset = (page - 1) * limit;
 
-    let whereClause = '1=1';
-    const params = [];
-    let paramCount = 1;
-
+    // สร้าง WHERE และ params สำหรับกรอง
+    const filterParams = [];
+    let filterWhere = '1=1';
     if (group !== 'all') {
-        whereClause += ` AND group_name = $${paramCount}`;
-        params.push(group);
-        paramCount++;
+        filterParams.push(group);
+        filterWhere += ` AND group_name = $${filterParams.length}`;
     }
     if (status !== 'all') {
-        whereClause += ` AND status = $${paramCount}`;
-        params.push(status);
-        paramCount++;
+        filterParams.push(status);
+        filterWhere += ` AND status = $${filterParams.length}`;
     }
 
     try {
-        const countResult = await pool.query(`SELECT COUNT(*) as total FROM rolls WHERE ${whereClause}`, params);
+        // COUNT (ใช้ filterParams)
+        const countResult = await pool.query(
+            `SELECT COUNT(*) as total FROM rolls WHERE ${filterWhere}`,
+            filterParams
+        );
         const total = parseInt(countResult.rows[0].total);
 
-        const queryParams = [req.user.username, ...params];
-        // ✅ FIX: ใช้ CASE WHEN เพื่อ CAST อย่างปลอดภัย (ถ้าไม่ใช่ตัวเลขให้เป็น 99999)
+        // MAIN QUERY: username = $1, แล้วต่อด้วย filterParams, แล้วต่อด้วย limit, offset
+        const mainParams = [req.user.username, ...filterParams];
+        const limitIdx = mainParams.length + 1;
+        const offsetIdx = mainParams.length + 2;
+        mainParams.push(limit, offset);
+
+        // ปรับ WHERE ให้ index เริ่มที่ $2 (เพราะ $1 = username)
+        let mainWhere = '1=1';
+        let idx = 2;
+        if (group !== 'all') {
+            mainWhere += ` AND group_name = $${idx}`;
+            idx++;
+        }
+        if (status !== 'all') {
+            mainWhere += ` AND status = $${idx}`;
+            idx++;
+        }
+
         const query = `
             SELECT r.*,
-                   (SELECT found FROM stock_check_items WHERE stock_count_id = (SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1) AND roll_number = r.roll_number AND checked_by = $1) as found,
-                   (SELECT checked_by FROM stock_check_items WHERE stock_count_id = (SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1) AND roll_number = r.roll_number AND found = 1) as checked_by
+                   (SELECT found FROM stock_check_items 
+                    WHERE stock_count_id = (SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1) 
+                    AND roll_number = r.roll_number AND checked_by = $1) as found,
+                   (SELECT checked_by FROM stock_check_items 
+                    WHERE stock_count_id = (SELECT id FROM stock_counts ORDER BY id DESC LIMIT 1) 
+                    AND roll_number = r.roll_number AND found = 1) as checked_by
             FROM rolls r
-            WHERE ${whereClause}
+            WHERE ${mainWhere}
             ORDER BY r.loc ASC NULLS LAST,
                      CASE r.status WHEN 'เต็ม' THEN 0 WHEN 'เศษ' THEN 1 WHEN 'รอกรอ' THEN 2 ELSE 3 END,
                      CASE WHEN r.width ~ '^[0-9]+$' THEN CAST(r.width AS INTEGER) ELSE 99999 END,
                      r.grade ASC
-            LIMIT $${params.length + 2} OFFSET $${params.length + 3}
+            LIMIT $${limitIdx} OFFSET $${offsetIdx}
         `;
-        const dataParams = [...queryParams, limit, offset];
-        const result = await pool.query(query, dataParams);
+        const result = await pool.query(query, mainParams);
 
         res.json({
             stock_count_id: null,
@@ -368,6 +392,7 @@ app.get('/api/stock/check-items', authMiddleware, async (req, res) => {
     }
 });
 
+// ---------- STOCK CHECK (บันทึก) ----------
 app.post('/api/stock/check', authMiddleware, async (req, res) => {
     const { roll_number, found, checked_by } = req.body;
     if (!roll_number) return res.status(400).json({ message: 'Missing roll number' });
@@ -401,6 +426,7 @@ app.post('/api/stock/check', authMiddleware, async (req, res) => {
     }
 });
 
+// ---------- ALERTS ----------
 app.get('/api/alerts', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const result = await pool.query(`SELECT * FROM stock_alerts WHERE resolved = 0 ORDER BY alert_date DESC`);
@@ -419,6 +445,7 @@ app.put('/api/alerts/:id/resolve', authMiddleware, adminMiddleware, async (req, 
     }
 });
 
+// ---------- IMPORT EXCEL ----------
 const upload = multer({ dest: 'uploads/' });
 
 app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), async (req, res) => {
@@ -504,6 +531,7 @@ app.get('/api/import/history', authMiddleware, adminMiddleware, async (req, res)
     }
 });
 
+// ---------- CLEAR DATA ----------
 app.delete('/api/data/clear', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         await pool.query(`DELETE FROM rolls`);
@@ -530,6 +558,7 @@ app.delete('/api/data/clear-all', authMiddleware, adminMiddleware, async (req, r
     }
 });
 
+// ---------- SERVE FRONTEND ----------
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
