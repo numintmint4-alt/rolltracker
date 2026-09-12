@@ -43,7 +43,6 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 .btn-print { background: #28a745; color: #fff; } .btn-print:hover { background: #218838; }
 .btn-print:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ⭐ Preview: จัดกึ่งกลางทั้งแนวตั้ง-แนวนอน */
 .preview-wrap {
     background: #e9edf4;
     padding: 20px;
@@ -62,7 +61,6 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     padding: 4mm;
     box-sizing: border-box;
     background: #fff;
-    border: 1.5pt solid #000;      /* ⭐ เพิ่มบรรทัดนี้ */
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -75,7 +73,6 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 }
 
 /* ===== 1 Label ===== */
-/* ⭐ ใช้ margin ติดลบ เพื่อให้ขอบที่ชนกันซ้อนทับ (ไม่หนา 2 เท่า) */
 .label {
     border: 0.75pt solid #000;
     margin: -0.375pt;
@@ -101,9 +98,10 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     text-overflow: ellipsis;
     display: flex;
     align-items: center;
+    justify-content: center;      /* ⭐ กึ่งกลางแนวนอน (default) */
 }
 
-/* ⭐ กลุ่ม อยู่ขวา — rotate -90° (อ่านจากล่างขึ้นบน) */
+/* ⭐ กลุ่ม อยู่ขวา — rotate -90° */
 .label .side {
     width: 11mm;
     border-left: 0.75pt solid #000;
@@ -123,33 +121,50 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     display: inline-block;
 }
 
+/* ⭐ เลขม้วน: กึ่งกลาง + ดาวอยู่ขวาสุด */
 .label .roll-row {
     background: #e8e8e8;
     border-bottom: 0.75pt solid #000;
     font-size: 17pt;
     font-weight: 700;
-    justify-content: space-between;
+    position: relative;            /* ⭐ ให้ .star ใช้ absolute ได้ */
+    justify-content: center;       /* ⭐ เลขม้วนกึ่งกลาง */
+    padding: 0 8mm;                /* ⭐ กันชนกับดาว */
 }
-.label .roll-row .star { font-size: 15pt; }
+.label .roll-row .star {
+    font-size: 15pt;
+    position: absolute;            /* ⭐ ติดขวาสุด */
+    right: 1.5mm;
+    top: 50%;
+    transform: translateY(-50%);
+}
 
+/* ⭐ Grade + Size: กึ่งกลาง */
 .label .grade-row {
     font-size: 15pt;
     font-weight: 600;
     border-bottom: 0.5pt solid #000;
+    justify-content: center;
 }
 
+/* ⭐ Dia.: กึ่งกลาง */
 .label .dia-row {
     font-size: 13pt;
     border-bottom: 0.5pt solid #000;
+    justify-content: center;
 }
 
+/* ลงชื่อ + สถานที่: ชิดซ้าย (ตามเดิม) */
 .label .sign-row {
     font-size: 9pt;
     border-bottom: 0.5pt solid #000;
+    justify-content: flex-start;
+    text-align: left;
 }
-
 .label .place-row {
     font-size: 9pt;
+    justify-content: flex-start;
+    text-align: left;
 }
 
 .placeholder {
@@ -384,7 +399,7 @@ $('backBtn').addEventListener('click', () => { window.location.href = '/stock-ch
     } catch (e) { window.location.href = '/'; }
 })();
 
-console.log('🏷️ Label Print v1.7 ready');
+console.log('🏷️ Label Print v1.8 ready');
 </script>
 </body>
 </html>
