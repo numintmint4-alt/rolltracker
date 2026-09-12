@@ -94,21 +94,24 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     align-items: center;
 }
 
-/* ⭐ กลุ่ม อยู่ขวา — ตัวอักษรหันแบบในภาพ (vertical-rl) */
+/* ⭐ กลุ่ม อยู่ขวา — ตัวอักษรอ่านจากล่างขึ้นบน (rotate -90°) */
 .label .side {
     width: 11mm;
-    border-left: 1.2px solid #000;      /* ⭐ ซ้ายของ side = ขอบเขตกับ main */
+    border-left: 1.2px solid #000;
     display: flex;
     align-items: center;
     justify-content: center;
-    writing-mode: vertical-rl;          /* ⭐ หันขวา (ตามภาพ) */
-    text-orientation: mixed;
-    font-size: 15pt;
-    font-weight: 500;
-    padding: 1mm 0;
-    letter-spacing: 0.5px;
     height: 100%;
     flex-shrink: 0;
+    overflow: hidden;
+}
+.label .side span {
+    transform: rotate(-90deg);      /* ⭐ อ่านจากล่างขึ้นบน */
+    white-space: nowrap;
+    font-size: 15pt;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    display: inline-block;
 }
 
 .label .roll-row {
@@ -318,7 +321,7 @@ function renderPreview() {
     const group = currentRoll.group_name || '';
     const rollNum = currentRoll.roll_number || '';
 
-    // ⭐ side อยู่หลัง main → ตำแหน่งขวา
+    // ⭐ side อยู่หลัง main + มี <span> ข้างในเพื่อ rotate
     const labelHtml = (idx) => `
         <div class="label">
             <div class="main">
@@ -331,7 +334,7 @@ function renderPreview() {
                 <div class="sign-row">ลงชื่อจนท.บัญชี:</div>
                 <div class="place-row">สถานที่พบ / กลุ่ม:</div>
             </div>
-            <div class="side">${escHtml(group)}</div>
+            <div class="side"><span>${escHtml(group)}</span></div>
         </div>
     `;
 
@@ -364,7 +367,7 @@ $('backBtn').addEventListener('click', () => { window.location.href = '/stock-ch
     } catch (e) { window.location.href = '/'; }
 })();
 
-console.log('🏷️ Label Print v1.5 ready');
+console.log('🏷️ Label Print v1.6 ready');
 </script>
 </body>
 </html>
