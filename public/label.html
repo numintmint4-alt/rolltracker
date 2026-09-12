@@ -56,7 +56,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 .label-page {
     width: 148mm;
     height: 210mm;
-    padding: 4mm;                    /* ⭐ ข้อ 3: ขอบ 4 มม. */
+    padding: 4mm;
     box-sizing: border-box;
     background: #fff;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
@@ -65,10 +65,10 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     grid-template-rows: repeat(5, 1fr);
     font-family: 'Sarabun', sans-serif;
     color: #000;
-    overflow: hidden;                 /* ⭐ ข้อ 2: กัน overflow */
+    overflow: hidden;
 }
 
-/* ===== 1 Label (70 × 40.4 mm) ===== */
+/* ===== 1 Label ===== */
 .label {
     border: 1.2px solid #000;
     display: flex;
@@ -78,27 +78,9 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     height: 100%;
 }
 
-/* ⭐ ข้อ 1: กลุ่มอยู่ซ้าย + ตัวอักษรหันซ้าย */
-.label .side {
-    width: 11mm;
-    border-right: 1.2px solid #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    writing-mode: vertical-lr;        /* ⭐ หันซ้าย (เดิม vertical-rl หันขวา) */
-    text-orientation: mixed;
-    font-size: 15pt;
-    font-weight: 500;
-    padding: 1mm 0;
-    letter-spacing: 0.5px;
-    height: 100%;
-    flex-shrink: 0;
-}
-
 .label .main {
     flex: 1;
     display: grid;
-    /* ⭐ ใช้ fr แทน mm เพื่อให้ scale ตามขนาดจริง */
     grid-template-rows: 11fr 8.8fr 8.8fr 6.7fr 6.7fr;
     min-width: 0;
     height: 100%;
@@ -110,6 +92,23 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     text-overflow: ellipsis;
     display: flex;
     align-items: center;
+}
+
+/* ⭐ กลุ่ม อยู่ขวา — ตัวอักษรหันแบบในภาพ (vertical-rl) */
+.label .side {
+    width: 11mm;
+    border-left: 1.2px solid #000;      /* ⭐ ซ้ายของ side = ขอบเขตกับ main */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    writing-mode: vertical-rl;          /* ⭐ หันขวา (ตามภาพ) */
+    text-orientation: mixed;
+    font-size: 15pt;
+    font-weight: 500;
+    padding: 1mm 0;
+    letter-spacing: 0.5px;
+    height: 100%;
+    flex-shrink: 0;
 }
 
 .label .roll-row {
@@ -157,7 +156,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
         margin: 0;
         width: 148mm;
         height: 210mm;
-        overflow: hidden;              /* ⭐ ข้อ 2: กันหน้าว่าง */
+        overflow: hidden;
     }
     .container {
         box-shadow: none;
@@ -182,7 +181,6 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     }
     .label-page {
         box-shadow: none;
-        /* ⭐ ข้อ 2: ลบ page-break-after ที่ทำให้เกิดหน้าว่าง */
         page-break-after: auto !important;
         break-after: auto !important;
         margin: 0;
@@ -320,9 +318,9 @@ function renderPreview() {
     const group = currentRoll.group_name || '';
     const rollNum = currentRoll.roll_number || '';
 
+    // ⭐ side อยู่หลัง main → ตำแหน่งขวา
     const labelHtml = (idx) => `
         <div class="label">
-            <div class="side">${escHtml(group)}</div>
             <div class="main">
                 <div class="roll-row">
                     <span>${escHtml(rollNum)}</span>
@@ -333,6 +331,7 @@ function renderPreview() {
                 <div class="sign-row">ลงชื่อจนท.บัญชี:</div>
                 <div class="place-row">สถานที่พบ / กลุ่ม:</div>
             </div>
+            <div class="side">${escHtml(group)}</div>
         </div>
     `;
 
@@ -365,7 +364,7 @@ $('backBtn').addEventListener('click', () => { window.location.href = '/stock-ch
     } catch (e) { window.location.href = '/'; }
 })();
 
-console.log('🏷️ Label Print v1.4 ready');
+console.log('🏷️ Label Print v1.5 ready');
 </script>
 </body>
 </html>
