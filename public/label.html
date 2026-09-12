@@ -98,7 +98,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     text-overflow: ellipsis;
     display: flex;
     align-items: center;
-    justify-content: center;      /* ⭐ เปลี่ยน: กึ่งกลาง (default ใหม่) */
+    justify-content: center;       /* default = กึ่งกลาง */
 }
 
 /* ⭐ กลุ่ม อยู่ขวา — rotate -90° */
@@ -127,13 +127,13 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     border-bottom: 0.75pt solid #000;
     font-size: 17pt;
     font-weight: 700;
-    position: relative;            /* ⭐ ให้ .star ใช้ absolute ได้ */
-    justify-content: center;       /* ⭐ เลขม้วนกึ่งกลาง */
-    padding: 0 8mm;                /* ⭐ กันชนกับดาว */
+    position: relative;
+    justify-content: center;
+    padding: 0 8mm;
 }
 .label .roll-row .star {
     font-size: 15pt;
-    position: absolute;            /* ⭐ ติดขวาสุด */
+    position: absolute;
     right: 1.5mm;
     top: 50%;
     transform: translateY(-50%);
@@ -154,17 +154,17 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     justify-content: center;
 }
 
-/* ลงชื่อ + สถานที่: ชิดซ้าย (ตามเดิม) */
-.label .sign-row {
+/* ⭐ ลงชื่อ + สถานที่: ชิดซ้าย — เพิ่ม specificity เป็น `.label .main > .sign-row` */
+.label .main > .sign-row {
     font-size: 9pt;
     border-bottom: 0.5pt solid #000;
-    justify-content: flex-start;  /* ⭐ เพิ่ม: override กลับเป็นชิดซ้าย */
-    text-align: left;             /* ⭐ เพิ่ม: ชิดซ้าย (สำรอง) */
+    justify-content: flex-start;   /* ⭐ ชิดซ้าย */
+    text-align: left;
 }
-.label .place-row {
+.label .main > .place-row {
     font-size: 9pt;
-    justify-content: flex-start;  /* ⭐ เพิ่ม: override กลับเป็นชิดซ้าย */
-    text-align: left;             /* ⭐ เพิ่ม: ชิดซ้าย (สำรอง) */
+    justify-content: flex-start;   /* ⭐ ชิดซ้าย */
+    text-align: left;
 }
 
 .placeholder {
@@ -399,7 +399,7 @@ $('backBtn').addEventListener('click', () => { window.location.href = '/stock-ch
     } catch (e) { window.location.href = '/'; }
 })();
 
-console.log('🏷️ Label Print v1.8 ready');
+console.log('🏷️ Label Print v1.9 ready');
 </script>
 </body>
 </html>
