@@ -265,6 +265,110 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
     } catch (e) { res.status(500).json({ message: 'DB error' }); }
 });
 
+// ---------- ⭐ NEW: DASHBOARD GROUP SUMMARY ----------
+app.get('/api/dashboard/group-summary', authMiddleware, async (req, res) => {
+    try {
+        const stockId = await getLatestStockCountId();
+
+        const totalResult = await pool.query(`SELECT COUNT(*)::int AS total FROM rolls`);
+        let foundTotal = 0;
+        if (stockId) {
+            const fr = await pool.query(
+                `SELECT COUNT(DISTINCT roll_number)::int AS found
+                 FROM stock_check_items
+                 WHERE stock_count_id = $1 AND found = 1`,
+                [stockId]
+            );
+            foundTotal = fr.rows[0].found || 0;
+        }
+        const total = totalResult.rows[0].total;
+        foundTotal = Math.min(foundTotal, total);
+        const notFoundTotal = total - foundTotal;
+
+        const q = `
+            SELECT r.group_name, r.width,
+                   COUNT(*)::int AS total,
+                   COUNT(*) FILTER (WHERE EXISTS (
+                       SELECT 1 FROM stock_check_items sci
+                       WHERE sci.stock_count_id = $1
+                         AND sci.roll_number = r.roll_number
+                         AND sci.found = 1
+                   ))::int AS found
+            FROM rolls r
+            GROUP BY r.group_name, r.width
+            ORDER BY r.group_name NULLS LAST,
+                     CASE WHEN r.width ~ '^[0-9]+$' THEN CAST(r.width AS INTEGER) ELSE 99999 END,
+                     r.width
+        `;
+        const rows = (await pool.query(q, [stockId])).rows;
+
+        const groupMap = new Map();
+        for (const row of rows) {
+            const gname = row.group_name || '(ไม่มีกลุ่ม)';
+            if (!groupMap.has(gname)) {
+                groupMap.set(gname, { group_name: gname, total: 0, found: 0, sizes: [] });
+            }
+            const g = groupMap.get(gname);
+            g.total += row.total;
+            g.found += row.found;
+            g.sizes.push({
+                width: row.width || '—',
+                total: row.total,
+                found: row.found,
+                not_found: row.total - row.found
+            });
+        }
+
+        const groups = Array.from(groupMap.values()).map(g => {
+            g.not_found = g.total - g.found;
+            g.percent_found = g.total > 0 ? (g.found / g.total * 100) : 0;
+            g.sizes = g.sizes.map(s => ({
+                ...s,
+                percent_found: s.total > 0 ? (s.found / s.total * 100) : 0
+            }));
+            return g;
+        });
+
+        res.json({
+            groups,
+            overall: {
+                total,
+                found: foundTotal,
+                not_found: notFoundTotal,
+                percent_found: total > 0 ? (foundTotal / total * 100) : 0
+            }
+        });
+    } catch (e) {
+        console.error('group-summary error:', e);
+        res.status(500).json({ message: 'DB error: ' + e.message });
+    }
+});
+
+// ---------- ⭐ NEW: DASHBOARD NOT FOUND LIST ----------
+app.get('/api/dashboard/not-found-list', authMiddleware, async (req, res) => {
+    try {
+        const stockId = await getLatestStockCountId();
+        const where = `NOT EXISTS (
+            SELECT 1 FROM stock_check_items sci
+            WHERE sci.stock_count_id = $1
+              AND sci.roll_number = r.roll_number
+              AND sci.found = 1
+        )`;
+        const q = `
+            SELECT r.roll_number, r.width, r.group_name, r.loc, r.status, r.grade, r.dimeter, r.kgs
+            FROM rolls r
+            WHERE ${where}
+            ORDER BY r.group_name NULLS LAST, r.width, r.roll_number
+            LIMIT 5000
+        `;
+        const result = await pool.query(q, [stockId]);
+        res.json({ rolls: result.rows, stock_id: stockId });
+    } catch (e) {
+        console.error('not-found-list error:', e);
+        res.status(500).json({ message: 'DB error: ' + e.message });
+    }
+});
+
 // ---------- STOCK SETTINGS ----------
 app.post('/api/stock/settings', authMiddleware, adminMiddleware, async (req, res) => {
     const { count_number, stock_date, stock_time } = req.body;
@@ -485,7 +589,7 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
                 buyDate = buyDate.split('T')[0];
             }
             rows.push([
-                rollNumber,
+                String(rollNumber).trim(),
                 row['grade'] || '',
                 row['width'] ? String(row['width']) : '',
                 row['supplier'] || '',
@@ -507,11 +611,18 @@ app.post('/api/import', authMiddleware, adminMiddleware, upload.single('file'), 
             ]);
         }
 
+        // ⭐ Deduplicate: เก็บแถวสุดท้ายของแต่ละ roll_number (แก้ error "cannot affect row a second time")
+        const dedupMap = new Map();
+        for (const r of rows) {
+            dedupMap.set(r[0], r);  // r[0] = roll_number
+        }
+        const uniqueRows = Array.from(dedupMap.values());
+
         // ⭐ BATCH INSERT — ทีละ 500 แถว
         const BATCH_SIZE = 500;
         const COLS = 19;
-        for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-            const batch = rows.slice(i, i + BATCH_SIZE);
+        for (let i = 0; i < uniqueRows.length; i += BATCH_SIZE) {
+            const batch = uniqueRows.slice(i, i + BATCH_SIZE);
 
             const values = [];
             const placeholders = batch.map((rowVals, rowIdx) => {
