@@ -98,7 +98,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     text-overflow: ellipsis;
     display: flex;
     align-items: center;
-    justify-content: center;      /* ⭐ กึ่งกลางแนวนอน (default) */
+    justify-content: center;      /* ⭐ เปลี่ยน: กึ่งกลาง (default ใหม่) */
 }
 
 /* ⭐ กลุ่ม อยู่ขวา — rotate -90° */
@@ -158,13 +158,13 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 .label .sign-row {
     font-size: 9pt;
     border-bottom: 0.5pt solid #000;
-    justify-content: flex-start;
-    text-align: left;
+    justify-content: flex-start;  /* ⭐ เพิ่ม: override กลับเป็นชิดซ้าย */
+    text-align: left;             /* ⭐ เพิ่ม: ชิดซ้าย (สำรอง) */
 }
 .label .place-row {
     font-size: 9pt;
-    justify-content: flex-start;
-    text-align: left;
+    justify-content: flex-start;  /* ⭐ เพิ่ม: override กลับเป็นชิดซ้าย */
+    text-align: left;             /* ⭐ เพิ่ม: ชิดซ้าย (สำรอง) */
 }
 
 .placeholder {
