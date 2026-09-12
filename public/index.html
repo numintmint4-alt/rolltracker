@@ -503,7 +503,7 @@
         .pct-high { color: #28a745; }
         .pct-mid { color: #e6a800; }
         .pct-low { color: #dc3545; }
-        .notfound-link {
+                .notfound-link {
             display: inline-block;
             background: #dc3545; color: #fff; padding: 4px 14px;
             border-radius: 20px; font-size: 12px;
@@ -511,6 +511,134 @@
             transition: 0.2s;
         }
         .notfound-link:hover { background: #c82333; }
+
+        /* ⭐ Group Cards */
+        .group-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .group-card {
+            background: #fff;
+            border: 1px solid #e9edf4;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+        .group-card:hover { box-shadow: 0 4px 16px rgba(26,75,109,0.08); }
+        .group-card-header {
+            background: linear-gradient(135deg, #f8faff, #eef4fb);
+            padding: 14px 20px;
+            border-bottom: 1px solid #e9edf4;
+        }
+        .group-card-title-row {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 10px; margin-bottom: 10px;
+        }
+        .group-card-title {
+            font-size: 17px; font-weight: 700; color: #0b2b44;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .group-card-title .group-icon { font-size: 20px; }
+        .group-card-title .group-count {
+            background: #1a4b6d; color: #fff; padding: 2px 12px;
+            border-radius: 20px; font-size: 12px; font-weight: 600;
+        }
+        .group-card-actions { display: flex; align-items: center; gap: 8px; }
+        .group-card-actions .total-badge {
+            background: #e9edf4; color: #1a2a3a; padding: 4px 14px;
+            border-radius: 20px; font-size: 13px; font-weight: 600;
+        }
+        .toggle-btn {
+            background: #1a4b6d; color: #fff; border: none;
+            padding: 5px 16px; border-radius: 20px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            transition: 0.2s; display: flex; align-items: center; gap: 4px;
+        }
+        .toggle-btn:hover { background: #0b2b44; }
+        .toggle-btn .arrow {
+            display: inline-block; transition: transform 0.25s;
+            font-size: 10px;
+        }
+        .toggle-btn.expanded .arrow { transform: rotate(90deg); }
+
+        .group-progress-row {
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        }
+        .group-progress-bar {
+            flex: 1; min-width: 160px; height: 10px; background: #e9edf4;
+            border-radius: 6px; overflow: hidden;
+        }
+        .group-progress-fill {
+            height: 100%; border-radius: 6px;
+            transition: width 0.6s ease;
+        }
+        .group-progress-fill.pct-high { background: linear-gradient(90deg, #28a745, #4cd964); }
+        .group-progress-fill.pct-mid { background: linear-gradient(90deg, #e6a800, #f4c430); }
+        .group-progress-fill.pct-low { background: linear-gradient(90deg, #dc3545, #ef5350); }
+        .group-progress-pct { font-size: 15px; font-weight: 700; min-width: 65px; text-align: right; }
+        .group-progress-detail {
+            font-size: 12px; color: #5a6a7e; display: flex; gap: 12px;
+            flex-wrap: wrap; width: 100%; margin-top: 4px;
+        }
+        .group-progress-detail span { display: flex; align-items: center; gap: 4px; }
+        .badge-dot-found {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            background: #28a745;
+        }
+        .badge-dot-notfound {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            background: #dc3545;
+        }
+
+        .group-card-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease;
+        }
+        .group-card-body.expanded { max-height: 1000px; }
+        .size-row {
+            display: grid;
+            grid-template-columns: 100px 1fr 90px 130px;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid #f0f3f8;
+        }
+        .size-row:last-child { border-bottom: none; }
+        .size-row:hover { background: #f8faff; }
+        .size-label {
+            font-weight: 600; color: #0b2b44; font-size: 14px;
+        }
+        .size-progress-bar {
+            height: 8px; background: #e9edf4; border-radius: 6px; overflow: hidden;
+        }
+        .size-progress-fill {
+            height: 100%; border-radius: 6px;
+            transition: width 0.6s ease;
+        }
+        .size-progress-fill.pct-high { background: linear-gradient(90deg, #28a745, #4cd964); }
+        .size-progress-fill.pct-mid { background: linear-gradient(90deg, #e6a800, #f4c430); }
+        .size-progress-fill.pct-low { background: linear-gradient(90deg, #dc3545, #ef5350); }
+        .size-pct { font-weight: 700; font-size: 14px; text-align: right; }
+        .size-pct.pct-high { color: #28a745; }
+        .size-pct.pct-mid { color: #e6a800; }
+        .size-pct.pct-low { color: #dc3545; }
+        .size-counts {
+            font-size: 13px; color: #5a6a7e; text-align: right;
+            display: flex; gap: 8px; justify-content: flex-end;
+        }
+        .size-counts .cnt-found { color: #28a745; font-weight: 600; }
+        .size-counts .cnt-notfound { color: #dc3545; font-weight: 600; }
+
+        @media (max-width: 640px) {
+            .size-row {
+                grid-template-columns: 70px 1fr 60px;
+                font-size: 12px;
+                padding: 8px 14px;
+            }
+            .size-counts { display: none; }
+        }
     </style>
 </head>
 <body>
