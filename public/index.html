@@ -506,46 +506,56 @@
         }
         .notfound-link:hover { background: #c82333; }
 
-        /* ⭐ Group Cards */
+        /* ⭐ Group Cards — Grid 3 คอลัมน์ */
         .group-cards {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 14px;
         }
+        @media (max-width: 900px) {
+            .group-cards { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .group-cards { grid-template-columns: 1fr; }
+        }
+
         .group-card {
             background: #fff;
             border: 1px solid #e9edf4;
             border-radius: 16px;
             overflow: hidden;
             transition: box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
         }
         .group-card:hover { box-shadow: 0 4px 16px rgba(26,75,109,0.08); }
         .group-card-header {
             background: linear-gradient(135deg, #f8faff, #eef4fb);
-            padding: 14px 20px;
+            padding: 12px 14px;
             border-bottom: 1px solid #e9edf4;
         }
         .group-card-title-row {
-            display: flex; justify-content: space-between; align-items: center;
-            flex-wrap: wrap; gap: 10px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            flex-wrap: wrap; gap: 6px; margin-bottom: 10px;
         }
         .group-card-title {
-            font-size: 17px; font-weight: 700; color: #0b2b44;
-            display: flex; align-items: center; gap: 8px;
+            font-size: 15px; font-weight: 700; color: #0b2b44;
+            display: flex; align-items: center; gap: 6px;
+            flex-wrap: wrap;
         }
-        .group-card-title .group-icon { font-size: 20px; }
+        .group-card-title .group-icon { font-size: 18px; }
         .group-card-title .group-count {
-            background: #1a4b6d; color: #fff; padding: 2px 12px;
-            border-radius: 20px; font-size: 12px; font-weight: 600;
+            background: #1a4b6d; color: #fff; padding: 2px 10px;
+            border-radius: 20px; font-size: 11px; font-weight: 600;
         }
-        .group-card-actions { display: flex; align-items: center; gap: 8px; }
+        .group-card-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .group-card-actions .total-badge {
-            background: #e9edf4; color: #1a2a3a; padding: 4px 14px;
-            border-radius: 20px; font-size: 13px; font-weight: 600;
+            background: #e9edf4; color: #1a2a3a; padding: 3px 12px;
+            border-radius: 20px; font-size: 12px; font-weight: 600;
         }
         .toggle-btn {
             background: #1a4b6d; color: #fff; border: none;
-            padding: 5px 16px; border-radius: 20px;
+            padding: 4px 14px; border-radius: 20px;
             font-size: 12px; font-weight: 600; cursor: pointer;
             transition: 0.2s; display: flex; align-items: center; gap: 4px;
         }
@@ -557,10 +567,10 @@
         .toggle-btn.expanded .arrow { transform: rotate(90deg); }
 
         .group-progress-row {
-            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
         }
         .group-progress-bar {
-            flex: 1; min-width: 160px; height: 10px; background: #e9edf4;
+            flex: 1; min-width: 100px; height: 10px; background: #e9edf4;
             border-radius: 6px; overflow: hidden;
         }
         .group-progress-fill {
@@ -570,12 +580,12 @@
         .group-progress-fill.pct-high { background: linear-gradient(90deg, #28a745, #4cd964); }
         .group-progress-fill.pct-mid { background: linear-gradient(90deg, #e6a800, #f4c430); }
         .group-progress-fill.pct-low { background: linear-gradient(90deg, #dc3545, #ef5350); }
-        .group-progress-pct { font-size: 15px; font-weight: 700; min-width: 65px; text-align: right; }
+        .group-progress-pct { font-size: 14px; font-weight: 700; min-width: 60px; text-align: right; }
         .group-progress-pct.pct-high { color: #28a745; }
         .group-progress-pct.pct-mid { color: #e6a800; }
         .group-progress-pct.pct-low { color: #dc3545; }
         .group-progress-detail {
-            font-size: 12px; color: #5a6a7e; display: flex; gap: 12px;
+            font-size: 12px; color: #5a6a7e; display: flex; gap: 10px;
             flex-wrap: wrap; width: 100%; margin-top: 4px;
         }
         .group-progress-detail span { display: flex; align-items: center; gap: 4px; }
@@ -596,16 +606,17 @@
         .group-card-body.expanded { max-height: 1500px; }
         .size-row {
             display: grid;
-            grid-template-columns: 100px 1fr 90px 150px;
-            gap: 12px;
+            grid-template-columns: 70px 1fr 60px;
+            gap: 10px;
             align-items: center;
-            padding: 10px 20px;
+            padding: 8px 14px;
             border-bottom: 1px solid #f0f3f8;
+            font-size: 13px;
         }
         .size-row:last-child { border-bottom: none; }
         .size-row:hover { background: #f8faff; }
         .size-label {
-            font-weight: 600; color: #0b2b44; font-size: 14px;
+            font-weight: 600; color: #0b2b44; font-size: 13px;
         }
         .size-progress-bar {
             height: 8px; background: #e9edf4; border-radius: 6px; overflow: hidden;
@@ -617,26 +628,18 @@
         .size-progress-fill.pct-high { background: linear-gradient(90deg, #28a745, #4cd964); }
         .size-progress-fill.pct-mid { background: linear-gradient(90deg, #e6a800, #f4c430); }
         .size-progress-fill.pct-low { background: linear-gradient(90deg, #dc3545, #ef5350); }
-        .size-pct { font-weight: 700; font-size: 14px; text-align: right; }
+        .size-pct { font-weight: 700; font-size: 13px; text-align: right; }
         .size-pct.pct-high { color: #28a745; }
         .size-pct.pct-mid { color: #e6a800; }
         .size-pct.pct-low { color: #dc3545; }
         .size-counts {
-            font-size: 13px; color: #5a6a7e; text-align: right;
-            display: flex; gap: 8px; justify-content: flex-end;
+            font-size: 12px; color: #5a6a7e; text-align: right;
+            display: flex; gap: 6px; justify-content: flex-end;
+            grid-column: 1 / -1;
+            margin-top: -4px;
         }
         .size-counts .cnt-found { color: #28a745; font-weight: 600; }
         .size-counts .cnt-notfound { color: #dc3545; font-weight: 600; }
-
-        @media (max-width: 640px) {
-            .size-row {
-                grid-template-columns: 70px 1fr 60px;
-                font-size: 12px;
-                padding: 8px 14px;
-            }
-            .size-counts { display: none; }
-            .group-progress-detail { font-size: 11px; }
-        }
     </style>
 </head>
 <body>
@@ -673,7 +676,6 @@
         </header>
 
         <div class="app-body">
-            <!-- Admin Alert Banner -->
             <div class="alert-banner" id="alertBanner">
                 <div class="alert-title">⚠️ แจ้งเตือน: พบเลขม้วนที่ไม่มีใน Stock</div>
                 <ul class="alert-list" id="alertList"></ul>
@@ -682,7 +684,6 @@
 
             <div id="stockTimestamp" class="stock-timestamp">📅 โหลดข้อมูล...</div>
 
-            <!-- Search -->
             <div class="search-section">
                 <label for="rollSearch">🔎 เลขม้วน</label>
                 <div class="search-input-wrapper">
@@ -694,7 +695,6 @@
                 <span style="font-size:13px;color:#7a8a9e;margin-left:auto;" id="totalRollsDisplay">โหลดข้อมูล...</span>
             </div>
 
-            <!-- Result -->
             <div class="result-card" id="resultCard">
                 <div class="roll-header">
                     <span class="roll-number" id="resultRollNumber">—</span>
@@ -720,7 +720,6 @@
                 <p>กรุณาตรวจสอบเลขม้วนอีกครั้ง</p>
             </div>
 
-            <!-- Stats -->
             <div style="margin-top:28px;">
                 <h3 style="font-size:16px;color:#0b2b44;margin-bottom:12px;">📊 สรุปข้อมูล</h3>
                 <div class="stats-grid" id="statsGrid">
@@ -733,7 +732,6 @@
                 </div>
             </div>
 
-            <!-- Overall Progress -->
             <div style="margin-top:28px;">
                 <h3 style="font-size:16px;color:#0b2b44;margin-bottom:12px;">📈 เปอร์เซ็นต์การตรวจนับรวม</h3>
                 <div class="progress-card">
@@ -751,7 +749,6 @@
                 </div>
             </div>
 
-            <!-- Group Summary (Cards) -->
             <div style="margin-top:28px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
                     <h3 style="font-size:16px;color:#0b2b44;">📋 สรุปตามกลุ่มและ Size</h3>
@@ -765,7 +762,6 @@
                 </div>
             </div>
 
-            <!-- Not Found Rolls -->
             <div style="margin-top:28px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
                     <h3 style="font-size:16px;color:#0b2b44;">🚨 ม้วนที่ยังไม่พบ (<span id="notFoundTotalLabel">0</span> ม้วน)</h3>
@@ -794,7 +790,6 @@
                 </div>
             </div>
 
-            <!-- Admin Panel -->
             <div class="admin-panel" id="adminPanel">
                 <h2>⚙️ แผงควบคุมผู้ดูแล</h2>
                 <div class="admin-tabs">
@@ -887,7 +882,6 @@
     <div id="toastContainer"></div>
 
     <script>
-        // ---------- State ----------
         let token = localStorage.getItem('rolltracker_token') || '';
         let currentUser = null;
 
@@ -987,7 +981,6 @@
             return dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'numeric', day: 'numeric' });
         }
 
-        // ---------- Auth ----------
         function setAuth(tokenVal, user) {
             token = tokenVal;
             currentUser = user;
@@ -1061,7 +1054,6 @@
         logoutBtn.addEventListener('click', logout);
         stockCheckBtn.addEventListener('click', () => { window.location.href = '/stock-check'; });
 
-        // ---------- Session check ----------
         (function init() {
             const saved = localStorage.getItem('rolltracker_user');
             if (saved) {
@@ -1083,7 +1075,6 @@
             logout();
         })();
 
-        // ---------- Search ----------
         let suggestTimeout;
         rollSearch.addEventListener('input', function() {
             const q = this.value.trim();
@@ -1173,7 +1164,6 @@
             rollSearch.focus();
         });
 
-        // ---------- Load stock timestamp ----------
         async function loadStockTimestamp() {
             try {
                 const res = await fetch('/api/stock/latest', {
@@ -1190,7 +1180,6 @@
             }
         }
 
-        // ---------- Stats ----------
         async function loadStats() {
             try {
                 const res = await fetch('/api/dashboard/stats', { headers: { 'Authorization': 'Bearer ' + token } });
@@ -1216,7 +1205,6 @@
             } catch (e) { totalRollsDisplay.textContent = '📦 —'; }
         }
 
-        // ---------- Group Summary (Cards) ----------
         async function loadGroupSummary() {
             try {
                 const res = await fetch('/api/dashboard/group-summary', {
@@ -1313,11 +1301,9 @@
             container.innerHTML = html;
             $('groupSummaryMeta').textContent = `${groups.length} กลุ่ม · ${totalRolls} ม้วน`;
 
-            // Reset toggle all button
             allExpanded = false;
             $('toggleAllGroupsBtn').textContent = '📂 ขยายทั้งหมด';
 
-            // ผูก event ปุ่ม toggle แต่ละกลุ่ม
             container.querySelectorAll('.toggle-btn[data-toggle-idx]').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const idx = this.dataset.toggleIdx;
@@ -1331,7 +1317,6 @@
             });
         }
 
-        // ปุ่ม "ขยายทั้งหมด/ย่อทั้งหมด"
         let allExpanded = false;
         $('toggleAllGroupsBtn').addEventListener('click', function() {
             allExpanded = !allExpanded;
@@ -1347,7 +1332,6 @@
             this.textContent = allExpanded ? '📁 ย่อทั้งหมด' : '📂 ขยายทั้งหมด';
         });
 
-        // ---------- Not Found List ----------
         let notFoundListLoaded = false;
 
         async function loadNotFoundList() {
@@ -1399,7 +1383,6 @@
             }
         });
 
-        // ---------- Admin Alerts ----------
         async function loadAlerts() {
             try {
                 const res = await api('GET', '/alerts');
@@ -1425,7 +1408,6 @@
             } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
         });
 
-        // ---------- Admin: Users ----------
         async function loadUsers() {
             try {
                 const res = await api('GET', '/users');
@@ -1495,7 +1477,6 @@
             } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
         });
 
-        // ---------- Admin: Import ----------
         excelFileInput.addEventListener('change', (e) => {
             const f = e.target.files[0];
             if (f) fileInfo.textContent = '📄 ' + f.name + ' (' + (f.size/1024/1024).toFixed(2) + ' MB)';
@@ -1554,7 +1535,6 @@
             setTimeout(() => { importProgress.style.width = '0%'; }, 2000);
         });
 
-        // ---------- Admin: History ----------
         async function loadHistory() {
             try {
                 const res = await api('GET', '/import/history');
@@ -1578,7 +1558,6 @@
                 `).join('');
         }
 
-        // ---------- Clear data ----------
         clearImportBtn.addEventListener('click', async () => {
             if (!confirm('⚠️ ล้างข้อมูลทั้งหมด (ม้วน, ประวัติ)? การกระทำนี้ไม่สามารถกู้คืนได้!')) return;
             if (!confirm('ยืนยันอีกครั้ง?')) return;
@@ -1617,7 +1596,6 @@
             } catch (e) { showToast('เกิดข้อผิดพลาด', 'error'); }
         });
 
-        // ---------- Admin tabs ----------
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1628,7 +1606,6 @@
             });
         });
 
-        // Set default date/time
         (function setDefaultDateTime() {
             const now = new Date();
             const dateStr = now.toISOString().split('T')[0];
