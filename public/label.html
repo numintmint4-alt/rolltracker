@@ -60,23 +60,26 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 42mm);
     font-family: 'Sarabun', sans-serif;
     color: #000;
 }
 
-/* ===== 1 Label ===== */
+/* ===== 1 Label (74 × 42 mm) ===== */
 .label {
     border: 1.2px solid #000;
     display: flex;
     overflow: hidden;
     background: #fff;
+    width: 74mm;
+    height: 42mm;
 }
 .label .main {
     flex: 1;
     display: grid;
-    grid-template-rows: auto auto auto 1fr 1fr;
+    grid-template-rows: 11mm 9.5mm 9.5mm 6mm 6mm;
     min-width: 0;
+    height: 42mm;
 }
 .label .side {
     width: 11mm;
@@ -86,47 +89,48 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     justify-content: center;
     writing-mode: vertical-rl;
     text-orientation: mixed;
-    font-size: 9pt;
+    font-size: 15pt;
     font-weight: 500;
     padding: 1mm 0;
     letter-spacing: 0.5px;
+    height: 42mm;
 }
 .label .main > div {
-    padding: 0.6mm 1.5mm;
+    padding: 0 1.5mm;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     display: flex;
     align-items: center;
 }
+
 .label .roll-row {
     background: #e8e8e8;
     border-bottom: 1.2px solid #000;
-    font-size: 10pt;
+    font-size: 17pt;
     font-weight: 700;
     justify-content: space-between;
-    padding: 1mm 1.5mm;
 }
-.label .roll-row .star { font-size: 12pt; }
+.label .roll-row .star { font-size: 15pt; }
+
 .label .grade-row {
-    font-size: 9.5pt;
+    font-size: 15pt;
     font-weight: 600;
     border-bottom: 1px solid #000;
-    padding: 1mm 1.5mm;
 }
+
 .label .dia-row {
-    font-size: 8.5pt;
+    font-size: 13pt;
     border-bottom: 1px solid #000;
-    padding: 1mm 1.5mm;
 }
+
 .label .sign-row {
-    font-size: 7.5pt;
+    font-size: 9pt;
     border-bottom: 1px solid #000;
-    padding: 1mm 1.5mm;
 }
+
 .label .place-row {
-    font-size: 7.5pt;
-    padding: 1mm 1.5mm;
+    font-size: 9pt;
 }
 
 .placeholder {
@@ -139,7 +143,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 
 @media print {
     @page { size: A5 portrait; margin: 0; }
-    body { background: #fff; padding: 0; margin: 0; }
+    html, body { background: #fff; padding: 0; margin: 0; width: 148mm; height: 210mm; }
     .container { box-shadow: none; border-radius: 0; padding: 0; max-width: none; background: #fff; }
     .no-print { display: none !important; }
     .preview-wrap { padding: 0; background: #fff; }
@@ -259,7 +263,19 @@ searchBtn.addEventListener('click', doSearch);
 // ============ Render preview ============
 function renderPreview() {
     if (!currentRoll) return;
-    const grade = `${currentRoll.grade || ''}${currentRoll.width ? currentRoll.width + '"' : ''}`.trim();
+
+    // ⭐ Grade + Size: ถ้ามีทั้งคู่ → "CA105-40"" / ถ้ามีอย่างเดียว → แสดงอย่างเดียว
+    let gradeSize = '';
+    const grade = (currentRoll.grade || '').trim();
+    const width = (currentRoll.width || '').trim();
+    if (grade && width) {
+        gradeSize = `${grade}-${width}"`;
+    } else if (grade) {
+        gradeSize = grade;
+    } else if (width) {
+        gradeSize = `${width}"`;
+    }
+
     const dia = currentRoll.dimeter ? `Dia. ${currentRoll.dimeter}` : 'Dia. —';
     const group = currentRoll.group_name || '';
     const rollNum = currentRoll.roll_number || '';
@@ -271,7 +287,7 @@ function renderPreview() {
                     <span>${escHtml(rollNum)}</span>
                     ${idx === 0 ? '<span class="star">*</span>' : ''}
                 </div>
-                <div class="grade-row">${escHtml(grade)}</div>
+                <div class="grade-row">${escHtml(gradeSize)}</div>
                 <div class="dia-row">${escHtml(dia)}</div>
                 <div class="sign-row">ลงชื่อจนท.บัญชี:</div>
                 <div class="place-row">สถานที่พบ / กลุ่ม:</div>
@@ -309,7 +325,7 @@ $('backBtn').addEventListener('click', () => { window.location.href = '/stock-ch
     } catch (e) { window.location.href = '/'; }
 })();
 
-console.log('🏷️ Label Print v1.0 ready');
+console.log('🏷️ Label Print v1.2 ready');
 </script>
 </body>
 </html>
