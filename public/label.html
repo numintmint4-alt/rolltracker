@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏷️ พิมพ์ป้ายม้วนกระดาษ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f2f5; padding: 16px; }
+.container { max-width: 1100px; margin: 0 auto; background: #fff; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 20px 24px 28px; }
+.header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; border-bottom: 2px solid #e9edf4; padding-bottom: 14px; margin-bottom: 18px; }
+.header h1 { font-size: 24px; color: #0b2b44; font-weight: 700; }
+.header .btn { padding: 8px 20px; border-radius: 30px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; }
+.btn-secondary { background: #6c757d; color: #fff; } .btn-secondary:hover { background: #5a6268; }
+
+.search-area {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    background: #f8faff; padding: 16px 20px; border-radius: 14px;
+    border: 1px solid #e9edf4; margin-bottom: 16px;
+}
+.search-area label { font-weight: 600; color: #1a2a3a; font-size: 15px; }
+.search-area .input-wrap { position: relative; flex: 1 1 260px; }
+.search-area input {
+    width: 100%; padding: 12px 18px; border: 2px solid #dce2ec;
+    border-radius: 40px; font-size: 16px; outline: none;
+    font-family: 'Sarabun', sans-serif;
+}
+.search-area input:focus { border-color: #1a4b6d; box-shadow: 0 0 0 4px rgba(26,75,109,0.12); }
+.search-area .suggestions {
+    position: absolute; top: 110%; left: 0; right: 0; background: #fff;
+    border: 1px solid #dce2ec; border-radius: 12px; max-height: 200px;
+    overflow-y: auto; z-index: 100; display: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+.search-area .suggestions.show { display: block; }
+.search-area .suggestions .item { padding: 10px 18px; cursor: pointer; border-bottom: 1px solid #f0f3f8; font-size: 14px; }
+.search-area .suggestions .item:hover { background: #f0f4fa; }
+.search-area .btn { padding: 12px 26px; border-radius: 40px; border: none; font-weight: 600; font-size: 15px; cursor: pointer; }
+.btn-search { background: #1a4b6d; color: #fff; } .btn-search:hover { background: #0b2b44; }
+.btn-print { background: #28a745; color: #fff; } .btn-print:hover { background: #218838; }
+.btn-print:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.preview-wrap {
+    background: #e9edf4;
+    padding: 20px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+}
+
+/* ===== A5 Page ===== */
+.label-page {
+    width: 148mm;
+    height: 210mm;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(5, 1fr);
+    font-family: 'Sarabun', sans-serif;
+    color: #000;
+}
+
+/* ===== 1 Label ===== */
+.label {
+    border: 1.2px solid #000;
+    display: flex;
+    overflow: hidden;
+    background: #fff;
+}
+.label .main {
+    flex: 1;
+    display: grid;
+    grid-template-rows: auto auto auto 1fr 1fr;
+    min-width: 0;
+}
+.label .side {
+    width: 11mm;
+    border-left: 1.2px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 9pt;
+    font-weight: 500;
+    padding: 1mm 0;
+    letter-spacing: 0.5px;
+}
+.label .main > div {
+    padding: 0.6mm 1.5mm;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+}
+.label .roll-row {
+    background: #e8e8e8;
+    border-bottom: 1.2px solid #000;
+    font-size: 10pt;
+    font-weight: 700;
+    justify-content: space-between;
+    padding: 1mm 1.5mm;
+}
+.label .roll-row .star { font-size: 12pt; }
+.label .grade-row {
+    font-size: 9.5pt;
+    font-weight: 600;
+    border-bottom: 1px solid #000;
+    padding: 1mm 1.5mm;
+}
+.label .dia-row {
+    font-size: 8.5pt;
+    border-bottom: 1px solid #000;
+    padding: 1mm 1.5mm;
+}
+.label .sign-row {
+    font-size: 7.5pt;
+    border-bottom: 1px solid #000;
+    padding: 1mm 1.5mm;
+}
+.label .place-row {
+    font-size: 7.5pt;
+    padding: 1mm 1.5mm;
+}
+
+.placeholder {
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px; color: #7a8a9e; font-size: 15px;
+}
+
+.toast { position: fixed; bottom: 24px; right: 24px; background: #1a2a3a; color: #fff; padding: 14px 24px; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); font-weight: 500; z-index: 2000; }
+.toast.success { background: #28a745; } .toast.error { background: #dc3545; } .toast.warning { background: #ffc107; color: #1a2a3a; }
+
+@media print {
+    @page { size: A5 portrait; margin: 0; }
+    body { background: #fff; padding: 0; margin: 0; }
+    .container { box-shadow: none; border-radius: 0; padding: 0; max-width: none; background: #fff; }
+    .no-print { display: none !important; }
+    .preview-wrap { padding: 0; background: #fff; }
+    .label-page { box-shadow: none; page-break-after: always; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header no-print">
+        <h1>🏷️ พิมพ์ป้ายม้วนกระดาษ</h1>
+        <button class="btn btn-secondary" id="backBtn">← กลับหน้าตรวจนับ</button>
+    </div>
+
+    <div class="search-area no-print">
+        <label for="rollInput">🔎 เลขม้วน</label>
+        <div class="input-wrap">
+            <input type="text" id="rollInput" placeholder="พิมพ์เลขม้วน..." autocomplete="off" />
+            <div class="suggestions" id="suggestions"></div>
+        </div>
+        <button class="btn btn-search" id="searchBtn">🔍 ค้นหา</button>
+        <button class="btn btn-print" id="printBtn" disabled>🖨️ พิมพ์ป้าย (10 ดวง)</button>
+    </div>
+
+    <div class="preview-wrap no-print" id="previewWrap">
+        <div class="placeholder" id="placeholder">พิมพ์เลขม้วนเพื่อดูตัวอย่างป้าย</div>
+    </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+let token = localStorage.getItem('rolltracker_token') || '';
+let currentRoll = null;
+
+const $ = id => document.getElementById(id);
+const rollInput = $('rollInput');
+const suggestions = $('suggestions');
+const searchBtn = $('searchBtn');
+const printBtn = $('printBtn');
+const previewWrap = $('previewWrap');
+const placeholder = $('placeholder');
+
+function escHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function showToast(msg, type = 'info') {
+    const c = document.createElement('div');
+    c.className = `toast ${type}`;
+    c.textContent = msg;
+    $('toastContainer').appendChild(c);
+    setTimeout(() => { c.style.opacity = '0'; c.style.transition = 'opacity 0.4s'; setTimeout(() => c.remove(), 500); }, 3000);
+}
+
+// ============ Suggest ============
+let suggestTimeout;
+rollInput.addEventListener('input', function() {
+    const q = this.value.trim();
+    clearTimeout(suggestTimeout);
+    if (q.length < 1) { suggestions.classList.remove('show'); return; }
+    suggestTimeout = setTimeout(async () => {
+        try {
+            const res = await fetch('/api/rolls/suggest?q=' + encodeURIComponent(q), {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            if (Array.isArray(data) && data.length) {
+                suggestions.innerHTML = data.map(s => `<div class="item" data-value="${escHtml(s)}">${escHtml(s)}</div>`).join('');
+                suggestions.classList.add('show');
+                suggestions.querySelectorAll('.item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        rollInput.value = this.dataset.value;
+                        suggestions.classList.remove('show');
+                        doSearch();
+                    });
+                });
+            } else suggestions.classList.remove('show');
+        } catch (e) { suggestions.classList.remove('show'); }
+    }, 200);
+});
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.input-wrap')) suggestions.classList.remove('show');
+});
+rollInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { suggestions.classList.remove('show'); doSearch(); }
+    if (e.key === 'Escape') suggestions.classList.remove('show');
+});
+
+// ============ Search ============
+async function doSearch() {
+    const q = rollInput.value.trim();
+    if (!q) return;
+    searchBtn.disabled = true;
+    try {
+        const res = await fetch('/api/rolls/search?q=' + encodeURIComponent(q), {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) {
+            showToast('ไม่พบเลขม้วนนี้', 'error');
+            currentRoll = null;
+            printBtn.disabled = true;
+            previewWrap.innerHTML = '<div class="placeholder">ไม่พบม้วนนี้ในระบบ</div>';
+            return;
+        }
+        const data = await res.json();
+        currentRoll = data.roll;
+        renderPreview();
+        printBtn.disabled = false;
+    } catch (e) {
+        showToast('เกิดข้อผิดพลาด', 'error');
+    } finally {
+        searchBtn.disabled = false;
+    }
+}
+searchBtn.addEventListener('click', doSearch);
+
+// ============ Render preview ============
+function renderPreview() {
+    if (!currentRoll) return;
+    const grade = `${currentRoll.grade || ''}${currentRoll.width ? currentRoll.width + '"' : ''}`.trim();
+    const dia = currentRoll.dimeter ? `Dia. ${currentRoll.dimeter}` : 'Dia. —';
+    const group = currentRoll.group_name || '';
+    const rollNum = currentRoll.roll_number || '';
+
+    const labelHtml = (idx) => `
+        <div class="label">
+            <div class="main">
+                <div class="roll-row">
+                    <span>${escHtml(rollNum)}</span>
+                    ${idx === 0 ? '<span class="star">*</span>' : ''}
+                </div>
+                <div class="grade-row">${escHtml(grade)}</div>
+                <div class="dia-row">${escHtml(dia)}</div>
+                <div class="sign-row">ลงชื่อจนท.บัญชี:</div>
+                <div class="place-row">สถานที่พบ / กลุ่ม:</div>
+            </div>
+            <div class="side">${escHtml(group)}</div>
+        </div>
+    `;
+
+    let labels = '';
+    for (let i = 0; i < 10; i++) labels += labelHtml(i);
+
+    previewWrap.innerHTML = `<div class="label-page" id="labelPage">${labels}</div>`;
+}
+
+// ============ Print ============
+printBtn.addEventListener('click', async () => {
+    if (!currentRoll) return;
+    try {
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+        window.print();
+    } catch (e) {
+        showToast('เกิดข้อผิดพลาดในการพิมพ์', 'error');
+    }
+});
+
+$('backBtn').addEventListener('click', () => { window.location.href = '/stock-check'; });
+
+// ============ Auth check ============
+(async function init() {
+    try {
+        const res = await fetch('/api/auth/me', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) { window.location.href = '/'; return; }
+    } catch (e) { window.location.href = '/'; }
+})();
+
+console.log('🏷️ Label Print v1.0 ready');
+</script>
+</body>
+</html>
