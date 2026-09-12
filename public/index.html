@@ -462,7 +462,7 @@
         .alert-banner .alert-list { margin-top: 6px; font-size: 14px; }
         .alert-banner .alert-list li { margin-bottom: 4px; }
 
-        /* ⭐ NEW: Progress Card */
+        /* ⭐ Progress Card */
         .progress-card {
             background: #f8faff;
             border: 1px solid #e9edf4;
@@ -497,13 +497,7 @@
             background: #f8d7da; color: #721c24; padding: 4px 14px;
             border-radius: 20px; font-weight: 600;
         }
-        #groupTable td.group-cell { font-weight: 600; color: #0b2b44; }
-        #groupTable tr.group-total-row td { background: #f0f4fa; font-weight: 700; color: #0b2b44; }
-        .pct-cell { font-weight: 700; }
-        .pct-high { color: #28a745; }
-        .pct-mid { color: #e6a800; }
-        .pct-low { color: #dc3545; }
-                .notfound-link {
+        .notfound-link {
             display: inline-block;
             background: #dc3545; color: #fff; padding: 4px 14px;
             border-radius: 20px; font-size: 12px;
@@ -577,6 +571,9 @@
         .group-progress-fill.pct-mid { background: linear-gradient(90deg, #e6a800, #f4c430); }
         .group-progress-fill.pct-low { background: linear-gradient(90deg, #dc3545, #ef5350); }
         .group-progress-pct { font-size: 15px; font-weight: 700; min-width: 65px; text-align: right; }
+        .group-progress-pct.pct-high { color: #28a745; }
+        .group-progress-pct.pct-mid { color: #e6a800; }
+        .group-progress-pct.pct-low { color: #dc3545; }
         .group-progress-detail {
             font-size: 12px; color: #5a6a7e; display: flex; gap: 12px;
             flex-wrap: wrap; width: 100%; margin-top: 4px;
@@ -596,10 +593,10 @@
             overflow: hidden;
             transition: max-height 0.35s ease;
         }
-        .group-card-body.expanded { max-height: 1000px; }
+        .group-card-body.expanded { max-height: 1500px; }
         .size-row {
             display: grid;
-            grid-template-columns: 100px 1fr 90px 130px;
+            grid-template-columns: 100px 1fr 90px 150px;
             gap: 12px;
             align-items: center;
             padding: 10px 20px;
@@ -638,6 +635,7 @@
                 padding: 8px 14px;
             }
             .size-counts { display: none; }
+            .group-progress-detail { font-size: 11px; }
         }
     </style>
 </head>
@@ -735,7 +733,7 @@
                 </div>
             </div>
 
-            <!-- ⭐ NEW: Overall Progress -->
+            <!-- Overall Progress -->
             <div style="margin-top:28px;">
                 <h3 style="font-size:16px;color:#0b2b44;margin-bottom:12px;">📈 เปอร์เซ็นต์การตรวจนับรวม</h3>
                 <div class="progress-card">
@@ -753,32 +751,21 @@
                 </div>
             </div>
 
-            <!-- ⭐ NEW: Group Summary -->
+            <!-- Group Summary (Cards) -->
             <div style="margin-top:28px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
                     <h3 style="font-size:16px;color:#0b2b44;">📋 สรุปตามกลุ่มและ Size</h3>
-                    <span style="font-size:13px;color:#7a8a9e;" id="groupSummaryMeta">—</span>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <span style="font-size:13px;color:#7a8a9e;" id="groupSummaryMeta">—</span>
+                        <button class="toggle-btn" id="toggleAllGroupsBtn">📂 ขยายทั้งหมด</button>
+                    </div>
                 </div>
-                <div class="table-wrap">
-                    <table id="groupTable">
-                        <thead>
-                            <tr>
-                                <th>กลุ่ม</th>
-                                <th>Size</th>
-                                <th style="text-align:right;">จำนวน</th>
-                                <th style="text-align:right;">พบ</th>
-                                <th style="text-align:right;">ยังไม่พบ</th>
-                                <th style="text-align:right;">% พบ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="groupTableBody">
-                            <tr><td colspan="6" class="text-muted" style="text-align:center;">กำลังโหลด...</td></tr>
-                        </tbody>
-                    </table>
+                <div class="group-cards" id="groupCards">
+                    <div class="text-muted" style="text-align:center;padding:20px;">กำลังโหลด...</div>
                 </div>
             </div>
 
-            <!-- ⭐ NEW: Not Found Rolls -->
+            <!-- Not Found Rolls -->
             <div style="margin-top:28px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
                     <h3 style="font-size:16px;color:#0b2b44;">🚨 ม้วนที่ยังไม่พบ (<span id="notFoundTotalLabel">0</span> ม้วน)</h3>
@@ -1035,7 +1022,7 @@
                 loadStats();
                 loadTotalCount();
                 loadStockTimestamp();
-                loadGroupSummary();      // ⭐ NEW
+                loadGroupSummary();
             } else {
                 app.style.display = 'none';
                 loginOverlay.classList.add('visible');
@@ -1229,7 +1216,7 @@
             } catch (e) { totalRollsDisplay.textContent = '📦 —'; }
         }
 
-        // ---------- ⭐ NEW: Group Summary ----------
+        // ---------- Group Summary (Cards) ----------
         async function loadGroupSummary() {
             try {
                 const res = await fetch('/api/dashboard/group-summary', {
@@ -1238,7 +1225,7 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.message || 'error');
                 renderOverall(data.overall || {});
-                renderGroupTable(data.groups || []);
+                renderGroupCards(data.groups || []);
             } catch (e) {
                 console.warn('group summary error', e);
             }
@@ -1255,48 +1242,112 @@
             $('notFoundTotalLabel').textContent = o.not_found || 0;
         }
 
-        function renderGroupTable(groups) {
-            const tbody = $('groupTableBody');
+        function renderGroupCards(groups) {
+            const container = $('groupCards');
             if (!groups.length) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-muted" style="text-align:center;">ไม่มีข้อมูล</td></tr>';
+                container.innerHTML = '<div class="text-muted" style="text-align:center;padding:20px;">ไม่มีข้อมูล</div>';
                 $('groupSummaryMeta').textContent = '—';
                 return;
             }
-            let html = '';
             let totalRolls = 0;
-            for (const g of groups) {
+            let html = '';
+            for (let gi = 0; gi < groups.length; gi++) {
+                const g = groups[gi];
                 totalRolls += g.total;
-                for (const s of g.sizes) {
-                    const pct = Number(s.percent_found || 0).toFixed(2);
-                    const cls = pct >= 90 ? 'pct-high' : pct >= 60 ? 'pct-mid' : 'pct-low';
-                    html += `
-                        <tr>
-                            <td class="group-cell">${escHtml(g.group_name)}</td>
-                            <td>${s.width !== '—' ? escHtml(s.width) + '"' : '—'}</td>
-                            <td style="text-align:right;">${s.total}</td>
-                            <td style="text-align:right;color:#28a745;font-weight:600;">${s.found}</td>
-                            <td style="text-align:right;color:#dc3545;font-weight:600;">${s.not_found}</td>
-                            <td style="text-align:right;" class="pct-cell ${cls}">${pct}%</td>
-                        </tr>
-                    `;
-                }
                 const gpct = Number(g.percent_found || 0).toFixed(2);
                 const gcls = gpct >= 90 ? 'pct-high' : gpct >= 60 ? 'pct-mid' : 'pct-low';
+
+                let sizesHtml = '';
+                for (const s of g.sizes) {
+                    const spct = Number(s.percent_found || 0).toFixed(2);
+                    const scls = spct >= 90 ? 'pct-high' : spct >= 60 ? 'pct-mid' : 'pct-low';
+                    sizesHtml += `
+                        <div class="size-row">
+                            <div class="size-label">Size ${s.width !== '—' ? escHtml(s.width) + '"' : '—'}</div>
+                            <div class="size-progress-bar">
+                                <div class="size-progress-fill ${scls}" style="width:${spct}%"></div>
+                            </div>
+                            <div class="size-pct ${scls}">${spct}%</div>
+                            <div class="size-counts">
+                                <span class="cnt-found">✓${s.found}</span>
+                                <span class="cnt-notfound">✗${s.not_found}</span>
+                                <span>· ${s.total} ม้วน</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 html += `
-                    <tr class="group-total-row">
-                        <td class="group-cell" colspan="2">${escHtml(g.group_name)} — รวม</td>
-                        <td style="text-align:right;">${g.total}</td>
-                        <td style="text-align:right;color:#28a745;">${g.found}</td>
-                        <td style="text-align:right;color:#dc3545;">${g.not_found}</td>
-                        <td style="text-align:right;" class="pct-cell ${gcls}">${gpct}%</td>
-                    </tr>
+                    <div class="group-card" data-group-idx="${gi}">
+                        <div class="group-card-header">
+                            <div class="group-card-title-row">
+                                <div class="group-card-title">
+                                    <span class="group-icon">📦</span>
+                                    <span>${escHtml(g.group_name)}</span>
+                                    <span class="group-count">${g.sizes.length} Size</span>
+                                </div>
+                                <div class="group-card-actions">
+                                    <span class="total-badge">${g.total} ม้วน</span>
+                                    <button class="toggle-btn" data-toggle-idx="${gi}">
+                                        <span class="arrow">▶</span> ขยาย
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="group-progress-row">
+                                <div class="group-progress-bar">
+                                    <div class="group-progress-fill ${gcls}" style="width:${gpct}%"></div>
+                                </div>
+                                <div class="group-progress-pct ${gcls}">${gpct}%</div>
+                                <div class="group-progress-detail">
+                                    <span><span class="badge-dot-found"></span> พบ ${g.found} ม้วน</span>
+                                    <span><span class="badge-dot-notfound"></span> ไม่พบ ${g.not_found} ม้วน</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="group-card-body" id="group-body-${gi}">
+                            ${sizesHtml}
+                        </div>
+                    </div>
                 `;
             }
-            tbody.innerHTML = html;
+            container.innerHTML = html;
             $('groupSummaryMeta').textContent = `${groups.length} กลุ่ม · ${totalRolls} ม้วน`;
+
+            // Reset toggle all button
+            allExpanded = false;
+            $('toggleAllGroupsBtn').textContent = '📂 ขยายทั้งหมด';
+
+            // ผูก event ปุ่ม toggle แต่ละกลุ่ม
+            container.querySelectorAll('.toggle-btn[data-toggle-idx]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const idx = this.dataset.toggleIdx;
+                    const body = document.getElementById('group-body-' + idx);
+                    const isExpanded = body.classList.toggle('expanded');
+                    this.classList.toggle('expanded', isExpanded);
+                    this.innerHTML = isExpanded
+                        ? '<span class="arrow">▶</span> ย่อ'
+                        : '<span class="arrow">▶</span> ขยาย';
+                });
+            });
         }
 
-        // ---------- ⭐ NEW: Not Found List ----------
+        // ปุ่ม "ขยายทั้งหมด/ย่อทั้งหมด"
+        let allExpanded = false;
+        $('toggleAllGroupsBtn').addEventListener('click', function() {
+            allExpanded = !allExpanded;
+            document.querySelectorAll('.group-card-body').forEach(el => {
+                el.classList.toggle('expanded', allExpanded);
+            });
+            document.querySelectorAll('.toggle-btn[data-toggle-idx]').forEach(btn => {
+                btn.classList.toggle('expanded', allExpanded);
+                btn.innerHTML = allExpanded
+                    ? '<span class="arrow">▶</span> ย่อ'
+                    : '<span class="arrow">▶</span> ขยาย';
+            });
+            this.textContent = allExpanded ? '📁 ย่อทั้งหมด' : '📂 ขยายทั้งหมด';
+        });
+
+        // ---------- Not Found List ----------
         let notFoundListLoaded = false;
 
         async function loadNotFoundList() {
@@ -1487,8 +1538,8 @@
                     loadTotalCount();
                     loadHistory();
                     loadStockTimestamp();
-                    loadGroupSummary();           // ⭐ NEW
-                    notFoundListLoaded = false;   // ⭐ NEW: reset cache
+                    loadGroupSummary();
+                    notFoundListLoaded = false;
                     excelFileInput.value = '';
                     fileInfo.textContent = 'ยังไม่ได้เลือกไฟล์';
                 } else {
@@ -1538,8 +1589,8 @@
                     loadStats();
                     loadTotalCount();
                     loadHistory();
-                    loadGroupSummary();           // ⭐ NEW
-                    notFoundListLoaded = false;   // ⭐ NEW
+                    loadGroupSummary();
+                    notFoundListLoaded = false;
                     resultCard.classList.remove('visible');
                     notFound.style.display = 'none';
                 } else showToast(res.message || 'ผิดพลาด', 'error');
@@ -1557,8 +1608,8 @@
                     loadTotalCount();
                     loadHistory();
                     loadUsers();
-                    loadGroupSummary();           // ⭐ NEW
-                    notFoundListLoaded = false;   // ⭐ NEW
+                    loadGroupSummary();
+                    notFoundListLoaded = false;
                     resultCard.classList.remove('visible');
                     notFound.style.display = 'none';
                     clearStatus.textContent = '✅ ล้างข้อมูลแล้ว';
