@@ -960,9 +960,52 @@ document.getElementById('labelBtn').addEventListener('click', () => { window.loc
     await loadGroups();
     await loadSizes();
     searchRollInput.value = '';
+
+    // ⭐ NEW: รับ ?roll=XXX → เด้งไปที่ม้วนนั้น
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetRoll = urlParams.get('roll');
+    if (targetRoll) {
+        try {
+            const res = await fetch('/api/rolls/search?q=' + encodeURIComponent(targetRoll), {
+                headers: getAuthHeaders()
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const rollWidth = data.roll?.width;
+                if (rollWidth) {
+                    const idx = sizeGroups.findIndex(g => String(g.width) === String(rollWidth));
+                    if (idx >= 0) {
+                        currentPage = idx;
+                        await renderCurrentSize();
+                        updatePagination();
+                        // scroll + highlight
+                        setTimeout(() => {
+                            const el = document.querySelector(`.found-checkbox[data-roll="${CSS.escape(targetRoll)}"]`);
+                            if (el) {
+                                const tr = el.closest('tr');
+                                if (tr) {
+                                    tr.style.transition = 'background 0.4s';
+                                    tr.style.backgroundColor = '#fff3cd';
+                                    setTimeout(() => { tr.style.backgroundColor = ''; }, 3500);
+                                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                            }
+                        }, 250);
+                        showToast('📍 เด้งไปที่ม้วน ' + targetRoll, 'success');
+                    } else {
+                        showToast('ไม่พบ Size ของม้วนนี้ในรายการ', 'warning');
+                    }
+                }
+            } else {
+                showToast('ไม่พบม้วนนี้ในระบบ', 'error');
+            }
+        } catch (e) {
+            console.warn('focus roll error', e);
+        }
+    }
 })();
 
-console.log('📋 Stock Check v18.0 ready');
+console.log('📋 Stock Check v19.0 ready');
 </script>
 </body>
 </html>
