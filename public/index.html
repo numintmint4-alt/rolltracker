@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📦 ระบบตรวจสอบ Location ม้วนกระดาษ</title>
+    <title>📦 Dashboard : Paper Roll Stock</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -461,6 +461,56 @@
         .alert-banner .alert-title { font-weight: 700; color: #856404; }
         .alert-banner .alert-list { margin-top: 6px; font-size: 14px; }
         .alert-banner .alert-list li { margin-bottom: 4px; }
+
+        /* ⭐ NEW: Progress Card */
+        .progress-card {
+            background: #f8faff;
+            border: 1px solid #e9edf4;
+            border-radius: 16px;
+            padding: 20px 24px;
+        }
+        .progress-label {
+            display: flex; justify-content: space-between; align-items: baseline;
+            flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+        }
+        .progress-label .found-pct { font-size: 34px; font-weight: 700; color: #28a745; }
+        .progress-label .found-detail { color: #5a6a7e; font-size: 14px; }
+        .progress-bar-wrap {
+            background: #e9edf4; height: 14px; border-radius: 10px; overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #28a745, #4cd964);
+            height: 100%; border-radius: 10px;
+            transition: width 0.8s ease;
+            width: 0%;
+        }
+        .progress-meta {
+            display: flex; justify-content: space-between; font-size: 13px;
+            flex-wrap: wrap; gap: 8px;
+        }
+        .badge-found {
+            background: #d4edda; color: #155724; padding: 4px 14px;
+            border-radius: 20px; font-weight: 600;
+        }
+        .badge-notfound {
+            background: #f8d7da; color: #721c24; padding: 4px 14px;
+            border-radius: 20px; font-weight: 600;
+        }
+        #groupTable td.group-cell { font-weight: 600; color: #0b2b44; }
+        #groupTable tr.group-total-row td { background: #f0f4fa; font-weight: 700; color: #0b2b44; }
+        .pct-cell { font-weight: 700; }
+        .pct-high { color: #28a745; }
+        .pct-mid { color: #e6a800; }
+        .pct-low { color: #dc3545; }
+        .notfound-link {
+            display: inline-block;
+            background: #dc3545; color: #fff; padding: 4px 14px;
+            border-radius: 20px; font-size: 12px;
+            font-weight: 600; cursor: pointer; text-decoration: none;
+            transition: 0.2s;
+        }
+        .notfound-link:hover { background: #c82333; }
     </style>
 </head>
 <body>
@@ -468,7 +518,7 @@
     <div class="login-overlay visible" id="loginOverlay">
         <div class="login-box">
             <h2>🔐 เข้าสู่ระบบ</h2>
-            <div class="sub">ระบบตรวจสอบ Location ม้วนกระดาษ</div>
+            <div class="sub">Dashboard : Paper Roll Stock</div>
             <div class="form-group">
                 <label>ชื่อผู้ใช้</label>
                 <input type="text" id="loginUser" placeholder="username" />
@@ -485,7 +535,7 @@
     <!-- App -->
     <div id="app" style="display:none;">
         <header class="app-header">
-            <h1>📦 RollTracker <small>· ตรวจสอบม้วนกระดาษ</small></h1>
+            <h1>📦 Dashboard : Paper Roll Stock <small>· ตรวจสอบม้วนกระดาษ</small></h1>
             <div class="header-actions">
                 <span class="user-badge" id="userBadge">
                     <span id="userNameDisplay">—</span>
@@ -554,6 +604,78 @@
                     <div class="stat-card"><div class="number" id="statFull">0</div><div class="label">✅ เต็ม</div></div>
                     <div class="stat-card"><div class="number" id="statScrap">0</div><div class="label">🔻 เศษ</div></div>
                     <div class="stat-card"><div class="number" id="statWait">0</div><div class="label">⏳ รอกรอ</div></div>
+                </div>
+            </div>
+
+            <!-- ⭐ NEW: Overall Progress -->
+            <div style="margin-top:28px;">
+                <h3 style="font-size:16px;color:#0b2b44;margin-bottom:12px;">📈 เปอร์เซ็นต์การตรวจนับรวม</h3>
+                <div class="progress-card">
+                    <div class="progress-label">
+                        <span class="found-pct" id="overallPct">0.00%</span>
+                        <span class="found-detail">พบแล้ว <strong id="overallFound">0</strong> / <strong id="overallTotal">0</strong> ม้วน</span>
+                    </div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="overallBar"></div>
+                    </div>
+                    <div class="progress-meta">
+                        <span class="badge-found">✓ พบ <span id="overallFound2">0</span> ม้วน</span>
+                        <span class="badge-notfound">✗ ยังไม่พบ <span id="overallNotFound">0</span> ม้วน</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ⭐ NEW: Group Summary -->
+            <div style="margin-top:28px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+                    <h3 style="font-size:16px;color:#0b2b44;">📋 สรุปตามกลุ่มและ Size</h3>
+                    <span style="font-size:13px;color:#7a8a9e;" id="groupSummaryMeta">—</span>
+                </div>
+                <div class="table-wrap">
+                    <table id="groupTable">
+                        <thead>
+                            <tr>
+                                <th>กลุ่ม</th>
+                                <th>Size</th>
+                                <th style="text-align:right;">จำนวน</th>
+                                <th style="text-align:right;">พบ</th>
+                                <th style="text-align:right;">ยังไม่พบ</th>
+                                <th style="text-align:right;">% พบ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="groupTableBody">
+                            <tr><td colspan="6" class="text-muted" style="text-align:center;">กำลังโหลด...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ⭐ NEW: Not Found Rolls -->
+            <div style="margin-top:28px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+                    <h3 style="font-size:16px;color:#0b2b44;">🚨 ม้วนที่ยังไม่พบ (<span id="notFoundTotalLabel">0</span> ม้วน)</h3>
+                    <button class="btn btn-primary btn-sm" id="toggleNotFoundBtn">📋 แสดงรายการ</button>
+                </div>
+                <div id="notFoundSection" style="display:none;">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>เลขม้วน</th>
+                                    <th>Size</th>
+                                    <th>Grade</th>
+                                    <th>กลุ่ม</th>
+                                    <th>LOC.</th>
+                                    <th>สถานะ</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="notFoundTableBody">
+                                <tr><td colspan="8" class="text-muted" style="text-align:center;">กำลังโหลด...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -642,7 +764,7 @@
             </div>
 
             <div style="margin-top:16px;font-size:13px;color:#a0b0c6;text-align:center;border-top:1px solid #e9edf4;padding-top:16px;">
-                RollTracker v2.0 · ข้อมูลทั้งหมด <span id="footerTotal">0</span> ม้วน
+                Dashboard : Paper Roll Stock v2.0 · ข้อมูลทั้งหมด <span id="footerTotal">0</span> ม้วน
             </div>
         </div>
     </div>
@@ -722,6 +844,10 @@
         const stockDate = $('stockDate');
         const stockTime = $('stockTime');
 
+        function escHtml(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+        }
+
         function showToast(msg, type = 'info') {
             const c = document.createElement('div');
             c.className = `toast ${type}`;
@@ -781,6 +907,7 @@
                 loadStats();
                 loadTotalCount();
                 loadStockTimestamp();
+                loadGroupSummary();      // ⭐ NEW
             } else {
                 app.style.display = 'none';
                 loginOverlay.classList.add('visible');
@@ -854,7 +981,7 @@
                     });
                     const data = await res.json();
                     if (Array.isArray(data) && data.length) {
-                        suggestions.innerHTML = data.map(s => `<div class="suggestion-item" data-value="${s}">${s}</div>`).join('');
+                        suggestions.innerHTML = data.map(s => `<div class="suggestion-item" data-value="${escHtml(s)}">${escHtml(s)}</div>`).join('');
                         suggestions.classList.add('show');
                         suggestions.querySelectorAll('.suggestion-item').forEach(el => {
                             el.addEventListener('click', function() {
@@ -974,6 +1101,125 @@
             } catch (e) { totalRollsDisplay.textContent = '📦 —'; }
         }
 
+        // ---------- ⭐ NEW: Group Summary ----------
+        async function loadGroupSummary() {
+            try {
+                const res = await fetch('/api/dashboard/group-summary', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'error');
+                renderOverall(data.overall || {});
+                renderGroupTable(data.groups || []);
+            } catch (e) {
+                console.warn('group summary error', e);
+            }
+        }
+
+        function renderOverall(o) {
+            const pct = Number(o.percent_found || 0).toFixed(2);
+            $('overallPct').textContent = pct + '%';
+            $('overallFound').textContent = o.found || 0;
+            $('overallTotal').textContent = o.total || 0;
+            $('overallFound2').textContent = o.found || 0;
+            $('overallNotFound').textContent = o.not_found || 0;
+            $('overallBar').style.width = pct + '%';
+            $('notFoundTotalLabel').textContent = o.not_found || 0;
+        }
+
+        function renderGroupTable(groups) {
+            const tbody = $('groupTableBody');
+            if (!groups.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-muted" style="text-align:center;">ไม่มีข้อมูล</td></tr>';
+                $('groupSummaryMeta').textContent = '—';
+                return;
+            }
+            let html = '';
+            let totalRolls = 0;
+            for (const g of groups) {
+                totalRolls += g.total;
+                for (const s of g.sizes) {
+                    const pct = Number(s.percent_found || 0).toFixed(2);
+                    const cls = pct >= 90 ? 'pct-high' : pct >= 60 ? 'pct-mid' : 'pct-low';
+                    html += `
+                        <tr>
+                            <td class="group-cell">${escHtml(g.group_name)}</td>
+                            <td>${s.width !== '—' ? escHtml(s.width) + '"' : '—'}</td>
+                            <td style="text-align:right;">${s.total}</td>
+                            <td style="text-align:right;color:#28a745;font-weight:600;">${s.found}</td>
+                            <td style="text-align:right;color:#dc3545;font-weight:600;">${s.not_found}</td>
+                            <td style="text-align:right;" class="pct-cell ${cls}">${pct}%</td>
+                        </tr>
+                    `;
+                }
+                const gpct = Number(g.percent_found || 0).toFixed(2);
+                const gcls = gpct >= 90 ? 'pct-high' : gpct >= 60 ? 'pct-mid' : 'pct-low';
+                html += `
+                    <tr class="group-total-row">
+                        <td class="group-cell" colspan="2">${escHtml(g.group_name)} — รวม</td>
+                        <td style="text-align:right;">${g.total}</td>
+                        <td style="text-align:right;color:#28a745;">${g.found}</td>
+                        <td style="text-align:right;color:#dc3545;">${g.not_found}</td>
+                        <td style="text-align:right;" class="pct-cell ${gcls}">${gpct}%</td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = html;
+            $('groupSummaryMeta').textContent = `${groups.length} กลุ่ม · ${totalRolls} ม้วน`;
+        }
+
+        // ---------- ⭐ NEW: Not Found List ----------
+        let notFoundListLoaded = false;
+
+        async function loadNotFoundList() {
+            try {
+                const res = await fetch('/api/dashboard/not-found-list', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'error');
+                renderNotFoundTable(data.rolls || []);
+                notFoundListLoaded = true;
+            } catch (e) {
+                showToast('โหลดรายการไม่สำเร็จ', 'error');
+            }
+        }
+
+        function renderNotFoundTable(rolls) {
+            const tbody = $('notFoundTableBody');
+            if (!rolls.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-muted" style="text-align:center;">🎉 ไม่มีม้วนที่ยังไม่พบ</td></tr>';
+                return;
+            }
+            tbody.innerHTML = rolls.map((r, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${escHtml(r.roll_number)}</strong></td>
+                    <td>${r.width ? escHtml(r.width) + '"' : '—'}</td>
+                    <td>${escHtml(r.grade || '—')}</td>
+                    <td>${escHtml(r.group_name || '—')}</td>
+                    <td>${escHtml(r.loc || '—')}</td>
+                    <td>${escHtml(r.status || '—')}</td>
+                    <td>
+                        <a class="notfound-link" href="/stock-check?roll=${encodeURIComponent(r.roll_number)}" target="_blank">🏷️ ไปตรวจนับ</a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        $('toggleNotFoundBtn').addEventListener('click', async () => {
+            const section = $('notFoundSection');
+            const btn = $('toggleNotFoundBtn');
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                btn.textContent = '🔽 ซ่อนรายการ';
+                if (!notFoundListLoaded) await loadNotFoundList();
+            } else {
+                section.style.display = 'none';
+                btn.textContent = '📋 แสดงรายการ';
+            }
+        });
+
         // ---------- Admin Alerts ----------
         async function loadAlerts() {
             try {
@@ -1016,7 +1262,7 @@
             userTableBody.innerHTML = users.map(u => `
                     <tr>
                         <td>${u.id}</td>
-                        <td><strong>${u.username}</strong></td>
+                        <td><strong>${escHtml(u.username)}</strong></td>
                         <td><span class="badge ${u.role === 'admin' ? 'admin' : 'user'}">${u.role === 'admin' ? '👑 Admin' : '👤 User'}</span></td>
                         <td><span class="badge ${u.is_active ? 'active' : 'inactive'}">${u.is_active ? '✅ ใช้งาน' : '❌ ปิดใช้งาน'}</span></td>
                         <td>${formatDate(u.created_at)}</td>
@@ -1113,6 +1359,8 @@
                     loadTotalCount();
                     loadHistory();
                     loadStockTimestamp();
+                    loadGroupSummary();           // ⭐ NEW
+                    notFoundListLoaded = false;   // ⭐ NEW: reset cache
                     excelFileInput.value = '';
                     fileInfo.textContent = 'ยังไม่ได้เลือกไฟล์';
                 } else {
@@ -1143,8 +1391,8 @@
             historyTableBody.innerHTML = rows.map((h, i) => `
                     <tr>
                         <td>${i+1}</td>
-                        <td>${h.filename || '—'}</td>
-                        <td>${h.imported_by || '—'}</td>
+                        <td>${escHtml(h.filename || '—')}</td>
+                        <td>${escHtml(h.imported_by || '—')}</td>
                         <td>${h.rows_imported || 0}</td>
                         <td>${formatDate(h.import_date)}</td>
                     </tr>
@@ -1162,6 +1410,8 @@
                     loadStats();
                     loadTotalCount();
                     loadHistory();
+                    loadGroupSummary();           // ⭐ NEW
+                    notFoundListLoaded = false;   // ⭐ NEW
                     resultCard.classList.remove('visible');
                     notFound.style.display = 'none';
                 } else showToast(res.message || 'ผิดพลาด', 'error');
@@ -1179,6 +1429,8 @@
                     loadTotalCount();
                     loadHistory();
                     loadUsers();
+                    loadGroupSummary();           // ⭐ NEW
+                    notFoundListLoaded = false;   // ⭐ NEW
                     resultCard.classList.remove('visible');
                     notFound.style.display = 'none';
                     clearStatus.textContent = '✅ ล้างข้อมูลแล้ว';
@@ -1206,7 +1458,7 @@
             stockTime.value = timeStr;
         })();
 
-        console.log('📦 RollTracker v2.0 ready');
+        console.log('📦 Dashboard : Paper Roll Stock v2.0 ready');
     </script>
 </body>
 </html>
