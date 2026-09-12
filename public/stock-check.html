@@ -952,6 +952,7 @@ async function generatePrintHtml(selectedSizes, showCheckmarks) {
 
 loadBtn.addEventListener('click', () => loadSizes());
 backBtn.addEventListener('click', () => { window.location.href = '/'; });
+document.getElementById('labelBtn').addEventListener('click', () => { window.location.href = '/label'; });
 
 (async function init() {
     await loadUser();
