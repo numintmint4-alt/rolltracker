@@ -98,7 +98,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     text-overflow: ellipsis;
     display: flex;
     align-items: center;
-    justify-content: center;       /* default = กึ่งกลาง */
+    justify-content: center;
 }
 
 /* ⭐ กลุ่ม อยู่ขวา — rotate -90° */
@@ -121,7 +121,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     display: inline-block;
 }
 
-/* ⭐ เลขม้วน: กึ่งกลาง + ดาวอยู่ขวาสุด */
+/* ⭐ เลขม้วน: กึ่งกลาง + ดาว 3 ดวงอยู่ขวาสุด */
 .label .roll-row {
     background: #e8e8e8;
     border-bottom: 0.75pt solid #000;
@@ -129,7 +129,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     font-weight: 700;
     position: relative;
     justify-content: center;
-    padding: 0 8mm;
+    padding: 0 12mm;              /* ⭐ เพิ่ม padding-right สำหรับ *** */
 }
 .label .roll-row .star {
     font-size: 15pt;
@@ -154,16 +154,16 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     justify-content: center;
 }
 
-/* ⭐ ลงชื่อ + สถานที่: ชิดซ้าย — เพิ่ม specificity เป็น `.label .main > .sign-row` */
+/* ⭐ ลงชื่อ + สถานที่: ชิดซ้าย */
 .label .main > .sign-row {
     font-size: 9pt;
     border-bottom: 0.5pt solid #000;
-    justify-content: flex-start;   /* ⭐ ชิดซ้าย */
+    justify-content: flex-start;
     text-align: left;
 }
 .label .main > .place-row {
     font-size: 9pt;
-    justify-content: flex-start;   /* ⭐ ชิดซ้าย */
+    justify-content: flex-start;
     text-align: left;
 }
 
@@ -354,12 +354,13 @@ function renderPreview() {
     const group = currentRoll.group_name || '';
     const rollNum = currentRoll.roll_number || '';
 
+    // ⭐ เปลี่ยน * → ***
     const labelHtml = (idx) => `
         <div class="label">
             <div class="main">
                 <div class="roll-row">
                     <span>${escHtml(rollNum)}</span>
-                    ${idx === 0 ? '<span class="star">*</span>' : ''}
+                    ${idx === 0 ? '<span class="star">***</span>' : ''}
                 </div>
                 <div class="grade-row">${escHtml(gradeSize)}</div>
                 <div class="dia-row">${escHtml(dia)}</div>
@@ -399,7 +400,7 @@ $('backBtn').addEventListener('click', () => { window.location.href = '/stock-ch
     } catch (e) { window.location.href = '/'; }
 })();
 
-console.log('🏷️ Label Print v1.9 ready');
+console.log('🏷️ Label Print v2.0 ready');
 </script>
 </body>
 </html>
