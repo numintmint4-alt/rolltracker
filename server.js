@@ -614,6 +614,7 @@ app.delete('/api/data/clear-all', authMiddleware, adminMiddleware, async (req, r
 // ---------- SERVE FRONTEND ----------
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/stock-check', (req, res) => res.sendFile(path.join(__dirname, 'public', 'stock-check.html')));
+app.get('/label', (req, res) => res.sendFile(path.join(__dirname, 'public', 'label.html')));
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT} (PostgreSQL Ready)`);
