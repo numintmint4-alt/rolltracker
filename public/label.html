@@ -43,13 +43,16 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 .btn-print { background: #28a745; color: #fff; } .btn-print:hover { background: #218838; }
 .btn-print:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ⭐ Preview: จัดกึ่งกลางทั้งแนวตั้ง-แนวนอน */
 .preview-wrap {
     background: #e9edf4;
     padding: 20px;
     border-radius: 14px;
     display: flex;
     justify-content: center;
-    overflow-x: auto;
+    align-items: center;
+    min-height: 500px;
+    overflow: auto;
 }
 
 /* ===== A5 Page ===== */
@@ -63,14 +66,20 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: repeat(5, 1fr);
+    /* ⭐ จัดกึ่งกลาง ถ้ามีพื้นที่เหลือ */
+    justify-content: center;
+    align-content: center;
     font-family: 'Sarabun', sans-serif;
     color: #000;
     overflow: hidden;
 }
 
 /* ===== 1 Label ===== */
+/* ⭐ ใช้ margin ติดลบ เพื่อให้ขอบที่ชนกันซ้อนทับ (ไม่หนา 2 เท่า) */
 .label {
-    border: 1.2px solid #000;
+    border: 0.75pt solid #000;
+    margin: -0.375pt;
+    box-sizing: border-box;
     display: flex;
     overflow: hidden;
     background: #fff;
@@ -94,10 +103,10 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     align-items: center;
 }
 
-/* ⭐ กลุ่ม อยู่ขวา — ตัวอักษรอ่านจากล่างขึ้นบน (rotate -90°) */
+/* ⭐ กลุ่ม อยู่ขวา — rotate -90° (อ่านจากล่างขึ้นบน) */
 .label .side {
     width: 11mm;
-    border-left: 1.2px solid #000;
+    border-left: 0.75pt solid #000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -106,7 +115,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     overflow: hidden;
 }
 .label .side span {
-    transform: rotate(-90deg);      /* ⭐ อ่านจากล่างขึ้นบน */
+    transform: rotate(-90deg);
     white-space: nowrap;
     font-size: 15pt;
     font-weight: 500;
@@ -116,7 +125,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 
 .label .roll-row {
     background: #e8e8e8;
-    border-bottom: 1.2px solid #000;
+    border-bottom: 0.75pt solid #000;
     font-size: 17pt;
     font-weight: 700;
     justify-content: space-between;
@@ -126,17 +135,17 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 .label .grade-row {
     font-size: 15pt;
     font-weight: 600;
-    border-bottom: 1px solid #000;
+    border-bottom: 0.5pt solid #000;
 }
 
 .label .dia-row {
     font-size: 13pt;
-    border-bottom: 1px solid #000;
+    border-bottom: 0.5pt solid #000;
 }
 
 .label .sign-row {
     font-size: 9pt;
-    border-bottom: 1px solid #000;
+    border-bottom: 0.5pt solid #000;
 }
 
 .label .place-row {
@@ -160,6 +169,9 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
         width: 148mm;
         height: 210mm;
         overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     .container {
         box-shadow: none;
@@ -171,22 +183,28 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
         width: 148mm;
         height: 210mm;
         overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     .no-print { display: none !important; }
     .preview-wrap {
         padding: 0 !important;
         background: #fff !important;
         border-radius: 0 !important;
-        display: block !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
         overflow: hidden !important;
         width: 148mm !important;
         height: 210mm !important;
+        min-height: 0 !important;
     }
     .label-page {
         box-shadow: none;
         page-break-after: auto !important;
         break-after: auto !important;
-        margin: 0;
+        margin: 0 auto;
         width: 148mm;
         height: 210mm;
     }
@@ -321,7 +339,6 @@ function renderPreview() {
     const group = currentRoll.group_name || '';
     const rollNum = currentRoll.roll_number || '';
 
-    // ⭐ side อยู่หลัง main + มี <span> ข้างในเพื่อ rotate
     const labelHtml = (idx) => `
         <div class="label">
             <div class="main">
@@ -367,7 +384,7 @@ $('backBtn').addEventListener('click', () => { window.location.href = '/stock-ch
     } catch (e) { window.location.href = '/'; }
 })();
 
-console.log('🏷️ Label Print v1.6 ready');
+console.log('🏷️ Label Print v1.7 ready');
 </script>
 </body>
 </html>
