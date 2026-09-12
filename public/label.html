@@ -77,13 +77,14 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 .label .main {
     flex: 1;
     display: grid;
-    grid-template-rows: 11mm 9.5mm 9.5mm 6mm 6mm;
+    /* 5 แถว: 11 / 8.8 / 8.8 / 6.7 / 6.7 mm */
+    grid-template-rows: 11mm 8.8mm 8.8mm 6.7mm 6.7mm;
     min-width: 0;
     height: 42mm;
 }
 .label .side {
     width: 11mm;
-    border-left: 1.2px solid #000;
+    border-right: 1.2px solid #000;  /* ⭐ เปลี่ยนจาก left → right */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -143,11 +144,35 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 
 @media print {
     @page { size: A5 portrait; margin: 0; }
-    html, body { background: #fff; padding: 0; margin: 0; width: 148mm; height: 210mm; }
-    .container { box-shadow: none; border-radius: 0; padding: 0; max-width: none; background: #fff; }
+    html, body {
+        background: #fff;
+        padding: 0;
+        margin: 0;
+        width: 148mm;
+        height: 210mm;
+    }
+    .container {
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        max-width: none;
+        background: #fff;
+        margin: 0;
+    }
     .no-print { display: none !important; }
-    .preview-wrap { padding: 0; background: #fff; }
-    .label-page { box-shadow: none; page-break-after: always; }
+    /* ⭐ preview-wrap ต้องแสดงใน print ด้วย — ไม่มี no-print แล้ว */
+    .preview-wrap {
+        padding: 0 !important;
+        background: #fff !important;
+        border-radius: 0 !important;
+        display: block !important;
+        overflow: visible !important;
+    }
+    .label-page {
+        box-shadow: none;
+        page-break-after: always;
+        margin: 0;
+    }
 }
 </style>
 </head>
@@ -168,7 +193,8 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
         <button class="btn btn-print" id="printBtn" disabled>🖨️ พิมพ์ป้าย (10 ดวง)</button>
     </div>
 
-    <div class="preview-wrap no-print" id="previewWrap">
+    <!-- ⭐ ไม่มี no-print แล้ว เพื่อให้แสดงใน print -->
+    <div class="preview-wrap" id="previewWrap">
         <div class="placeholder" id="placeholder">พิมพ์เลขม้วนเพื่อดูตัวอย่างป้าย</div>
     </div>
 </div>
@@ -264,7 +290,6 @@ searchBtn.addEventListener('click', doSearch);
 function renderPreview() {
     if (!currentRoll) return;
 
-    // ⭐ Grade + Size: ถ้ามีทั้งคู่ → "CA105-40"" / ถ้ามีอย่างเดียว → แสดงอย่างเดียว
     let gradeSize = '';
     const grade = (currentRoll.grade || '').trim();
     const width = (currentRoll.width || '').trim();
@@ -282,6 +307,7 @@ function renderPreview() {
 
     const labelHtml = (idx) => `
         <div class="label">
+            <div class="side">${escHtml(group)}</div>
             <div class="main">
                 <div class="roll-row">
                     <span>${escHtml(rollNum)}</span>
@@ -292,7 +318,6 @@ function renderPreview() {
                 <div class="sign-row">ลงชื่อจนท.บัญชี:</div>
                 <div class="place-row">สถานที่พบ / กลุ่ม:</div>
             </div>
-            <div class="side">${escHtml(group)}</div>
         </div>
     `;
 
@@ -325,7 +350,7 @@ $('backBtn').addEventListener('click', () => { window.location.href = '/stock-ch
     } catch (e) { window.location.href = '/'; }
 })();
 
-console.log('🏷️ Label Print v1.2 ready');
+console.log('🏷️ Label Print v1.3 ready');
 </script>
 </body>
 </html>
